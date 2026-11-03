@@ -127,3 +127,37 @@ test('the tap hashes every inline script and widens nothing else', async () => {
   assert.equal(head[1].trimStart().startsWith('<meta http-equiv="Content-Security-Policy"'), true,
     'the policy does not come first in the head')
 })
+
+test('a directive in another case, or carried twice, is rewritten as well', async () => {
+  const module = await import('../src/csp.mjs').catch(() => null)
+  assert.ok(module !== null, 'app/src/csp.mjs is missing')
+  const tap = module.cspTap ?? Object.values(module).find(value => typeof value === 'function')
+  const page = [
+    '<!doctype html>',
+    '<html lang="en">',
+    '<head>',
+    '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; SCRIPT-SRC \'self\' \'unsafe-inline\'; script-src \'unsafe-inline\'; script-src \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\'">',
+    '</head>',
+    '<body>',
+    '<script>globalThis.__DSH_BOOT__ = { a: 1 }</script>',
+    '</body>',
+    '</html>',
+  ].join('\n')
+
+  let served = await tap(page)
+  if (typeof served === 'function') served = await served(page)
+  const html = typeof served === 'string' ? served : String(served)
+  const meta = /<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]*)"/u.exec(html)
+  assert.ok(meta !== null, 'the tap dropped the policy')
+  const scriptDirectives = meta[1].split(';').map(directive => directive.trim())
+    .filter(directive => /^script-src(\s|$)/iu.test(directive))
+  // Neither the other case nor the second copy may keep a rule of its own.
+  assert.equal(scriptDirectives.length, 3, 'the tap dropped a copy of the directive')
+  for (const directive of scriptDirectives) {
+    assert.equal(directive.startsWith('script-src \'self\' '), true, directive)
+    assert.equal(directive.includes('unsafe-inline'), false, directive)
+    assert.equal(directive.includes('*'), false, directive)
+  }
+  // The style directive is untouched: styles stay inline.
+  assert.equal(meta[1].includes('style-src \'self\' \'unsafe-inline\''), true)
+})
