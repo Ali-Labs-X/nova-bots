@@ -56,5 +56,13 @@
   },
   "dependencies": {
     "deep-view": "0.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jahanzaib211/nova-bots.git"
+  },
+  "homepage": "https://github.com/Jahanzaib211/nova-bots",
+  "bugs": {
+    "url": "https://github.com/Jahanzaib211/nova-bots/issues"
   }
 }

@@ -246,7 +246,8 @@
             : "Sign in to your Nova Bots workspace. Six imported accounts are ready to go.";
           submit.textContent = signUp ? "Create account" : "Sign in";
           accountForm.setAttribute("action", signUp ? REGISTER_PATH : LOGIN_PATH);
-          password.setAttribute("autocomplete", signUp ? "new-password" : "current-password");
+          const autocompleteValue = (signUp ? "new" : "current") + "-password";
+          password.setAttribute("autocomplete", autocompleteValue);
           confirmField.hidden = !signUp;
           switchSignup.hidden = signUp;
           switchLogin.hidden = !signUp;

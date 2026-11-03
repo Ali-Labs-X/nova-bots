@@ -73,14 +73,14 @@ mounted under **`/host`**:
 
 | On this machine | Inside the container |
 |---|---|
-| `/home/jahanzaib/Desktop` | `/host` |
-| `/home/jahanzaib/Desktop/linkedin-agent` | `/host/linkedin-agent` |
+| `~/Desktop` | `/host` |
+| `~/Desktop/linkedin-agent` | `/host/linkedin-agent` |
 
 Set that up in `docker/.env`:
 
 ```sh
-HOST_SHARE=/home/jahanzaib/Desktop
-#BOT_MOUNTS=/home/jahanzaib/Documents,/home/jahanzaib/notes:/mnt/notes
+HOST_SHARE=~/Desktop
+#BOT_MOUNTS=~/Documents,~/notes:/mnt/notes
 ```
 
 `HOST_SHARE` is one folder, mounted at `/host`. `BOT_MOUNTS` is a

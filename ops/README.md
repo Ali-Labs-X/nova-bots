@@ -110,7 +110,7 @@ empty, and it does not restart a unit systemd has already given up on
 
 ```bash
 # Inventory — the product entry and the supervisor entry
-python3 -c "import json;d=json.load(open('/home/jahanzaib/.nova/gates/inventory.json'));print([c for c in d['checks'] if 'bots' in c['name']])"
+python3 -c "import json;d=json.load(open('$HOME/.nova/gates/inventory.json'));print([c for c in d['checks'] if 'bots' in c['name']])"
 
 # The probe, in isolation (does not touch the running daemon)
 cd ~/Desktop/nova && NOVA_BOTS_ENABLED=1 \

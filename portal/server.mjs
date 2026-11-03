@@ -33,7 +33,7 @@ import { handleAdmin } from './admin.mjs'
 const PORT = Number(process.env.NOVA_PORTAL_PORT ?? 13081)
 const HOST = process.env.NOVA_PORTAL_HOST ?? '127.0.0.1'
 const ENGINE = process.env.NOVA_ENGINE_URL ?? 'http://127.0.0.1:13083'
-const TOKEN_FILE = process.env.NOVA_LAUNCH_TOKEN_FILE ?? '/home/jahanzaib/Desktop/Nova-Bots/docker/data/.launch-token'
+const TOKEN_FILE = process.env.NOVA_LAUNCH_TOKEN_FILE ?? '../docker/data/.launch-token'
 const CONTAINER = process.env.NOVA_ENGINE_CONTAINER ?? 'nova-bots'
 const COOKIE = 'access_token'
 
