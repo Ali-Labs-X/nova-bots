@@ -10,13 +10,13 @@ import { WidgetCard, ViewUi, DEEP_VIEW_CSS, WidgetView as CoreWidgetView, ViewMe
 import { checkShownView } from 'deep-view/core'
 
 // The core components draw with the host's labels: the submit keeps ds-bot's
-// wording, the rest resolve through ds-bot's dictionary.
+// wording, the rest resolve through the plugin's dictionary.
 const viewT = (key, params) => (key === 'Send' ? t('Send to Bot') : t(key, params))
 const VIEW_UI = { t: viewT, Markdown: MarkdownText }
 const Card = props => h(ViewUi.Provider, { value: VIEW_UI }, h(WidgetCard, props))
 const withUi = Component => props => h(ViewUi.Provider, { value: VIEW_UI }, h(Component, props))
 
-// Direct renders (tests, history) still see ds-bot's labels.
+// Direct renders (tests, history) still see the plugin's labels.
 export const WidgetView = withUi(CoreWidgetView)
 export const ViewMenuList = withUi(CoreViewMenuList)
 
@@ -111,7 +111,7 @@ export function AnsweredReply({ node }) {
   return h(AnsweredCell, { node })
 }
 
-// The core styles, with the --dv-* tokens rebound to ds-bot's --bt-* palette so
+// The core styles, with the --dv-* tokens rebound to the plugin's --bt-* palette so
 // a view card keeps the Bot theme.
 export const WIDGET_CSS = `${DEEP_VIEW_CSS}
 body{

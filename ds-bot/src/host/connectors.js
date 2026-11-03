@@ -1,10 +1,10 @@
 // Connectors: outside services every Bot can use. GitHub is the first one. Its tools come
-// from GitHub's MCP server through DSH's own MCP client, mounted on the plugin context,
+// from GitHub's MCP server through Nova's own MCP client, mounted on the plugin context,
 // so every Bot and Session gets them as mcp__github__<tool>.
 //
 // The token is the GITHUB_TOKEN secret (secrets.js keeps it, redacts it, and offers it to
 // the shell). It reaches GitHub only in the MCP request headers, built here in memory,
-// never written to the DSH profile. A new token is shared with no Bot's shell: the tools
+// never written to the Nova profile. A new token is shared with no Bot's shell: the tools
 // do not need it there, and a Bot that reads a planted instruction in an issue could
 // send it anywhere. The Secrets page can still share it. Signing in is `signIn` alone, so a browser login can
 // take its place later without touching the mount.
@@ -25,7 +25,7 @@ export async function signIn(token, { api = DEFAULTS.api, fetch: request = fetch
   let response
   try {
     response = await request(`${api.replace(/\/$/, '')}/user`, {
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'User-Agent': 'ds-bot', 'X-GitHub-Api-Version': '2022-11-28' },
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'User-Agent': 'nova-bots', 'X-GitHub-Api-Version': '2022-11-28' },
       signal: AbortSignal.timeout(CHECK_TIMEOUT_MS),
     })
   } catch {
@@ -77,7 +77,7 @@ export function install(rt) {
     const loader = ctx.get?.('loader')
     if (typeof loader?.import !== 'function' || typeof ctx.plugin !== 'function') {
       mount = { token }
-      status = { state: 'error', error: 'This DSH cannot load connectors' }
+      status = { state: 'error', error: 'This Nova cannot load connectors' }
       return
     }
     try {
@@ -98,13 +98,13 @@ export function install(rt) {
       await unmount()
       mount = { token }
       status = { state: 'error', error: reason(error) }
-      rt.warn('ds-bot: GitHub connector failed: %s', status.error)
+      rt.warn('GitHub connector failed: %s', status.error)
     }
   }
 
   // One change at a time; `force` connects again even when the token is the same.
   const sync = (force = false) => {
-    queue = queue.then(() => reconcile(force)).catch(error => { rt.warn('ds-bot: connectors: %s', reason(error)) })
+    queue = queue.then(() => reconcile(force)).catch(error => { rt.warn('connectors: %s', reason(error)) })
     return queue
   }
 
@@ -163,7 +163,7 @@ export function install(rt) {
       stopped = true
       void unmount()
     }
-  }, 'ds-bot: connectors')
+  }, 'Nova Bots: connectors')
 
   Object.assign(rt, { connectorsView, connectorEndpoint, secretsChanged: () => { void sync() } })
 }

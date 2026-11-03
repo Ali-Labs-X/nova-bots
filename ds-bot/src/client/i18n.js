@@ -1,8 +1,8 @@
-// Interface copy follows the DSH language. Keys are the English text; `zh` maps them.
+// Interface copy follows the Nova language. Keys are the English text; `zh` maps them.
 // Copy is looked up at render time and every slot outlet re-renders on a language
 // switch, so nothing caches a translated string.
 
-export const NAMESPACE = 'ds-bot'
+export const NAMESPACE = 'nova'
 
 const ZH = {
   // Shared
@@ -80,7 +80,7 @@ const ZH = {
   Command: '命令',
   'Arguments (one per line)': '参数（每行一个）',
   'Environment (JSON)': '环境变量（JSON）',
-  '{"API_KEY": "$DSH_SECRET_MY_KEY"}': '{"API_KEY": "$DSH_SECRET_MY_KEY"}',
+  '{"API_KEY": "$NOVA_SECRET_MY_KEY"}': '{"API_KEY": "$NOVA_SECRET_MY_KEY"}',
   URL: 'URL',
   'Headers (JSON)': '请求头（JSON）',
   'Skill instructions': '技能说明',
@@ -119,7 +119,7 @@ const ZH = {
   'GitHub did not say who this token belongs to': 'GitHub 没有返回这个 token 的账号',
   'Paste a token first': '请先粘贴 token',
   'GitHub addresses must start with https://': 'GitHub 地址必须以 https:// 开头',
-  'This DSH cannot load connectors': '这个 DSH 不能加载连接器',
+  'This Nova cannot load connectors': '这个 Nova 不能加载连接器',
   'No such connector': '没有这个连接器',
   'Classic Agent mode': '经典 Agent 模式',
   'Switch': '切换',
@@ -135,16 +135,16 @@ const ZH = {
   'An API key has no spaces or special characters': 'API key 里不能有空格或特殊字符',
   'Another provider': '其他服务商',
   // Models page
-  'This DSH cannot set up model providers.': '这个 DSH 不能设置模型服务商。',
-  'This DSH cannot set up model providers': '这个 DSH 不能设置模型服务商',
+  'This Nova cannot set up model providers.': '这个 Nova 不能设置模型服务商。',
+  'This Nova cannot set up model providers': '这个 Nova 不能设置模型服务商',
   'Model providers · {count}': '模型服务商 · {count}',
   'Add a provider': '添加服务商',
   'Needs an API key': '需要 API key',
   'Key set': '已设置 key',
-  'Key set outside DS Bot': 'key 在 DS Bot 之外设置',
+  'Key set outside Nova Bots': 'key 在 Nova Bots 之外设置',
   'No models': '没有模型',
   '{count} models': '{count} 个模型',
-  'This key comes from outside DS Bot, such as an environment variable, and cannot be changed here.': '这个 key 来自 DS Bot 之外（例如环境变量），这里改不了。',
+  'This key comes from outside Nova Bots, such as an environment variable, and cannot be changed here.': '这个 key 来自 Nova Bots 之外（例如环境变量），这里改不了。',
   'and {count} more': '还有 {count} 个',
   'Remove {name}? Bots on its models need another model.': '删除 {name}？用它的模型的 Bot 要换一个模型。',
   'Remove provider': '删除服务商',
@@ -173,10 +173,10 @@ const ZH = {
   'Add at least one model': '至少添加一个模型',
   'Two models have the same id': '有两个模型的 ID 相同',
   'Mode': '模式',
-  'Sign in to DeepSeek': '登录 DeepSeek 账号',
-  'Enter a DeepSeek API key': '填入 DeepSeek API key',
+  'Sign in to Nova': '登录 Nova 账号',
+  'Enter a Nova API key': '填入 Nova API key',
   'Open settings to set up a custom model': '打开设置配置自定义模型',
-  'DS Bot': 'DS Bot',
+  'Nova Bots': 'Nova Bots',
 
   // Header
   'Message {name}': '给 {name} 发消息',
@@ -262,7 +262,7 @@ const ZH = {
   Rename: '重命名',
   'Add instructions in Bot settings': '在 Bot 设置里添加说明',
   'No scheduled tasks yet. To add one, tell the Bot in its chat what to do and when.': '还没有定时任务。要添加，在对话里告诉 Bot 做什么、什么时候做。',
-  'The browser is in DSH Desktop and the DS Bot app.': '浏览器在 DSH 桌面版和 DS Bot 应用里。',
+  'The browser is in Nova Desktop and the Nova Bots app.': '浏览器在 Nova 桌面版和 Nova Bots 应用里。',
   'New tab': '新标签页',
   'Close tab': '关闭标签页',
   'Open {title}': '打开 {title}',
@@ -394,7 +394,7 @@ const ZH = {
   'Upload photo': '上传照片',
   'A Bot named {name} already exists': '已经有叫 {name} 的 Bot 了',
   'The Bot runs on this model. You can change it later in its details.': 'Bot 会使用这个模型。以后可以在详情里修改。',
-  "Add a provider and a model in DeepSeek Harness first, or pick one in the Bot's chat later.": '请先在 DeepSeek Harness 里添加服务商和模型，或者稍后在 Bot 的对话里选择。',
+  "Add a provider and a model in Nova Bots first, or pick one in the Bot's chat later.": '请先在 Nova Bots 里添加服务商和模型，或者稍后在 Bot 的对话里选择。',
   'Creating…': '创建中…',
   Create: '创建',
 
@@ -406,26 +406,26 @@ const ZH = {
   'Choose a model': '选择模型',
   '{provider} · not available': '{provider} · 不可用',
   'Model for {name}': '{name} 的模型',
-  'No models are set up in DeepSeek Harness yet.': 'DeepSeek Harness 里还没有设置模型。',
+  'No models are set up in Nova Bots yet.': 'Nova Bots 里还没有设置模型。',
   'Models and providers…': '模型和服务商…',
   Models: '模型',
-  'Harness default': 'Harness 默认',
+  'Nova default': 'Nova 默认',
   Saving: '保存中',
   'Manage models': '管理模型',
 
   // Shapes
-  Whale: '鲸鱼', Star: '星星', Moon: '月亮', Wave: '声波', Squircle: '圆角方', Bull: '牛角', Blossom: '花朵',
+  'Nova Spark': 'Nova 星芒', Star: '星星', Moon: '月亮', Wave: '声波', Squircle: '圆角方', Bull: '牛角', Blossom: '花朵',
   Gumdrop: '软糖', Peanut: '花生', Bubbles: '泡泡', Saucer: '飞碟', Sprout: '嫩芽', Bunny: '兔子',
   Kitty: '小猫', Beacon: '灯塔', Plus: '加号', Magnet: '磁铁', Acorn: '橡果', Pebbles: '石子', Cushion: '靠垫',
   Ring: '圆环', Gem: '宝石',
 
   // Colors
   Black: '黑', Brown: '棕', Red: '红', Orange: '橙', Yellow: '黄', Green: '绿', Cyan: '青', Blue: '蓝',
-  Violet: '紫', Magenta: '品红', Gray: '灰', Aurora: '极光', Deepseek: 'DeepSeek 蓝', Charcoal: '炭黑',
+  Violet: '紫', Magenta: '品红', Gray: '灰', Aurora: '极光', Deepseek: 'Nova 蓝', Charcoal: '炭黑',
   Graphite: '石墨', Rose: '玫瑰', Sky: '天蓝', Tangerine: '橘', Cobalt: '钴蓝',
 
   // Themes
-  DeepSeek: 'DeepSeek', Mono: '黑白', Paper: '纸张', Moonlight: '月光',
+  Nova: '新星', 'Nova Galaxy': '新星银河', Mono: '黑白', Paper: '纸张',
 
   // Settings dialog
   General: '通用',
@@ -456,10 +456,10 @@ const ZH = {
   'No group chats yet.': '还没有群聊。',
   'A group chat lets several Bots work on one thing with you.': '在群聊里，几个 Bot 和你一起做一件事。',
   'Back to group chats': '返回群聊列表',
-  'DS Bot settings': 'DS Bot 设置',
+  'Nova Bots settings': 'Nova Bots 设置',
   'Settings pages': '设置页面',
-  'Models, providers, and the rest of DeepSeek Harness': '模型、服务商和 DeepSeek Harness 的其他设置',
-  'Harness settings': 'Harness 设置',
+  'Models, providers, and the rest of Nova Bots': '模型、服务商和 Nova Bots 的其他设置',
+  'Nova settings': 'Nova 设置',
   'Back to Bots': '返回 Bot 列表',
   'Close settings': '关闭设置',
 
@@ -474,38 +474,38 @@ const ZH = {
   'Copy conversation ID': '复制对话 ID',
   'Hide from sidebar': '从侧栏隐藏',
   '{name} actions': '{name} 的操作',
-  // The DSH Agent's own row and Session list. "DSH Agent" is a product name and
+  // The Nova Agent's own row and Session list. "Nova Agent" is a product name and
   // stays in English.
-  'Add DSH Agent': '添加 DSH Agent',
-  'Remove DSH Agent': '移除 DSH Agent',
+  'Add Nova Agent': '添加 Nova Agent',
+  'Remove Nova Agent': '移除 Nova Agent',
   'New session': '新会话',
   Archive: '归档',
   'Session actions': '会话操作',
-  'Plain dsh session': '原生 dsh 会话',
+  'Nova Agent session': 'Nova Agent 会话',
   'just now': '刚刚',
   '{n} min': '{n} 分钟',
   '{n} h': '{n} 小时',
   '{n} d': '{n} 天',
 
   // Plugin updates
-  'DS Bot {version} is available': 'DS Bot {version} 可以更新',
-  'Updating DS Bot…': '正在更新 DS Bot…',
-  'DS Bot {version} is installed. Restart DSH to use it.': 'DS Bot {version} 已安装，重启 DSH 后生效',
-  'DS Bot {version} is installed.': 'DS Bot {version} 已安装。',
-  'DS Bot update': 'DS Bot 更新',
-  'DS Bot {version}': 'DS Bot {version}',
+  'Nova Bots {version} is available': 'Nova Bots {version} 可以更新',
+  'Updating Nova Bots…': '正在更新 Nova Bots…',
+  'Nova Bots {version} is installed. Restart Nova to use it.': 'Nova Bots {version} 已安装，重启 Nova 后生效',
+  'Nova Bots {version} is installed.': 'Nova Bots {version} 已安装。',
+  'Nova Bots update': 'Nova Bots 更新',
+  'Nova Bots {version}': 'Nova Bots {version}',
   'Update installed': '更新已安装',
-  'Restart DSH to start using DS Bot {version}.': '重启 DSH 后开始使用 DS Bot {version}。',
+  'Restart Nova to start using Nova Bots {version}.': '重启 Nova 后开始使用 Nova Bots {version}。',
   'You have {version}.': '当前版本 {version}。',
   'The update did not finish: {reason}': '更新没有完成：{reason}',
   "What's new": '更新说明',
   'Updating…': '正在更新…',
-  'DSH {version} is available': 'DSH {version} 可以更新',
-  'Updating DSH…': '正在更新 DSH…',
-  'DSH update': 'DSH 更新',
-  'DSH {version}': 'DSH {version}',
-  'Restart DSH to start using DSH {version}.': '重启 DSH 后开始使用 DSH {version}。',
-  'Update DS Bot {version} first.': '先更新 DS Bot {version}。',
+  'Nova {version} is available': 'Nova {version} 可以更新',
+  'Updating Nova…': '正在更新 Nova…',
+  'Nova update': 'Nova 更新',
+  'Nova {version}': 'Nova {version}',
+  'Restart Nova to start using Nova {version}.': '重启 Nova 后开始使用 Nova {version}。',
+  'Update Nova Bots {version} first.': '先更新 Nova Bots {version}。',
   'Open updates': '打开更新',
 
   // Command palette
@@ -906,11 +906,11 @@ const ZH = {
   'Compared with the {count} days before': '与再往前 {count} 天相比',
   '{share}% of all usage from {span}': '占 {span} 全部用量的 {share}%',
   // About
-  'About DS Bot': '关于 DS Bot',
+  'About Nova Bots': '关于 Nova Bots',
   'Version {version}': '版本 {version}',
-  'Star DS Bot on GitHub': '在 GitHub 上给 DS Bot 点 Star',
+  'Star Nova Bots on GitHub': '在 GitHub 上给 Nova Bots 点 Star',
   '{count} stars': '{count} 个 Star',
-  'If DS Bot helps you, a star on GitHub helps more people find it.': '如果 DS Bot 对你有用，欢迎在 GitHub 上点个 Star，让更多人看到它。',
+  'If Nova Bots helps you, a star on GitHub helps more people find it.': '如果 Nova Bots 对你有用，欢迎在 GitHub 上点个 Star，让更多人看到它。',
   Updates: '更新',
   'Check for updates': '检查更新',
   'Checking…': '正在检查…',
@@ -925,7 +925,7 @@ const ZH = {
   '{version} is available': '{version} 已发布',
   'Installed from a local folder; update it there.': '从本地文件夹安装，请在那里更新。',
   'Updates are not offered for this install.': '这种安装方式不提供更新。',
-  'Updates come with the DS Bot app.': '随 DS Bot 应用一起更新。',
+  'Updates come with the Nova Bots app.': '随 Nova Bots 应用一起更新。',
   Links: '链接',
   'Source code': '源代码',
   'Release notes': '发布说明',
@@ -941,7 +941,7 @@ const ZH = {
   Show: '查看',
   Hide: '收起',
   'GitHub issue': 'GitHub issue',
-  'Opens a new issue in the DS Bot repository with all of this filled in. Nothing is sent until you submit it there.': '在 DS Bot 仓库新建一个 issue，并填好以上内容。你在 GitHub 上提交之前，什么都不会发出。',
+  'Opens a new issue in the Nova Bots repository with all of this filled in. Nothing is sent until you submit it there.': '在 Nova Bots 仓库新建一个 issue，并填好以上内容。你在 GitHub 上提交之前，什么都不会发出。',
   'Report on GitHub': '在 GitHub 上报告',
   'Copied the diagnostics.': '已复制诊断信息。',
   'Could not copy. Select the text below and copy it.': '无法复制。请选中下面的文字手动复制。',
@@ -953,14 +953,14 @@ const ZH = {
   'Recent errors': '最近的错误',
   'Recent errors · {count}': '最近的错误 · {count}',
   'No errors recorded.': '没有错误记录。',
-  'Failed model calls and DS Bot problems show here, newest first.': '模型调用失败和 DS Bot 的问题会显示在这里，最新的在前。',
+  'Failed model calls and Nova Bots problems show here, newest first.': '模型调用失败和 Nova Bots 的问题会显示在这里，最新的在前。',
   'Model call': '模型调用',
   'This window': '这个窗口',
   'Error log': '错误日志',
   'Kept on this computer across restarts, up to about 1 MB.': '保存在这台电脑上，重启后仍在，最多约 1 MB。',
   Clear: '清空',
   'Settings → Feedback has the details.': '详情见 设置 → 反馈。',
-  'Could not reach DSH. Check that it is still running.': '连不上 DSH，请确认它还在运行。',
+  'Could not reach Nova. Check that it is still running.': '连不上 Nova，请确认它还在运行。',
   '{name} could not answer: {reason}': '{name} 没能回答：{reason}',
   'Unknown error': '未知错误',
   'The API key was rejected': 'API 密钥无效',
@@ -1021,13 +1021,13 @@ const ZH = {
   'How many': '数量',
   Unit: '单位',
   'Create task': '创建任务',
-  'Turn on Automation tasks in DSH': '在 DSH 里打开「自动化任务」',
-  'Switch on Automation tasks on the Plugins page in Harness settings.': '在 Harness 设置的插件页启用「自动化任务」。',
-  'Open Harness settings': '打开 Harness 设置',
+  'Turn on Automation tasks in Nova': '在 Nova 里打开「自动化任务」',
+  'Switch on Automation tasks on the Plugins page in Nova settings.': '在 Nova 设置的插件页启用「自动化任务」。',
+  'Open Nova settings': '打开 Nova 设置',
   'New task': '新建任务',
   'No scheduled tasks yet.': '还没有定时任务。',
   'No scheduled tasks yet. Add one': '还没有定时任务，去添加',
-  'Automation tasks are off in DSH': 'DSH 的「自动化任务」没有打开',
+  'Automation tasks are off in Nova': 'Nova 的「自动化任务」没有打开',
   'No such Bot': '没有这个 Bot',
   'No such Bot or group chat': '没有这个 Bot 或群聊',
   'Give the task a name': '给任务起个名字',
@@ -1076,11 +1076,11 @@ const ZH = {
 // interface shows them. Static ones go through ZH, these carry names or numbers.
 const HOST_ERRORS = [
   [/^Model (.+) is not available\. Available: (.*)$/, '模型 $1 不可用。可用的：$2'],
-  [/^The API key for (.+) is set outside DS Bot and cannot be changed here$/, '$1 的 API key 是在 DS Bot 之外设置的，这里改不了'],
+  [/^The API key for (.+) is set outside Nova Bots and cannot be changed here$/, '$1 的 API key 是在 Nova Bots 之外设置的，这里改不了'],
   [/^(.+) takes no API key here$/, '$1 不能在这里填 API key'],
   [/^(.+) is already set up$/, '$1 已经设置过了'],
-  [/^DSH offers no provider (.+)$/, 'DSH 没有服务商 $1'],
-  [/^DSH already offers (.+); add it from its list$/, 'DSH 已经提供 $1，请在常用服务商里添加'],
+  [/^Nova offers no provider (.+)$/, 'Nova 没有服务商 $1'],
+  [/^Nova already offers (.+); add it from its list$/, 'Nova 已经提供 $1，请在常用服务商里添加'],
   [/^The protocol must be one of (.+)$/, '协议只能是 $1'],
   [/^(.+) is not set up$/, '$1 还没有设置'],
   [/^(.+) comes with this setup and cannot be removed$/, '$1 是这个配置自带的，不能删除'],
@@ -1095,7 +1095,7 @@ const HOST_ERRORS = [
   [/^A key must have at least (\d+) characters$/, '密钥至少 $1 个字符'],
   [/^A key can have at most (\d+) characters$/, '密钥最多 $1 个字符'],
   [/^(.+) is not saved yet$/, '$1 还没有保存'],
-  [/^The Bot team in (.+) is open in another dsh \((.+)\)\. This window shows the team but cannot change it; close the other one and reload\.$/, '$1 里的 Bot 团队已在另一个 dsh 中打开（$2）。这个窗口只能查看，不能修改；关掉另一个后刷新。'],
+  [/^The Bot team in (.+) is open in another Nova instance \((.+)\)\. This window shows the team but cannot change it; close the other one and reload\.$/, '$1 里的 Bot 团队已在另一个 Nova 实例 中打开（$2）。这个窗口只能查看，不能修改；关掉另一个后刷新。'],
   [/^HTTP (\d+)$/, '请求失败（HTTP $1）'],
   [/^GitHub answered (\d+)$/, 'GitHub 返回了 $1'],
   [/^Keep the name under (\d+) characters$/, '名字不能超过 $1 个字'],
@@ -1105,7 +1105,7 @@ const HOST_ERRORS = [
   [/^The avatar image is too large: .+$/, '头像图片太大了'],
   [/^There is no folder at (.+)$/, '找不到文件夹 $1'],
   [/^(.+) is a file, not a folder$/, '$1 是文件，不是文件夹'],
-  [/^(.+) holds DeepSeek Harness data, so Bots cannot work there$/, '$1 里有 DeepSeek Harness 的数据，Bot 不能在这里工作'],
+  [/^(.+) holds Nova Bots data, so Bots cannot work there$/, '$1 里有 Nova Bots 的数据，Bot 不能在这里工作'],
   [/^(.+) needs a folder of its own to be private$/, '$1 需要有自己的工作文件夹，才能设为隐私 Bot'],
   [/^(.+) is a Main Bot, so it cannot be private$/, '$1 是主 Bot，不能设为隐私 Bot'],
   [/^(.+) is in a group chat, where every member reads what is said\. Remove it from its groups first$/, '$1 还在群聊里，群成员都能看到群里的内容。请先把它移出群聊'],
@@ -1126,11 +1126,11 @@ const HOST_ERRORS = [
   [/^There is no entry (.+)\.$/, '没有第 $1 条'],
   [/^No entry in [\s\S]* matches "([\s\S]*)"\.[\s\S]*$/, '找不到「$1」这条记忆'],
   [/^"([\s\S]*)" matches (\d+) entries in [\s\S]*$/, '「$1」对应了 $2 条记忆，请说得更具体'],
-  [/^Memory cannot change now: [\s\S]*$/, '现在不能修改记忆：另一个 dsh 正在使用这个 Bot 团队'],
+  [/^Memory cannot change now: [\s\S]*$/, '现在不能修改记忆：另一个 Nova 实例 正在使用这个 Bot 团队'],
 ]
 const HOST_ZH = {
   'Request failed': '请求失败',
-  'Permissions are not available in this DeepSeek Harness': '这个 DeepSeek Harness 不支持权限设置',
+  'Permissions are not available in this Nova Bots': '这个 Nova Bots 不支持权限设置',
   'Avatar images must be PNG, JPEG, WebP, or GIF': '头像图片必须是 PNG、JPEG、WebP 或 GIF',
   'Avatar image is too large': '头像图片太大了',
   'A Bot needs a name': 'Bot 需要一个名字',
@@ -1156,12 +1156,12 @@ const HOST_ZH = {
   'A name uses capitals, digits, and underscores, and starts with a letter': '名字只能用大写字母、数字和下划线，并以字母开头',
   'No such key': '没有这个密钥',
   'Type a question or a change first': '请先输入问题或要改的内容',
-  'No model is available. Add one in Harness settings.': '没有可用的模型，请先在 Harness 设置里添加模型。',
+  'No model is available. Add one in Nova settings.': '没有可用的模型，请先在 Nova 设置里添加模型。',
   'Memory is turned off on this host': '这台主机关闭了记忆功能',
   'The model wrote nothing': '模型没有输出内容',
   'Write the entry to save.': '请写下要保存的内容。',
-  'This DeepSeek Harness has no folder chooser': '这个 DeepSeek Harness 没有文件夹选择窗口',
-  'This DeepSeek Harness cannot list folders': '这个 DeepSeek Harness 不能列出文件夹',
+  'This Nova Bots has no folder chooser': '这个 Nova Bots 没有文件夹选择窗口',
+  'This Nova Bots cannot list folders': '这个 Nova Bots 不能列出文件夹',
   "Side chat is only available in a Bot's private chat.": '侧边对话只在 Bot 的私聊里可用。',
   'Write a question.': '写上问题。',
   'Write a question after /side.': '在 /side 后面写上问题。',
@@ -1170,14 +1170,14 @@ const HOST_ZH = {
   'This side chat is no longer here.': '这个侧边对话已经不在了。',
   'This side question is no longer here.': '这个侧边提问已经不在了。',
   'This Bot has not called a model yet. Send a normal message first.': '这个 Bot 还没有调用过模型，请先正常发一条消息。',
-  'DS Bot restarted before this answer finished.': 'DS Bot 在回答完成前重启了。',
+  'Nova Bots restarted before this answer finished.': 'Nova Bots 在回答完成前重启了。',
   'The model called a tool again after being told not to, so this aside was not answered.': '模型在被要求不要调用工具之后又调用了工具，所以这次没有回答。',
   'The model wrote nothing.': '模型没有写任何内容。',
   'Nothing to ask': '没有要问的内容',
   'Nothing to open': '没有要打开的内容',
   'Nothing to cancel': '没有要取消的内容',
   'Nothing to close': '没有要关闭的内容',
-  'DS Bot is still loading this chat.': 'DS Bot 还在加载这个对话。',
+  'Nova Bots is still loading this chat.': 'Nova Bots 还在加载这个对话。',
 }
 Object.assign(ZH, HOST_ZH)
 
@@ -1188,7 +1188,7 @@ const fill = (text, params) => (params
 let service = null
 let bound = null
 
-// `locale` is the DSH locale service; without one, copy stays English.
+// `locale` is the Nova locale service; without one, copy stays English.
 export function installLocale(locale) {
   if (!locale || typeof locale.register !== 'function' || typeof locale.bind !== 'function') return () => {}
   service = locale
@@ -1200,21 +1200,41 @@ export function installLocale(locale) {
   }
 }
 
+// One brand pass over every string the interface renders, wherever it came from:
+// plugin copy, engine copy, host errors, model and provider labels. Longest names
+// first, so "DeepSeek Harness" becomes "Nova Bots" rather than "Nova Nova".
+const BRAND = [
+  [/DeepSeek Harness/g, 'Nova Bots'],
+  [/\bDS Bot's\b/g, "Nova Bots'"],
+  [/\bDS Bot\b/g, 'Nova Bots'],
+  [/\bDSH Desktop\b/g, 'Nova Desktop'],
+  [/\bDSH Web\b/g, 'Nova Web'],
+  [/\bDSH's\b/g, "Nova's"],
+  [/\bDSH\b/g, 'Nova'],
+  [/DeepSeek's/g, "Nova's"],
+  [/DeepSeek/g, 'Nova'],
+  [/\bHarness's\b/g, "Nova's"],
+  [/\bHarness\b/g, 'Nova'],
+]
+export const brand = text => (typeof text === 'string'
+  ? BRAND.reduce((out, [pattern, name]) => out.replace(pattern, name), text)
+  : text)
+
 export function t(key, params) {
-  return bound ? bound(key, params) : fill(key, params)
+  return brand(bound ? bound(key, params) : fill(key, params))
 }
 
 // A message from the host, in the interface language.
 export function hostText(message) {
-  if (!language().startsWith('zh')) return message
+  if (!language().startsWith('zh')) return brand(message)
   if (Object.hasOwn(ZH, message)) return t(message)
   for (const [pattern, template] of HOST_ERRORS) {
-    if (pattern.test(message)) return message.replace(pattern, template)
+    if (pattern.test(message)) return brand(message.replace(pattern, template))
   }
-  return message
+  return brand(message)
 }
 
-// The active DSH language tag, for dates and times.
+// The active Nova language tag, for dates and times.
 export function language() {
   const active = service?.getLocale?.().active
   return typeof active === 'string' ? active : 'en'

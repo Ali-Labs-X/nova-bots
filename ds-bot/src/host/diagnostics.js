@@ -1,5 +1,5 @@
 // Diagnostics: what went wrong on this host, kept where the user can see it and report it.
-// DSH mounts no exporter for ctx.logger once it has started, so warnings would otherwise
+// Nova mounts no exporter for ctx.logger once it has started, so warnings would otherwise
 // reach only stderr. Entries are kept in memory and in <home>/logs/diagnostics.jsonl, so
 // a report written after a restart still has them. Every text is cleaned of saved keys,
 // credential-like strings and the home folder before it is kept and again before it is
@@ -16,7 +16,7 @@ const LOG_MAX_BYTES = 1 << 20
 const STACK_LINES = 8
 const TEXT_MAX = 2000
 export const REPORT_ENTRIES = 20
-export const ISSUES_URL = 'https://github.com/Fei2411/DS-Bot/issues/new'
+export const ISSUES_URL = ''
 
 const quote = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
@@ -66,8 +66,8 @@ export function reportMarkdown({ facts, client = {}, entries = [], clientEntries
   const lines = [
     '| | |',
     '|---|---|',
-    row('DS Bot', facts.botVersion),
-    row('DSH', facts.dshVersion),
+    row('Nova Bots', facts.botVersion),
+    row('Nova', facts.dshVersion),
     row('Surface', client.surface),
     row('OS', facts.os),
     row('Node', facts.node),
@@ -97,7 +97,7 @@ const ownVersion = () => {
   }
 }
 
-// DSH packages share one version; the LLM package is always beside the plugin.
+// Nova packages share one version; the LLM package is always beside the plugin.
 const dshVersion = () => {
   try {
     let dir = dirname(fileURLToPath(import.meta.resolve('@deepseek-ai/dsh-llm')))
@@ -125,7 +125,7 @@ export function install(rt) {
   ctx.effect(() => () => {
     stopped = true
     return writing
-  }, 'ds-bot: diagnostics log')
+  }, 'Nova Bots: diagnostics log')
 
   const clean = text => cleanText(text, { redact: rt.redactSecrets })
 
@@ -152,7 +152,7 @@ export function install(rt) {
     }).catch((error) => {
       if (fileFailed) return
       fileFailed = true
-      console.error('[ds-bot] diagnostics log not written:', error?.code ?? clean(error?.message ?? String(error)))
+      console.error('[Nova Bots] diagnostics log not written:', error?.code ?? clean(error?.message ?? String(error)))
     })
   }
 
@@ -176,11 +176,11 @@ export function install(rt) {
     const line = clean(format(template, ...args.map(arg => (arg instanceof Error ? errorText(arg) : arg))))
     const frames = typeof error?.stack === 'string' ? error.stack.split('\n').filter(item => /^\s+at /.test(item)).slice(0, STACK_LINES).map(item => item.trim()) : []
     ctx.logger.warn('%s', line)
-    console.error(`[ds-bot] ${line}${frames.length > 0 ? `\n${clean(frames.join('\n'))}` : ''}`)
+    console.error(`[Nova Bots] ${line}${frames.length > 0 ? `\n${clean(frames.join('\n'))}` : ''}`)
     note({
       level: 'warn',
       source: 'host',
-      text: line.replace(/^ds-bot: /, ''),
+      text: line.replace(/^(?:Nova Bots|nova|ds-bot): /, ''),
       code: typeof error?.code === 'string' ? error.code : undefined,
       stack: error?.stack,
     })
@@ -207,7 +207,7 @@ export function install(rt) {
       node: process.version,
       team: `${count(bots.length, 'Bot', 'Bots')}, ${rt.state.mainBotIds.length} Main, ${count(groups, 'group chat', 'group chats')}`,
       models: models.length > 0 ? models.join(', ') : undefined,
-      readOnly: rt.readOnly?.() ? 'yes, another dsh holds the team' : undefined,
+      readOnly: rt.readOnly?.() ? 'yes, another Nova instance holds the team' : undefined,
     }
   }
 

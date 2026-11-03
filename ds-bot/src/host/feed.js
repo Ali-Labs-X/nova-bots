@@ -99,7 +99,7 @@ export function install(rt) {
       request.signal.addEventListener('abort', () => leave(controller), { once: true })
       return new Response(body, { status: 200, headers: { 'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-store' } })
     },
-  }), 'ds-bot: live feed route')
+  }), 'Nova Bots: live feed route')
 
   ctx.effect(() => {
     const keepalive = setInterval(() => {
@@ -111,5 +111,5 @@ export function install(rt) {
       clearTimeout(liveTimer)
       for (const controller of clients) leave(controller)
     }
-  }, 'ds-bot: live feed')
+  }, 'Nova Bots: live feed')
 }

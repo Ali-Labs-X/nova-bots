@@ -113,10 +113,10 @@ test('a saved API key goes to the provider\'s reference and frees its models', a
   await assert.rejects(rt.setProviderKey('deepseek-account', 'sk-test'), /deepseek-account takes no API key here/)
 })
 
-test('a key set outside DS Bot is not overwritten or removed', async () => {
+test('a key set outside Nova Bots is not overwritten or removed', async () => {
   const { rt, writes } = dsh({ keys: { DEEPSEEK_API_KEY: 'k' }, readOnly: ['DEEPSEEK_API_KEY'] })
-  await assert.rejects(rt.setProviderKey('deepseek-official', 'sk-test'), /set outside DS Bot/)
-  await assert.rejects(rt.clearProviderKey('deepseek-official'), /set outside DS Bot/)
+  await assert.rejects(rt.setProviderKey('deepseek-official', 'sk-test'), /set outside Nova Bots/)
+  await assert.rejects(rt.clearProviderKey('deepseek-official'), /set outside Nova Bots/)
   assert.deepEqual(writes, [])
   assert.deepEqual(row(await rt.providersView(), 'deepseek-official').key, { configured: true, writable: false })
 })
@@ -130,7 +130,7 @@ test('a provider from DSH\'s list goes in with the key DSH\'s own page would nam
   assert.equal(view.addable.some(entry => entry.id === 'moonshotai'), false)
   await assert.rejects(rt.addProvider({ provider: 'moonshotai', key: 'sk-kimi' }), /moonshotai is already set up/)
   await assert.rejects(rt.addProvider({ provider: 'deepseek-official' }), /already set up/)
-  await assert.rejects(rt.addProvider({ provider: 'nowhere' }), /DSH offers no provider nowhere/)
+  await assert.rejects(rt.addProvider({ provider: 'nowhere' }), /Nova offers no provider nowhere/)
 })
 
 test('a blank key keeps a key that is already there, else leaves the route without one', async () => {
@@ -159,7 +159,7 @@ test('a custom API is refused before anything is written when it cannot serve', 
   const { rt, writes } = dsh()
   const custom = { custom: true, provider: 'relay', api: 'openai-completions', baseURL: 'https://relay.example/v1', models: ['m'] }
   await assert.rejects(rt.addProvider({ ...custom, provider: 'My Relay' }), /lowercase letters, digits and dashes/)
-  await assert.rejects(rt.addProvider({ ...custom, provider: 'anthropic' }), /DSH already offers anthropic/)
+  await assert.rejects(rt.addProvider({ ...custom, provider: 'anthropic' }), /Nova already offers anthropic/)
   await assert.rejects(rt.addProvider({ ...custom, api: 'grpc' }), /protocol must be one of/)
   await assert.rejects(rt.addProvider({ ...custom, baseURL: 'relay.example' }), /http or https/)
   await assert.rejects(rt.addProvider({ ...custom, baseURL: 'ftp://relay.example' }), /http or https/)

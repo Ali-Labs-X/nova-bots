@@ -1,7 +1,7 @@
 // In a Bot's private chat a user steer must reach the Bot at once, not at the
-// next DSH step boundary. Two mechanisms:
+// next Nova step boundary. Two mechanisms:
 //  - a foreground shell call detaches into the jobs registry on a steer and
-//    returns DSH's promoted result, so the step ends while the command runs on;
+//    returns Nova's promoted result, so the step ends while the command runs on;
 //  - a running model call is cancelled (hook reason) and the steer is moved to
 //    the front of next-turn, so a fresh turn claims it at once.
 import { isAbsolute, resolve } from 'node:path'
@@ -17,7 +17,7 @@ export function install(rt) {
   const attachJobs = (sub) => {
     const own = sub.jobs
     jobs = own
-    sub.effect(() => () => { if (jobs === own) jobs = undefined }, 'ds-bot: jobs service')
+    sub.effect(() => () => { if (jobs === own) jobs = undefined }, 'Nova Bots: jobs service')
   }
   if (typeof ctx.inject === 'function') ctx.inject(['jobs'], attachJobs)
   else if (ctx.get?.('jobs') !== undefined) attachJobs({ jobs: ctx.get('jobs'), effect: (execute, label) => ctx.effect(execute, label) })
@@ -78,8 +78,8 @@ export function install(rt) {
 
   const noticeOf = (name, command, text) => createUserMessage({
     content: [{ type: 'text', text }],
-    // Same source as DSH's job-completion notice so every chat renders it the
-    // same way, and DS Bot's routing ignores it.
+    // Same source as Nova's job-completion notice so every chat renders it the
+    // same way, and Nova Bots' routing ignores it.
     source: { kind: 'tool-jobs', form: 'notice', summary: boundContextSummary(`${name} ${command} …`) },
   })
 
@@ -128,7 +128,7 @@ export function install(rt) {
       || promoted?.properties?.timeoutMs === undefined || promoted?.properties?.output === undefined) {
       if (!formatWarned.has(name)) {
         formatWarned.add(name)
-        rt.warn('ds-bot: %s has no promoted result format; its calls keep the step boundary', name)
+        rt.warn('%s has no promoted result format; its calls keep the step boundary', name)
       }
       return
     }
@@ -207,7 +207,7 @@ export function install(rt) {
         const lift = shadowShell(agent, name)
         if (typeof lift === 'function') disposers.push(lift)
       } catch (error) {
-        rt.warn('ds-bot: shadowing %s failed: %s', name, error)
+        rt.warn('shadowing %s failed: %s', name, error)
       }
     }
     return disposers

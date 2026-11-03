@@ -1,4 +1,4 @@
-// Bot browsers in DSH Desktop and the desktop app: per Bot, a tab strip of pages. Each tab
+// Bot browsers in Nova Desktop and the desktop app: per Bot, a tab strip of pages. Each tab
 // is one Electron webview in the Bot's own storage partition (`browser.acquire('bot:<id>')`
 // on either one's bridge — the same key always yields the same partition, so cookies and logins
 // never cross Bots while a Bot may hold several pages). Moving a webview to another
@@ -343,7 +343,7 @@ export function createBotBrowsers({ bridge, createSource, storage = globalThis.l
       // job resolves undefined instead of rejecting, so no caller drops one.
       job = create(tabId)
         .catch((error) => {
-          console.warn('[ds-bot] browser acquire', error)
+          console.warn('[nova] browser acquire', error)
           publish(tabId, { loading: false, error: String(error?.message ?? error) })
           return undefined
         })
@@ -371,7 +371,7 @@ export function createBotBrowsers({ bridge, createSource, storage = globalThis.l
     entry.stop()
     entry.element.remove()
     publish(tabId, { live: false, loading: false })
-    await bridge.release(entry.lease).catch(error => console.warn('[ds-bot] browser release', error))
+    await bridge.release(entry.lease).catch(error => console.warn('[nova] browser release', error))
   }
 
   function openTab(botId, url) {
@@ -499,7 +499,7 @@ export function createBotBrowsers({ bridge, createSource, storage = globalThis.l
     save(botId, undefined)
     seen.delete(botId)
     // The desktop app keeps a Bot's logins on disk; they go with the Bot.
-    await bridge.forget?.(`bot:${botId}`)?.catch(error => console.warn('[ds-bot] browser forget', error))
+    await bridge.forget?.(`bot:${botId}`)?.catch(error => console.warn('[nova] browser forget', error))
   }
 
   return {
@@ -608,7 +608,7 @@ export function serveBrowserReads({ browsers, post, clientId = globalThis.crypto
       answered.set(id, job)
       if (answered.size > 200) answered.delete(answered.keys().next().value)
     }
-    await post('browser-result', await job).catch(error => console.warn('[ds-bot] browser result', error))
+    await post('browser-result', await job).catch(error => console.warn('[nova] browser result', error))
   }
   const loop = async () => {
     let failures = 0

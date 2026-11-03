@@ -1,7 +1,7 @@
 // Reconcile #128: turning off `web-search-auto` does not undo the `web` row's
-// `searchProvider: auto`, which DS Bot's own patch selects for the profile — every
+// `searchProvider: auto`, which the Bot team's own patch selects for the profile — every
 // search then fails with WEB_PROVIDER_CONFIGURED_MISSING. When the app's own bundles
-// configured the selector before ds-bot arrived, restore that selection through a
+// configured the selector before the Bot team arrived, restore that selection through a
 // `--patch` overlay the app writes into its own data area next to the profiles
 // (`<DSH_HOME>/profiles/search-selector.patch.yml`): DSH reads it only through
 // `patchFiles` and nothing scans this location, so it cannot rewrite the profile or
@@ -26,8 +26,8 @@ export function searchSelectorPatch(profile) {
   if (entries.find(entry => entry.id === 'web-search-auto')?.disabled !== true) return undefined
   const web = entries.find(entry => entry.id === 'web')
   if (web?.config?.searchProvider !== 'auto') return undefined
-  // The web row as it composes from the bundles alone, before ds-bot's selection.
-  const base = layers.filter(({ packageName }) => packageName !== 'ds-bot')
+  // The web row as it composes from the bundles alone, before the Bot team's selection.
+  const base = layers.filter(({ packageName }) => packageName !== 'nova-bots')
   const original = composeEntries(base.map(layer => layer.patches)).find(entry => entry.id === 'web')
   if (original?.config?.searchProvider === undefined || original.config.searchProvider === 'auto') return undefined
   return [{ id: 'web', name: original.name, config: original.config }]

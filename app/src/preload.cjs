@@ -7,7 +7,7 @@ const { contextBridge, ipcRenderer } = require('electron')
 
 const host = process.argv.find(value => value.startsWith('--ds-bot-origin='))?.slice('--ds-bot-origin='.length)
 if (host !== undefined && location.origin === host) {
-  // DS Bot's settings show and move the app's data location through this.
+  // Nova Bots' settings show and move the app's data location through this.
   contextBridge.exposeInMainWorld('dsBotApp', {
     dataLocation: () => ipcRenderer.invoke('ds-bot:data-location'),
     moveData: (workspace) => ipcRenderer.invoke('ds-bot:move-data', typeof workspace === 'string' ? workspace : undefined),
@@ -38,13 +38,13 @@ function browserBridge() {
   const viewListeners = new Set()
   ipcRenderer.on('ds-bot:browser-view-changed', (_event, change) => {
     for (const listener of [...viewListeners]) {
-      try { listener(change) } catch (error) { console.error('DS Bot: a browser view listener failed', error) }
+      try { listener(change) } catch (error) { console.error('Nova Bots: a browser view listener failed', error) }
     }
   })
   ipcRenderer.on('ds-bot:browser-open-requested', (_event, request) => {
     if (typeof request?.lease !== 'string' || typeof request.url !== 'string') return
     for (const listener of [...(listeners.get(request.lease) ?? [])]) {
-      try { listener(request.url) } catch (error) { console.error('DS Bot: a browser link handler failed', error) }
+      try { listener(request.url) } catch (error) { console.error('Nova Bots: a browser link handler failed', error) }
     }
   })
   return {
@@ -86,7 +86,7 @@ function updatesBridge() {
   const listeners = new Set()
   ipcRenderer.on('ds-bot:app-update-changed', (_event, state) => {
     for (const listener of [...listeners]) {
-      try { listener(state) } catch (error) { console.error('DS Bot: an update state handler failed', error) }
+      try { listener(state) } catch (error) { console.error('Nova Bots: an update state handler failed', error) }
     }
   })
   return {

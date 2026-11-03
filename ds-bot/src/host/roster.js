@@ -44,10 +44,10 @@ export function install(rt) {
 
   let bootstrapping = null
 
-  // The team folder is DS Bot's own: deleted, it is made again before a Session needs it.
+  // The team folder is Nova Bots' own: deleted, it is made again before a Session needs it.
   async function keepTeamFolder() {
     const team = rt.teamFolder()
-    if (team !== undefined) await mkdir(team, { recursive: true }).catch(error => rt.warn('ds-bot: team folder %s not made again: %s', team, error))
+    if (team !== undefined) await mkdir(team, { recursive: true }).catch(error => rt.warn('team folder %s not made again: %s', team, error))
     return team
   }
 
@@ -58,13 +58,13 @@ export function install(rt) {
     }
     const path = rt.defaultTeamFolder()
     await mkdir(path, { recursive: true })
-    const workspace = await ctx.workspaceRegistry.resolveByPath(path) ?? await ctx.workspaceRegistry.create(path, 'DS Bot')
+    const workspace = await ctx.workspaceRegistry.resolveByPath(path) ?? await ctx.workspaceRegistry.create(path, 'Nova Bots')
     state.workspaceId = workspace.id
     await rt.save()
     return workspace.id
   }
 
-  // Under the PTC preset (DSH Desktop's default) a model may call only run_code, which
+  // Under the PTC preset (Nova Desktop's default) a model may call only run_code, which
   // turns down the group_relay call that a group chat's Session is given. A Session
   // keeps the preset it is made with.
   async function botPreset() {
@@ -75,7 +75,7 @@ export function install(rt) {
   }
 
   // `dir` is a working folder outside the team workspace. Such a Session is made by cwd
-  // alone, so it joins no DSH workspace and the user's own project lists stay as they are —
+  // alone, so it joins no Nova workspace and the user's own project lists stay as they are —
   // unless the folder is already registered as a workspace, which it then joins (#710).
   async function createSession(title, { dir } = {}) {
     // A Bot's tools run here too; while another dsh holds the team, a new Session would
@@ -83,7 +83,7 @@ export function install(rt) {
     const readOnly = rt.readOnly()
     if (readOnly !== undefined) throw new Error(readOnly)
     const usable = dir !== undefined && await rt.isFolder(dir)
-    if (dir !== undefined && !usable) rt.warn('ds-bot: the working folder %s is gone; %s starts in the team workspace', dir, title)
+    if (dir !== undefined && !usable) rt.warn('the working folder %s is gone; %s starts in the team workspace', dir, title)
     const known = usable ? await ctx.workspaceRegistry.resolveByPath(dir) : undefined
     const place = known !== undefined ? { workspaceId: known.id } : usable ? { cwd: dir } : { workspaceId: await ensureWorkspace() }
     const { sessionId } = await ctx.sessionController.create({ ...place, ...await botPreset() })
@@ -141,7 +141,7 @@ export function install(rt) {
 
   async function buildBot(cleanName, { role = '', instructions = '', color, brief = '', createdBy, main = false, avatar, model, effort, workDir, copyOf, pickModel = false }) {
     const cleanAvatarValue = cleanAvatar(avatar)
-    // The model is fixed at creation, so a later change of the DSH default leaves it alone.
+    // The model is fixed at creation, so a later change of the Nova default leaves it alone.
     const modelRef = model ? await rt.resolveModel(model) : pickModel ? undefined : await rt.defaultModel()
     // A thinking level needs a model to resolve against; with none it would be dropped
     // silently, so the create fails before a Session is made.
@@ -191,7 +191,7 @@ export function install(rt) {
       const bot = state.bots[id]
       // The Bot is saved by now; a failure here must not archive it in the catch below.
       const scopeTools = () => rt.resolveAgent(id)
-        .catch(error => rt.warn('ds-bot: scoped tools for %s not applied: %s', cleanName, error))
+        .catch(error => rt.warn('scoped tools for %s not applied: %s', cleanName, error))
       if (modelRef === undefined) {
         bot.kickoff = { text, from: createdBy ?? null, ...(main ? { main: true } : {}) }
         await rt.save()
@@ -203,7 +203,7 @@ export function install(rt) {
       await scopeTools()
       // The greeting runs on the Bot's own model, once its provider is registered.
       void rt.waitForModel(bot)
-        .then(() => rt.applyModel(bot).catch(error => rt.warn('ds-bot: model for %s not applied: %s', cleanName, error)))
+        .then(() => rt.applyModel(bot).catch(error => rt.warn('model for %s not applied: %s', cleanName, error)))
         .then(() => sendKickoff(bot, { text, from: createdBy }))
       return bot
     } catch (error) {
@@ -215,14 +215,14 @@ export function install(rt) {
       // one writes the team without it.
       void rt.save().catch(() => {})
       await ctx.workspaceRegistry.archiveSession(id)
-        .catch(archiveError => rt.warn('ds-bot: archiving the Session for %s failed: %s', cleanName, archiveError))
+        .catch(archiveError => rt.warn('archiving the Session for %s failed: %s', cleanName, archiveError))
       throw error
     }
   }
 
   function sendKickoff(bot, { text, from }) {
     void rt.deliver({ fromId: from ?? undefined, toId: bot.id, text, role: 'kickoff' })
-      .catch(error => rt.warn('ds-bot: kickoff failed: %s', error))
+      .catch(error => rt.warn('kickoff failed: %s', error))
   }
 
   // The user wrote first, so the held greeting would only interrupt.
@@ -351,7 +351,7 @@ export function install(rt) {
     const selfEditInChat = actorId === bot.id && fromSessionId === rt.chatOf(bot.id)
     if (notes.length > 0 && bot.kickoff === undefined && !selfEditInChat) {
       void rt.deliver({ toId: bot.id, text: notes.join('\n'), role: 'update' })
-        .catch(error => rt.warn('ds-bot: profile update for %s not delivered: %s', bot.name, error?.message ?? error))
+        .catch(error => rt.warn('profile update for %s not delivered: %s', bot.name, error?.message ?? error))
     }
     if (modelChanged) await rt.applyModel(bot, { force: true })
     if (moved) void rt.followFolder({ botId: bot.id })
@@ -397,7 +397,7 @@ export function install(rt) {
       const agent = await rt.resolveAgent(rt.sessionOfRoom(room))
       await ctx.sessionTitle.rename(agent.session, room.name)
     } catch (error) {
-      rt.warn('ds-bot: group title for %s not updated: %s', room.name, error)
+      rt.warn('group title for %s not updated: %s', room.name, error)
     }
   }
 
@@ -466,7 +466,7 @@ export function install(rt) {
       delete state.rooms[id]
       void rt.save().catch(() => {})
       await ctx.workspaceRegistry.archiveSession(id)
-        .catch(archiveError => rt.warn('ds-bot: archiving the Session for %s failed: %s', title, archiveError))
+        .catch(archiveError => rt.warn('archiving the Session for %s failed: %s', title, archiveError))
       throw error
     }
   }
@@ -594,7 +594,7 @@ export function install(rt) {
     // Armed scheduled tasks refuse a plain archive and would keep delivering into
     // the deleted group; the session-stop that stopActivity runs removes them.
     await ctx.workspaceRegistry.archiveSession(rt.sessionOfRoom(room), { stopActivity: true })
-      .catch(error => rt.warn('ds-bot: group chat %s not archived: %s', room.name, error))
+      .catch(error => rt.warn('group chat %s not archived: %s', room.name, error))
     if (failed !== undefined) throw failed
   }
 
@@ -682,7 +682,7 @@ export function install(rt) {
     // which otherwise stays armed and invisible. Already-archived ids are a no-op.
     for (const part of parts) {
       await ctx.workspaceRegistry.archiveSession(part, { stopActivity: true })
-        .catch(error => rt.warn('ds-bot: Bot %s not archived: %s', bot.name, error))
+        .catch(error => rt.warn('Bot %s not archived: %s', bot.name, error))
     }
     if (failed !== undefined) throw failed
   }
@@ -705,9 +705,9 @@ export function install(rt) {
     await rt.load()
     void rt.syncModels()
     if (state.mainBotIds.some(id => rt.botOf(id))) return
-    // Only the team's first Main Bot is stored as the DeepSeek whale; other Bots get a
-    // look from their id, and a Bot made Main Bot later keeps its own.
-    bootstrapping ??= createBot({ name: defaults.mainName, role: defaults.mainRole, main: true, color: 'deepseek', avatar: { shape: 'whale' }, pickModel: true })
+    // Only the team's first Main Bot gets the Nova spark; other Bots get a look from
+    // their id, and a Bot made Main Bot later keeps its own.
+    bootstrapping ??= createBot({ name: defaults.mainName, role: defaults.mainRole, main: true, color: 'nova', avatar: { shape: 'nova' }, pickModel: true })
       .finally(() => { bootstrapping = null })
     await bootstrapping
   }

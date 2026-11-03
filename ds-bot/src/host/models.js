@@ -11,7 +11,7 @@ export function install(rt) {
 
   let modelsSynced = null
   let catalogCache = { at: 0, value: [] }
-  // Routes DSH serves that cannot answer a request at all — a hosted loop engine
+  // Routes Nova serves that cannot answer a request at all — a hosted loop engine
   // publishes one so its Sessions can be prompted. Once one refuses with
   // HOSTED_ENGINE_ROUTE it is remembered with the models its provider served then,
   // and nothing chooses it again until that provider serves different models.
@@ -51,7 +51,7 @@ export function install(rt) {
     return value
   }
 
-  // A provider's model list can change in DSH settings without any event, so a picker
+  // A provider's model list can change in Nova settings without any event, so a picker
   // that is about to be used asks for a `fresh` one. Entries for models a Bot uses
   // also carry their `reasoning`, so the picker can offer thinking levels.
   async function catalog({ fresh = false } = {}) {
@@ -71,7 +71,7 @@ export function install(rt) {
         })
       }
     }
-    // DSH serves a provider's models whether or not its key is set; without one, every
+    // Nova serves a provider's models whether or not its key is set; without one, every
     // turn on them fails.
     const missing = await rt.missingKeys?.([...new Set(entries.map(entry => entry.provider))]) ?? new Set()
     for (const entry of entries) if (missing.has(entry.provider)) entry.needsKey = true
@@ -84,14 +84,14 @@ export function install(rt) {
     return answerable(entries)
   }
 
-  // The profile default model of DSH as set, served or not, and able to answer.
+  // The profile default model of Nova as set, served or not, and able to answer.
   const defaultRef = () => {
     const selection = ctx.get?.('agentDefaultModel')?.currentSelection?.()
     if (!selection?.provider || !selection?.model) return undefined
     const ref = `${selection.provider}/${selection.model}`
     return refused.has(ref) ? undefined : ref
   }
-  // The profile default model of DSH, when it is served; else the first served model.
+  // The profile default model of Nova, when it is served; else the first served model.
   function pickDefault(entries) {
     const ref = defaultRef()
     const list = answerable(entries)
@@ -154,7 +154,7 @@ export function install(rt) {
     return resolveEffort(ref, wanted).catch(() => undefined)
   }
 
-  // DSH's selectModel also saves the selection as the profile default model, in the
+  // Nova's selectModel also saves the selection as the profile default model, in the
   // background. A Bot's model is its own, so the user's default is written back after
   // it. Selections run one at a time and wait for the write-back: profile writes land in
   // submission order, so the next one reads the user's default, not a Bot's.
@@ -172,7 +172,7 @@ export function install(rt) {
       })
       const saved = result?.selected ?? { provider, model, ...(reasoningEffort === undefined ? {} : { reasoningEffort }) }
       if (before?.provider && before?.model && !sameSelection(before, saved)) {
-        await defaults.saveSelection(before).catch(error => rt.warn('ds-bot: the default model was not restored: %s', error))
+        await defaults.saveSelection(before).catch(error => rt.warn('the default model was not restored: %s', error))
       }
       sessionSelections.set(sessionId, { provider, model, reasoningEffort })
       return result
@@ -196,7 +196,7 @@ export function install(rt) {
       const applied = sessionSelections.get(sessionId)
       if (!force && applied !== undefined && sameSelection(applied, route)) continue
       await selectSessionModel(sessionId, route)
-        .catch(error => rt.warn('ds-bot: model for %s in a group not applied: %s', bot.name, error))
+        .catch(error => rt.warn('model for %s in a group not applied: %s', bot.name, error))
     }
     if (!ownChanged) return ref
     bot.appliedModel = ref
@@ -233,7 +233,7 @@ export function install(rt) {
   }
   async function syncAll() {
     for (const bot of Object.values(state.bots)) {
-      await applyModel(bot).catch(error => rt.warn('ds-bot: model for %s not applied: %s', bot.name, error))
+      await applyModel(bot).catch(error => rt.warn('model for %s not applied: %s', bot.name, error))
     }
   }
 
@@ -245,7 +245,7 @@ export function install(rt) {
     const served = await servedModels(ref)
     if (!refused.has(ref)) {
       refused.set(ref, served)
-      rt.warn('ds-bot: %s is not a model endpoint, so it is not chosen again', ref)
+      rt.warn('%s is not a model endpoint, so it is not chosen again', ref)
       const entries = await catalog()
       const pinned = Object.values(state.bots).filter(other => other.model === ref || other.appliedModel === ref)
       for (const other of pinned) {
@@ -254,7 +254,7 @@ export function install(rt) {
       }
       await rt.save()
       for (const other of pinned) {
-        if (other !== bot) await applyModel(other, { force: true }).catch(error => rt.warn('ds-bot: model for %s not applied: %s', other.name, error))
+        if (other !== bot) await applyModel(other, { force: true }).catch(error => rt.warn('model for %s not applied: %s', other.name, error))
       }
     }
     if (bot !== undefined) await applyModel(bot, { force: true })

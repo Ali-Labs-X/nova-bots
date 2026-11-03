@@ -342,15 +342,15 @@ test('a window holding live state gets fresh fields after the host restarts at t
   assert.equal(quiet.activity, undefined)
 })
 
-test('a new team starts with a DeepSeek-blue whale as its Main Bot', async (t) => {
+test('a new team starts with the Nova spark as its Main Bot', async (t) => {
   const { call, stop } = start()
   t.after(stop)
   const team = (await call('state', {})).value
   assert.equal(team.mainBotIds.length, 1)
   const main = team.bots.find(bot => bot.id === team.mainBotId)
-  assert.equal(main.name, 'Chief')
-  assert.equal(main.color, 'deepseek')
-  assert.deepEqual(main.avatar, { shape: 'whale' })
+  assert.equal(main.name, 'Orion')
+  assert.equal(main.color, 'nova')
+  assert.deepEqual(main.avatar, { shape: 'nova' })
 
   // Other Bots keep no stored look, so the client picks one from the id.
   const writer = (await call('create-bot', { name: 'Writer', role: '写作' })).value
@@ -377,23 +377,36 @@ const OLD_TEAM = {
   questions: {},
 }
 
-test('a team from before the whale was stored gets it once, on its first Main Bot only', async (t) => {
+test('a team from before the Main Bot look was stored gets it once, on its first Main Bot only', async (t) => {
   const { call, stop, home } = start(OLD_TEAM)
   t.after(stop)
   const bots = async () => Object.fromEntries((await call('state', {})).value.bots.map(bot => [bot.id, bot]))
   let team = await bots()
-  // A color the user picked stays; the missing shape becomes the whale.
+  // A color the user picked stays; the missing shape becomes the Nova spark.
   assert.equal(team.m1.color, 'red')
-  assert.deepEqual(team.m1.avatar, { shape: 'whale' })
+  assert.deepEqual(team.m1.avatar, { shape: 'nova' })
   assert.equal(team.w2.avatar, undefined)
   assert.equal(JSON.parse(readFileSync(join(home, 'state.json'), 'utf8')).whaleStored, true)
 
-  // The whale is now an ordinary look: it does not pass on when its Bot is deleted.
+  // The Nova spark is now an ordinary look: it does not pass on when its Bot is deleted.
   assert.equal((await call('set-main', { id: 'm1', main: false })).ok, true)
   assert.equal((await call('delete-bot', { id: 'm1' })).ok, true)
   team = await bots()
   assert.equal(team.w2.avatar, undefined)
   assert.equal(team.w2.color, undefined)
+})
+
+test('a Bot saved with the old mascot reads as the Nova spark', async (t) => {
+  const old = {
+    ...OLD_TEAM,
+    bots: { ...OLD_TEAM.bots, m1: { ...OLD_TEAM.bots.m1, color: 'deepseek', avatar: { shape: 'whale' } } },
+  }
+  const { call, stop } = start(old)
+  t.after(stop)
+  const bots = (await call('state', {})).value.bots
+  const chief = bots.find(bot => bot.id === 'm1')
+  assert.deepEqual(chief.avatar, { shape: 'nova' })
+  assert.equal(chief.color, 'nova')
 })
 
 test('another Bot takes the Main Bot place in one step', async (t) => {
@@ -404,9 +417,9 @@ test('another Bot takes the Main Bot place in one step', async (t) => {
   const team = (await call('set-main', { id: writer.id, main: true, replace: chief })).value
   assert.deepEqual(team.mainBotIds, [writer.id])
   assert.equal(team.mainBotId, writer.id)
-  // The whale stays with the Bot it was given to.
-  assert.deepEqual(team.bots.find(bot => bot.id === chief).avatar, { shape: 'whale' })
-  // The old Main Bot can now be deleted, and no new Chief is made in its place.
+  // The Nova spark stays with the Bot it was given to.
+  assert.deepEqual(team.bots.find(bot => bot.id === chief).avatar, { shape: 'nova' })
+  // The old Main Bot can now be deleted, and no new Main Bot is made in its place.
   assert.equal((await call('delete-bot', { id: chief })).ok, true)
   const after = (await call('state', {})).value
   assert.deepEqual(after.mainBotIds, [writer.id])
@@ -494,14 +507,14 @@ test('an archive failure on delete is warned instead of passing silently', async
   assert.equal(warnings.filter(text => text.includes('not archived')).length, 1)
 })
 
-test('a hidden Bot made Main Bot shows again, and a replaced Chief drops its held greeting', async (t) => {
+test('a hidden Bot made Main Bot shows again, and a replaced Main Bot drops its held greeting', async (t) => {
   const { call, stop, sent } = start(undefined, { models: ['deepseek-v4-flash'] })
   t.after(stop)
   const chief = (await call('state', {})).value.mainBotId
   const writer = (await call('create-bot', { name: 'Writer' })).value
   await call('set-flags', { id: writer.id, hidden: true })
   await settle()
-  // Only Chief's messages count: Writer's own greeting can go out late on a busy machine.
+  // Only the Main Bot's messages count: Writer's own greeting can go out late on a busy machine.
   const toChief = () => sent.filter(item => item.sessionId === chief).length
   const greeted = toChief()
   const team = (await call('set-main', { id: writer.id, main: true, replace: chief })).value
@@ -517,7 +530,7 @@ const takeover = (home, team) => {
   if (team !== undefined) writeFileSync(join(home, 'state.json'), JSON.stringify(team))
 }
 
-test('a host that loses its lock to another dsh refuses changes instead of making a phantom Bot', async (t) => {
+test('a host that loses its lock to another Nova instance refuses changes instead of making a phantom Bot', async (t) => {
   const { call, stop, home, ctx } = start({ version: 1, mainBotIds: ['chief'], bots: { chief: { id: 'chief', name: 'Chief' } } })
   t.after(stop)
   assert.equal((await call('state', {})).value.readOnly, null)
@@ -532,7 +545,7 @@ test('a host that loses its lock to another dsh refuses changes instead of makin
   assert.equal(created, 0)
   // The file keeps the new owner's team, and this host now follows it.
   const team = (await call('state', {})).value
-  assert.match(team.readOnly, /another dsh/)
+  assert.match(team.readOnly, /another Nova instance/)
   assert.ok(team.bots.some(bot => bot.name === 'FromB'))
   assert.equal(team.bots.some(bot => bot.name === 'Phantom'), false)
 })
@@ -843,7 +856,7 @@ test('a non-Main Bot still cannot change another Bot\u2019s thinking level', asy
   const writer = (await call('create-bot', { name: 'Writer', model: 'deepseek/deepseek-v4-flash', effort: 'high' })).value
   await until(() => sent.some(entry => entry.sessionId === writer.id))
   const exec = { agent: { id: writer.id } }
-  assert.match(await rt.teamTools.find(d => d.name === 'update_bot').execute({ bot: 'Chief', effort: 'low' }, exec), /^Only a Main Bot can change another Bot/)
+  assert.match(await rt.teamTools.find(d => d.name === 'update_bot').execute({ bot: 'Orion', effort: 'low' }, exec), /^Only a Main Bot can change another Bot/)
   // Its own level it may change.
   assert.equal(await rt.teamTools.find(d => d.name === 'update_bot').execute({ effort: 'low' }, exec), 'Updated Writer.')
   assert.equal((await call('state', {})).value.bots.find(bot => bot.id === writer.id).effort, 'low')
@@ -933,7 +946,7 @@ test('a photo in the team\'s data is refused, and one in the team workspace ther
   const exec = { agent: { id: chief } }
   const tool = avatar => rt.teamTools.find(d => d.name === 'update_bot').execute({ avatar }, exec)
   writeFileSync(join(home, 'photo.png'), PNG_BYTES)
-  assert.match(await tool(join(home, 'photo.png')), /is in DeepSeek Harness data, so it cannot be a Bot's photo/)
+  assert.match(await tool(join(home, 'photo.png')), /is in Nova Bots data, so it cannot be a Bot's photo/)
   assert.equal((await call('state', {})).value.bots.find(bot => bot.id === chief).avatar?.image, undefined)
   // The default team workspace lies in the team's data, and the Bots' own files are there.
   const workspace = ctx.workspaceRegistry.get((await call('state', {})).value.workspaceId)?.path ?? join(home, 'workspace')
@@ -958,7 +971,7 @@ test('a photo that cannot be read changes nothing, and a non-Main Bot cannot set
   await until(() => sent.some(entry => entry.sessionId === writer.id))
   const mine = { agent: { id: writer.id } }
   // Another Bot's photo is a Main Bot's to change, as its other settings are.
-  assert.match(await rt.teamTools.find(d => d.name === 'update_bot').execute({ bot: 'Chief', avatar: PNG_DATA_URL }, mine), /^Only a Main Bot can change another Bot/)
+  assert.match(await rt.teamTools.find(d => d.name === 'update_bot').execute({ bot: 'Orion', avatar: PNG_DATA_URL }, mine), /^Only a Main Bot can change another Bot/)
   assert.equal((await call('state', {})).value.bots.find(bot => bot.id === chief).avatar?.image, undefined)
   // Its own it may set; a later bad photo leaves the good one alone.
   assert.equal(await rt.teamTools.find(d => d.name === 'update_bot').execute({ avatar: PNG_DATA_URL }, mine), 'Updated Writer.')

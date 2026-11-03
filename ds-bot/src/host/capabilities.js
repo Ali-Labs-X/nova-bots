@@ -4,7 +4,7 @@ import { own } from './store.js'
 
 const MCP_CLIENT = '@deepseek-ai/dsh-mcp-client'
 const NAME = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
-const SECRET_REFERENCE = /\$DSH_SECRET_([A-Z][A-Z0-9_]*)/g
+const SECRET_REFERENCE = /\$(?:DSH|NOVA)_SECRET_([A-Z][A-Z0-9_]*)/g
 const ENSURE_TIMEOUT_MS = 15_000
 
 export function validateCapabilityName(value) {
@@ -257,7 +257,7 @@ export function install(rt) {
     if (!pluginPromise) {
       pluginPromise = (async () => {
         const loader = ctx.get?.('loader')
-        if (typeof loader?.import !== 'function') throw new Error('This DSH cannot load MCP servers.')
+        if (typeof loader?.import !== 'function') throw new Error('This Nova cannot load MCP servers.')
         const exports = await loader.import(MCP_CLIENT)
         return loader.unwrapExports?.(exports) ?? exports?.default ?? exports
       })()
@@ -313,7 +313,7 @@ export function install(rt) {
     try {
       const plugin = item.kind === 'skill'
         ? {
-          name: `ds-bot-capability-skill-${name}`,
+          name: `nova-bots-capability-skill-${name}`,
           inject: ['skills'],
           apply(c) {
             c.effect(() => c.skills.register({ name: config.name, description: config.description, source: 'runtime', content: config.content }))
@@ -362,7 +362,7 @@ export function install(rt) {
       const sessionId = agent.session.id
       if (stopped || agents.get(sessionId)?.deref() !== agent) return
       await reconcileAgent(agent, botOfSession(sessionId))
-    }).catch(error => rt.warn('ds-bot: capability reconcile for %s failed: %s', agent.session?.id, error))
+    }).catch(error => rt.warn('capability reconcile for %s failed: %s', agent.session?.id, error))
     chains.set(agent, run)
     return run
   }
@@ -394,7 +394,7 @@ export function install(rt) {
     if (!scheduled) {
       scheduled = new Promise(resolve => queueMicrotask(() => {
         scheduled = null
-        resolve(reconcile().catch(error => rt.warn('ds-bot: capability reconcile failed: %s', error)))
+        resolve(reconcile().catch(error => rt.warn('capability reconcile failed: %s', error)))
       }))
     }
     return scheduled
@@ -404,7 +404,7 @@ export function install(rt) {
   const stalled = new WeakSet()
   const prepare = async (agent, sessionId) => {
     const run = loadInputs().then(() => reconcileOne(agent)).then(() => true, error => {
-      rt.warn('ds-bot: capability mount for %s failed: %s', sessionId, error)
+      rt.warn('capability mount for %s failed: %s', sessionId, error)
       return true
     })
     if (stalled.has(agent)) return
@@ -415,7 +415,7 @@ export function install(rt) {
     if (completed) return
     stalled.add(agent)
     void run.then(() => stalled.delete(agent))
-    rt.warn('ds-bot: capability mount for %s did not finish within %dms; continuing', sessionId, timeoutMs)
+    rt.warn('capability mount for %s did not finish within %dms; continuing', sessionId, timeoutMs)
   }
   async function ensureCapabilities(sessionId) {
     await rt.load()
@@ -426,7 +426,7 @@ export function install(rt) {
     try {
       agent = await rt.resolveAgent(sessionId)
     } catch (error) {
-      rt.warn('ds-bot: capability Agent for %s could not be resolved: %s', sessionId, rt.redactSecrets(String(error)))
+      rt.warn('capability Agent for %s could not be resolved: %s', sessionId, rt.redactSecrets(String(error)))
       return
     }
     trackAgent(agent)
@@ -450,20 +450,20 @@ export function install(rt) {
       const sessionId = rt.chatOf(bot.id)
       if (typeof sessionId === 'string') sessionIds.add(sessionId)
     } catch (error) {
-      rt.warn('ds-bot: capability chat session for %s could not be read: %s', bot.id, error)
+      rt.warn('capability chat session for %s could not be read: %s', bot.id, error)
     }
     try {
       for (const sessionId of rt.groupSessionsOf(bot.id) ?? []) {
         if (typeof sessionId === 'string') sessionIds.add(sessionId)
       }
     } catch (error) {
-      rt.warn('ds-bot: capability group sessions for %s could not be read: %s', bot.id, error)
+      rt.warn('capability group sessions for %s could not be read: %s', bot.id, error)
     }
     for (const sessionId of sessionIds) {
       try {
         trackAgent(await rt.resolveAgent(sessionId))
       } catch (error) {
-        rt.warn('ds-bot: capability Agent for %s could not be resolved: %s', sessionId, error)
+        rt.warn('capability Agent for %s could not be resolved: %s', sessionId, error)
       }
     }
   }
@@ -507,7 +507,7 @@ export function install(rt) {
       const bot = botOfSession(agent.session.id)
       if ((bot?.capabilities ?? []).length > 0) await prepare(agent, agent.session.id)
     } catch (error) {
-      rt.warn('ds-bot: capability load failed: %s', error)
+      rt.warn('capability load failed: %s', error)
     }
   })
   ctx.effect(() => {
@@ -516,7 +516,7 @@ export function install(rt) {
         if ((bot.capabilities ?? []).length > 0) await trackBotAgents(bot)
       }
       await scheduleReconcile()
-    }).catch(error => rt.warn('ds-bot: capability startup failed: %s', error))
+    }).catch(error => rt.warn('capability startup failed: %s', error))
     return async () => {
       stopped = true
       const live = [...mounts.values()]
@@ -525,7 +525,7 @@ export function install(rt) {
       sessionStatuses.clear()
       await Promise.all(live.flatMap(agentMounts => [...agentMounts.values()].map(disposeMount)))
     }
-  }, 'ds-bot: capabilities')
+  }, 'Nova Bots: capabilities')
   Object.assign(rt, {
     capabilitySave,
     capabilityDelete,

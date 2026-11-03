@@ -19,7 +19,7 @@ const team = (extra = {}) => ({
   revision: 3,
   bots: {
     b1: {
-      id: 'b1', sessionId: 's-now', name: 'Chief', capabilities: [], color: 'deepseek', createdAt: 1,
+      id: 'b1', sessionId: 's-now', name: 'Orion', capabilities: [], color: 'nova', createdAt: 1,
       segments: [{ sessionId: 's-old', endedAt: 1 }],
     },
   },
@@ -281,7 +281,7 @@ test('a restart marks an aside that was still answering as failed', async (t) =>
   t.after(() => env.stop())
   const [live, old] = cardsOf(env.rt)
   assert.equal(live.status, 'failed')
-  assert.equal(live.error, 'DS Bot restarted before this answer finished.')
+  assert.equal(live.error, 'Nova Bots restarted before this answer finished.')
   assert.equal(typeof live.finishedAt, 'number')
   assert.equal(live.question, 'Still going?')
   assert.equal(old.status, 'done')
@@ -289,7 +289,7 @@ test('a restart marks an aside that was still answering as failed', async (t) =>
   assert.equal(old.finishedAt, 11)
   const file = cardsFile(env.home)
   assert.equal(file[0].status, 'failed')
-  assert.equal(file[0].error, 'DS Bot restarted before this answer finished.')
+  assert.equal(file[0].error, 'Nova Bots restarted before this answer finished.')
   assert.equal(file[1].status, 'done')
   const saved = JSON.parse(readFileSync(join(env.home, 'state.json'), 'utf8'))
   assert.equal('btwCards' in saved, false)
@@ -332,7 +332,7 @@ test('a second host does not fail an aside the writer is still answering', async
 
 test('deleting a Bot removes its card files', async (t) => {
   const state = team()
-  state.bots.b2 = { id: 'b2', sessionId: 's-b2', name: 'Side', capabilities: [], color: 'deepseek', createdAt: 2 }
+  state.bots.b2 = { id: 'b2', sessionId: 's-b2', name: 'Side', capabilities: [], color: 'nova', createdAt: 2 }
   const env = await setup({
     state,
     btw: {
@@ -389,7 +389,7 @@ test('an earlier part page carries that part\'s cards, read from its file', asyn
   assert.equal(page.value.btw[0].id, 'there')
   // The owning host's lazy read still records the restart this file kept.
   assert.equal(page.value.btw[1].status, 'failed')
-  assert.equal(page.value.btw[1].error, 'DS Bot restarted before this answer finished.')
+  assert.equal(page.value.btw[1].error, 'Nova Bots restarted before this answer finished.')
   const file = cardsFile(env.home, 'b1', 's-old')
   assert.equal(file[1].status, 'failed')
 })

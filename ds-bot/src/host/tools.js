@@ -14,18 +14,18 @@ import { checkShownView, showViewDescription, showViewParameters } from 'deep-vi
 export const output = { schema: { type: 'string' }, render: (_args, value) => [{ type: 'text', text: String(value) }] }
 export const GROUP_REF = { type: 'string', required: true, description: 'Exact group chat name from list_bots' }
 const BLOCKING_QUESTION_TOOL = 'ask_user_question'
-// DS Bot carries no goal across conversation parts, so Bot Sessions do not run DSH goals.
+// Nova Bots carries no goal across conversation parts, so Bot Sessions do not run Nova goals.
 const GOAL_TOOLS = ['create_goal', 'update_goal', 'get_goal']
-// DSH's delegation tools start child agents the user cannot watch or stop, and they
+// Nova's delegation tools start child agents the user cannot watch or stop, and they
 // end with the conversation part that started them; Bots hand work to other Bots.
 const DELEGATION_TOOLS = ['subagent', 'subagent_fork', 'subagent_codex', 'subagent_claude_code', 'list_subagent_models', 'send_message', 'interrupt_agent', 'list_agents', 'workflow', 'ralph']
 // restrict() refuses a whole list when one name is registered in the Agent's own
 // scope, so each group is masked on its own.
 const HIDDEN_TOOL_GROUPS = [[BLOCKING_QUESTION_TOOL, ...GOAL_TOOLS], DELEGATION_TOOLS]
 const HIDDEN_TOOLS = HIDDEN_TOOL_GROUPS.flat()
-// The guidance DSH writes into the prompt for the hidden tools.
+// The guidance Nova writes into the prompt for the hidden tools.
 const HIDDEN_SECTIONS = new Set([...HIDDEN_TOOLS.map(name => `tool:${name}`), 'tool:goal'])
-const GOAL_REFUSAL = 'DS Bot does not run goals. Ask the Bot in a message instead.'
+const GOAL_REFUSAL = 'Nova Bots does not run goals. Ask the Bot in a message instead.'
 const DELEGATION_REFUSAL = 'Bots do not start subagents or workflows. Do the work yourself, or hand it to another Bot with message_bot.'
 const MODE_PARAM = {
   type: 'string',
@@ -128,7 +128,7 @@ export function install(rt) {
     const turn = rt.live.get(exec.agent?.id)
     return [rt.workOf(turn?.info), ...(turn?.joined ?? []).map(joined => rt.workOf(joined.info))].filter(Boolean)
   }
-  const tooLong = text => `Not sent: the message has ${text.length} characters, more than ${MESSAGE_INLINE_MAX}, and this DeepSeek Harness cannot send it as a file. Write it to a file in your working folder and send its path instead.`
+  const tooLong = text => `Not sent: the message has ${text.length} characters, more than ${MESSAGE_INLINE_MAX}, and this Nova Bots cannot send it as a file. Write it to a file in your working folder and send its path instead.`
 
   // Work for a group stays in it: from a group Session, message_bot calls a member there
   // exactly as an "@Name" line would, and never reaches a Bot outside the group.
@@ -199,7 +199,7 @@ export function install(rt) {
       const answer = (outcome) => {
         if (outcome.status === 'replay') return outcome.receipt
         if (outcome.status === 'conflict') refuse(`Not sent: request_id "${name}" was already used for a different request. A request_id names one request; send this one under a new name.`)
-        if (outcome.status === 'uncertain') refuse(`Not sent again: the outcome of request_id "${name}" is not known (the delivery failed, or DS Bot restarted while it was in flight), so it was not sent again. Check whether ${target.name} got it before sending it under a new name.`)
+        if (outcome.status === 'uncertain') refuse(`Not sent again: the outcome of request_id "${name}" is not known (the delivery failed, or Nova Bots restarted while it was in flight), so it was not sent again. Check whether ${target.name} got it before sending it under a new name.`)
         if (outcome.status === 'expired') return `Nothing was sent again: request_id "${name}" was admitted before, but its receipt is no longer kept, so only the fact that it was sent is left. Send the work under a new request_id if it must be done again.`
         if (outcome.status === 'readonly') refuse(`Not sent: this window cannot save the Bot team, so it cannot record the request_id "${name}". Send it from the window that owns the team, or leave the request_id out.`)
         return outcome.receipt
@@ -329,7 +329,7 @@ export function install(rt) {
         const workDir = args.work_dir ? await rt.cleanWorkDir(args.work_dir) : undefined
         const name = String(args.name ?? '').trim()
         await rt.approveFolder(exec, { path: workDir, who: { en: `the new Bot ${name}`, zh: `新 Bot ${name} ` } })
-        // Without a named model the new Bot takes its creator's: the DSH default may be
+        // Without a named model the new Bot takes its creator's: the Nova default may be
         // a provider that has no key, and then the new Bot fails on its first reply.
         const creator = callerBot(exec)
         const served = creator?.model && (await rt.catalog()).some(entry => entry.ref === creator.model)
@@ -389,14 +389,14 @@ export function install(rt) {
     },
   }))
 
-  // DSH's working_directory changes a Session's folder in place, and the next part starts in
+  // Nova's working_directory changes a Session's folder in place, and the next part starts in
   // the Bot's working folder again. A Bot that changes to a folder outside its working folder
   // sets its working folder instead, with update_bot's checks, and goes on in a fresh part
   // there; a folder inside it only moves this Session there. In a group without a folder of
   // its own the change holds only for that conversation: the Bot's folder, its other groups
   // and its own chat keep theirs (folders.js memberDirs).
   ctx.on('tools/execute', async (exec, next) => {
-    // Resolved as DSH gets it, untrimmed, so that both mean the same folder.
+    // Resolved as Nova gets it, untrimmed, so that both mean the same folder.
     const cd = exec.name === WORKING_DIRECTORY_TOOL && typeof exec.arguments?.cd === 'string' ? exec.arguments.cd : ''
     const session = exec.agent?.session
     if (cd === '' || session === undefined) return next()
@@ -760,7 +760,7 @@ export function install(rt) {
       try {
         dispose()
       } catch (error) {
-        rt.warn('ds-bot: a scoped tool of %s was not removed: %s', id, error)
+        rt.warn('a scoped tool of %s was not removed: %s', id, error)
       }
     }
   }
@@ -775,7 +775,7 @@ export function install(rt) {
     // Session that stays unowned, and nothing twice for one already scoped.
     for (const agent of ctx.get?.('agents')?.list?.() ?? []) hideBotUnusedTools(agent)
   }
-  ctx.effect(() => () => { for (const id of scoped.keys()) unscope(id) }, 'ds-bot: scoped team tools')
+  ctx.effect(() => () => { for (const id of scoped.keys()) unscope(id) }, 'Nova Bots: scoped team tools')
 
   const shareBotTools = (agent) => {
     if (agent === undefined) return
@@ -811,7 +811,7 @@ export function install(rt) {
     held.tools = true
     held.disposers.push(...disposers)
     scoped.set(id, held)
-    if (failed.length > 0) rt.warn('ds-bot: team tools not served to %s: %s', id, failed.join('; '))
+    if (failed.length > 0) rt.warn('team tools not served to %s: %s', id, failed.join('; '))
   }
 
   // The standard preset registers `subagent` (model selection) in each Agent's own
@@ -902,17 +902,17 @@ export function install(rt) {
       await rt.load()
       hideBotUnusedTools(agent)
     } catch (error) {
-      rt.warn('ds-bot: hiding %s on agent/created failed: %s', HIDDEN_TOOLS.join(', '), error)
+      rt.warn('hiding %s on agent/created failed: %s', HIDDEN_TOOLS.join(', '), error)
     }
   })
 
   // The /goal command stays open in every Session, so a goal started in a Bot chat or a
-  // group is blocked at once; DSH's round driver then starts no round for it.
+  // group is blocked at once; Nova's round driver then starts no round for it.
   let goals = null
   const attachGoals = (sub) => {
     const own = sub.goals
     goals = own
-    sub.effect(() => () => { if (goals === own) goals = null }, 'ds-bot: goal service')
+    sub.effect(() => () => { if (goals === own) goals = null }, 'Nova Bots: goal service')
   }
   if (typeof ctx.inject === 'function') ctx.inject(['goals'], attachGoals)
   else if (ctx.get?.('goals') !== undefined) attachGoals({ goals: ctx.get('goals'), effect: (execute, label) => ctx.effect(execute, label) })
@@ -925,7 +925,7 @@ export function install(rt) {
       if (goal?.phase !== 'active') return
       service.block(agent, { id: goal.id, revision: goal.revision }, { code: 'not-supported', message: GOAL_REFUSAL })
     } catch (error) {
-      rt.warn('ds-bot: blocking the goal in %s failed: %s', sessionId, error)
+      rt.warn('blocking the goal in %s failed: %s', sessionId, error)
     }
   }
   ctx.on('session/event', (session, event) => {
@@ -970,9 +970,9 @@ export function install(rt) {
       transport: { type: 'string', enum: ['stdio', 'streamable-http'], description: 'How to reach an MCP server: a local command or an HTTP URL' },
       command: { type: 'string', description: 'Program that starts a local MCP server' },
       args: { type: 'array', items: { type: 'string' }, description: 'Arguments for command' },
-      env: { type: 'object', additionalProperties: true, description: 'Environment variables for command; write $DSH_SECRET_<NAME> to insert a saved secret instead of the value' },
-      url: { type: 'string', description: 'MCP server URL; write $DSH_SECRET_<NAME> in the path or query to insert a saved secret, URL-encoded. Prefer headers for keys' },
-      headers: { type: 'object', additionalProperties: true, description: 'HTTP headers; write $DSH_SECRET_<NAME> to insert a saved secret instead of the value' },
+      env: { type: 'object', additionalProperties: true, description: 'Environment variables for command; write $NOVA_SECRET_<NAME> to insert a saved secret instead of the value' },
+      url: { type: 'string', description: 'MCP server URL; write $NOVA_SECRET_<NAME> in the path or query to insert a saved secret, URL-encoded. Prefer headers for keys' },
+      headers: { type: 'object', additionalProperties: true, description: 'HTTP headers; write $NOVA_SECRET_<NAME> to insert a saved secret instead of the value' },
       content: { type: 'string', description: 'Skill instructions' },
       items: { type: 'array', items: { type: 'string' }, description: 'MCP server and skill names in the pack' },
     },
@@ -984,7 +984,7 @@ export function install(rt) {
       try {
         const item = await rt.capabilitySave(args, { botId: self })
         const approval = item.kind === 'mcp' && item.transport === 'stdio' && !item.approved
-          ? ' The user must allow this MCP server in DS Bot settings before it can work.'
+          ? ' The user must allow this MCP server in Nova Bots settings before it can work.'
           : ''
         return `Saved ${item.name}. Bots with it attached use the change from their next message.${approval}`
       } catch (error) { return error.message }
@@ -1026,7 +1026,7 @@ export function install(rt) {
             : attached ? [attached] : []
           const approvals = members
             .filter(item => item.kind === 'mcp' && item.transport === 'stdio' && item.approved !== true)
-            .map(item => ` The user must allow ${item.name} in DS Bot settings before it can work.`)
+            .map(item => ` The user must allow ${item.name} in Nova Bots settings before it can work.`)
             .join('')
           return `${verb} ${args.name} ${args.bot ? `to ${result.bot}` : 'to yourself'}. Changes apply from ${result.bot}'s next message.${endpoint === 'attach' ? approvals : ''}`
         } catch (error) { return error.message }

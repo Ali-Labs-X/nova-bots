@@ -1,8 +1,8 @@
 # The engine layer of the desktop app's profile, over dsh-base and under
-# ds-bot. It adds the loopback transport for ds-bot's channel, the host
-# services ds-bot uses, and the agent preset that Bot Sessions run on. It has
+# the Bot team plugin. It adds the loopback transport for the Bot team's channel, the host
+# services the Bot team uses, and the agent preset that Bot Sessions run on. It has
 # no DSH Web front-end rows: the window is the app's own page (../ui), which
-# talks only to ds-bot.
+# talks only to the Bot team.
 #
 # The rows follow @deepseek-ai/dsh-web-app's bundle patch (MIT; see NOTICE).
 # When the app moves to another DSH version, compare this file and
@@ -35,7 +35,7 @@
 
     # This package's own plugin (index.js): the launch-token exchange.
     - id: engine-index
-      name: dsbot-engine
+      name: novabots-engine
 
     - id: api-remotes
       name: '@deepseek-ai/dsh-api-remotes'
@@ -50,7 +50,7 @@
     - id: session-controller
       name: '@deepseek-ai/dsh-api-session-controller'
 
-    # ds-bot's folder chooser for Bot and group working folders.
+    # The Bot team's folder chooser for Bot and group working folders.
     - id: directory-picker
       name: '@deepseek-ai/dsh-host-directory-picker-auto'
 

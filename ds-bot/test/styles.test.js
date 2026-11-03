@@ -34,7 +34,7 @@ const react = {
 }
 
 const tick = () => new Promise(resolve => setImmediate(resolve))
-// DS Bot's style tags in a document, all of them or those of one group.
+// Nova Bots's style tags in a document, all of them or those of one group.
 const tagged = (document, tag) => [...document.head.querySelectorAll('style')]
   .filter(style => style.dataset.dshBot !== undefined && (tag === undefined || style.dataset.dshBot === tag))
 
@@ -96,7 +96,7 @@ const bench = (rows) => {
 
 // #228: our style tags carry the client module id, so another module's materialization
 // cannot claim them and its teardown cannot delete them.
-test('every DS Bot style is owned by the ds-bot client module', async () => {
+test('every Nova Bots style is owned by the Nova Bots client module', async () => {
   const { window, module, register, materialize, update } = bench(['other'])
   const { installStyles, installCompiledStyles } = module.exports
   const { document } = window
@@ -110,7 +110,7 @@ test('every DS Bot style is owned by the ds-bot client module', async () => {
   document.head.appendChild(stray)
   for (const style of [plain, compiled]) {
     assert.equal(style.dataset.dshBot !== undefined, true)
-    assert.equal(style.dataset.plugin, 'ds-bot')
+    assert.equal(style.dataset.plugin, 'nova')
     assert.equal(style.matches('style:not([data-plugin])'), false)
   }
 
@@ -118,8 +118,8 @@ test('every DS Bot style is owned by the ds-bot client module', async () => {
   // versions may not); ours keep their owner either way.
   materialize('other')
   const claimed = stray.dataset.plugin === 'other'
-  assert.equal(plain.dataset.plugin, 'ds-bot')
-  assert.equal(compiled.dataset.plugin, 'ds-bot')
+  assert.equal(plain.dataset.plugin, 'nova')
+  assert.equal(compiled.dataset.plugin, 'nova')
 
   // A newer revision of that module replaces it: what it claimed goes, ours stay.
   update('r2')

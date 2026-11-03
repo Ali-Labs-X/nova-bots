@@ -37,7 +37,7 @@ function entrySummary(entry) {
   return entry.text
 }
 
-const SOURCES = { turn: 'Model call', host: 'DS Bot', api: 'DS Bot', browser: 'This window' }
+const SOURCES = { turn: 'Model call', host: 'Nova Bots', api: 'Nova Bots', browser: 'This window' }
 
 // Where the new issue opens; `go(url)` tells whether it did. In a browser the window is
 // reserved inside the click gesture and addressed once the diagnostics are gathered:
@@ -45,7 +45,7 @@ const SOURCES = { turn: 'Model call', host: 'DS Bot', api: 'DS Bot', browser: 'T
 // hands an http(s) address to the system browser, has no blocker, and returns null even
 // then, so it gets the address itself.
 function issueWindow() {
-  if (window.dshDesktop !== undefined) return { go: (url) => { window.open(url, '_blank'); return true } }
+  if (window.dshDesktop !== undefined) return { go: (url) => { window.open(url, '_blank'); return true }, close: () => {} }
   const reserved = window.open('', '_blank')
   if (reserved !== null) reserved.opener = null
   return {
@@ -54,6 +54,7 @@ function issueWindow() {
       reserved.location.href = url
       return true
     },
+    close: () => reserved?.close?.(),
   }
 }
 
@@ -73,9 +74,18 @@ export function FeedbackPage({ actions, run, Section, Row }) {
     if (!copied) setPreview(true)
   }))
   const [issueLink, setIssueLink] = useState(null)
+  // A build without a public issue tracker keeps the report local: copy or download it.
+  const issueBase = report?.issuesUrl ?? ''
   const openIssue = () => {
     const target = issueWindow()
     run(fetchReport().then(async (next) => {
+      if (!next.issuesUrl) {
+        target.close?.()
+        const copied = await copy(next.markdown)
+        setNote(copied ? t('Copied the diagnostics.') : t('Could not copy. Select the text below and copy it.'))
+        if (!copied) setPreview(true)
+        return
+      }
       const copied = await copy(next.markdown)
       const { url, inline } = issueUrl(next.issuesUrl, { what, diagnostics: next.markdown })
       if (target.go(url)) {
@@ -93,7 +103,7 @@ export function FeedbackPage({ actions, run, Section, Row }) {
     }))
   }
   const downloadLog = () => run(actions.diagnosticsLog().then((text) => {
-    download('ds-bot-diagnostics.log', text || 'No entries.\n')
+    download('nova-diagnostics.log', text || 'No entries.\n')
     setNote(t('Downloaded the log. Keys, tokens, and your home folder are hidden in it.'))
   }))
   const clearLog = () => run(actions.diagnosticsClear().then(clearClientErrors).then(load).then(() => setNote(t('Cleared the error log.'))))
@@ -114,19 +124,19 @@ export function FeedbackPage({ actions, run, Section, Row }) {
         h('button', { type: 'button', className: 'bt-soft bt-soft-sm', onClick: () => setPreview(!preview), 'aria-expanded': preview }, preview ? t('Hide') : t('Show')),
         h('button', { type: 'button', className: 'bt-soft bt-soft-sm', onClick: copyReport }, t('Copy'))),
       preview ? h('div', { className: 'bt-set-row bt-fb-preview' }, h('pre', { tabIndex: 0, 'aria-label': t('Diagnostics') }, report?.markdown || t('Loading…'))) : null,
-      h(Row, { label: t('GitHub issue'), hint: t('Opens a new issue in the DS Bot repository with all of this filled in. Nothing is sent until you submit it there.') },
-        h('button', { type: 'button', className: 'bt-fb-primary', onClick: openIssue }, t('Report on GitHub')))),
+      report === null || issueBase ? h(Row, { label: t('GitHub issue'), hint: t('Opens a new issue in the Nova Bots repository with all of this filled in. Nothing is sent until you submit it there.') },
+        h('button', { type: 'button', className: 'bt-fb-primary', onClick: openIssue }, t('Report on GitHub'))) : null),
     note ? h('div', { key: 'note', className: 'bt-note bt-fb-note', role: 'status' },
       note,
       issueLink ? [' ', h('a', { key: 'link', href: issueLink, target: '_blank', rel: 'noopener noreferrer' }, t('Open the issue'))] : null) : null,
     h(Section, { key: 'errors', title: report ? t('Recent errors · {count}', { count: total }) : t('Recent errors') },
       shown.length === 0
-        ? h(Row, { label: t('No errors recorded.'), hint: t('Failed model calls and DS Bot problems show here, newest first.') })
+        ? h(Row, { label: t('No errors recorded.'), hint: t('Failed model calls and Nova Bots problems show here, newest first.') })
         : shown.map((entry, index) => h('div', { key: `${entry.time}-${index}`, className: 'bt-set-row bt-fb-entry', title: entry.text },
             h('span', { className: 'bt-fb-dot', 'data-level': entry.level, 'aria-hidden': true }),
             h('div', { className: 'bt-set-copy' },
               h('span', { className: 'bt-fb-text' }, entrySummary(entry)),
-              h('span', { className: 'bt-set-hint' }, [whenText(entry.time), entry.bot, entry.where, t(SOURCES[entry.source] ?? 'DS Bot')].filter(Boolean).join(' · '))),
+              h('span', { className: 'bt-set-hint' }, [whenText(entry.time), entry.bot, entry.where, t(SOURCES[entry.source] ?? 'Nova Bots')].filter(Boolean).join(' · '))),
             entry.code ? h('span', { className: 'bt-tag bt-fb-code' }, entry.status ? `${entry.code} ${entry.status}` : entry.code) : null)),
       h(Row, { label: t('Error log'), hint: t('Kept on this computer across restarts, up to about 1 MB.') },
         h('button', { type: 'button', className: 'bt-soft bt-soft-sm', onClick: downloadLog }, t('Download')),

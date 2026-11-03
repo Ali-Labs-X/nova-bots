@@ -61,7 +61,7 @@ test('the first model choice shows provider groups and keeps each model route', 
   assert.deepEqual(groups.map(group => nodes(group, node => node.props.className === 'bt-model-choice-provider')[0].children[0]), ['DeepSeek', 'Ollama'])
   const buttons = groups.map(group => nodes(group, node => node.type === 'button'))
   assert.deepEqual(buttons.map(list => list.map(button => button.children[0])), [['DeepSeek Flash', 'DeepSeek Pro'], ['DeepSeek Flash']])
-  assert.match(buttons[0][0].props.title, /official\/flash.*Harness default/)
+  assert.match(buttons[0][0].props.title, /official\/flash.*Nova default/)
   buttons[1][0].props.onClick()
   buttons[0][0].props.onClick()
   assert.deepEqual(picked, [['chief', 'local/flash'], ['chief', 'official/flash']])
@@ -91,7 +91,7 @@ test('an unavailable model offers the same provider groups', () => {
 test('an empty catalog offers setup choices, and a ready model needs no choice dock', () => {
   const { tree } = dock([])
   assert.deepEqual(nodes(tree, node => node.type === 'button').map(button => button.children[0]), [
-    'Enter a DeepSeek API key', 'Open settings to set up a custom model',
+    'Enter a Nova API key', 'Open settings to set up a custom model',
   ])
   assert.equal(dock(models, { model: models[0].ref }).tree, null)
   assert.equal(dock(models, { ready: false }).tree, null)
@@ -120,7 +120,7 @@ test('models that need an API key are no choice', () => {
   const buttons = tree => nodes(tree, node => node.type === 'button').map(button => button.children[0])
   assert.deepEqual(buttons(dock([...keyless, models[1]], { harness: false }).tree), ['DeepSeek Flash'])
   // Where DSH's own settings are, they take the key.
-  assert.deepEqual(buttons(dock(keyless).tree), ['Enter a DeepSeek API key', 'Open settings to set up a custom model'])
+  assert.deepEqual(buttons(dock(keyless).tree), ['Enter a Nova API key', 'Open settings to set up a custom model'])
 })
 
 test('a window without DSH settings asks for the missing API key in the first choice', () => {
@@ -131,7 +131,7 @@ test('a window without DSH settings asks for the missing API key in the first ch
     useRoster: select => select({ ready: true, byId: { chief: bot }, models: keyless }),
     actions: { setProviderKey: (provider, value) => { saved.push([provider, value]) } },
   })
-  assert.match(nodes(tree, node => node.props.className === 'bt-bubble')[0].children[0], /need a DeepSeek API key/)
+  assert.match(nodes(tree, node => node.props.className === 'bt-bubble')[0].children[0], /need a Nova API key/)
   const [card] = nodes(tree, node => node.props.model !== undefined)
   assert.equal(card.props.model.provider, 'official')
   assert.equal(nodes(tree, node => node.props.className === 'bt-model-chips').length, 0)

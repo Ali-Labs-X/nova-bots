@@ -86,7 +86,7 @@ test('without any verified version nothing is offered', async () => {
 test('the running version matching the verified one offers nothing', async () => {
   const { rt } = start({ source: `${PKG.name}@^${PKG.version}`, answers: registryLatest({ verifiedDsh: '0.1.0' }) })
   assert.equal((await rt.dshUpdateCheck()).available, false)
-  assert.throws(() => rt.dshUpdateStart(), /No DSH update/)
+  assert.throws(() => rt.dshUpdateStart(), /No Nova update/)
 })
 
 test('a minBot newer than the running bot gates the DSH update until the bot goes first', async () => {
@@ -94,18 +94,25 @@ test('a minBot newer than the running bot gates the DSH update until the bot goe
   const view = await rt.dshUpdateCheck()
   assert.equal(view.available, false)
   assert.equal(view.blockedBy, '9.9.9')
-  assert.throws(() => rt.dshUpdateStart(), /No DSH update/)
+  assert.throws(() => rt.dshUpdateStart(), /No Nova update/)
 })
 
-test('a git or local install asks the public repo\'s latest release for its declaration', async () => {
-  for (const source of ['github:Fei2411/DS-Bot#v0.1.0&path:/ds-bot', 'link:/work/ds-bot', undefined]) {
+test('a git install asks that repo\'s latest release for its declaration', async () => {
+  const source = 'github:Fei2411/DS-Bot#v0.1.0&path:/ds-bot'
+  const { rt, fetched } = start({ source, answers: githubLatest('v9.0.0', { dsBot: { verifiedDsh: '8.8.8' } }) })
+  const view = await rt.dshUpdateCheck()
+  assert.equal(view.verified, '8.8.8')
+  assert.deepEqual(fetched, [
+    'https://api.github.com/repos/Fei2411/DS-Bot/releases/latest',
+    'https://raw.githubusercontent.com/Fei2411/DS-Bot/v9.0.0/ds-bot/package.json',
+  ])
+})
+
+test('a local checkout without a public repository asks for no declaration', async () => {
+  for (const source of ['link:/work/ds-bot', undefined]) {
     const { rt, fetched } = start({ source, answers: githubLatest('v9.0.0', { dsBot: { verifiedDsh: '8.8.8' } }) })
-    const view = await rt.dshUpdateCheck()
-    assert.equal(view.verified, '8.8.8')
-    assert.deepEqual(fetched, [
-      'https://api.github.com/repos/Fei2411/DS-Bot/releases/latest',
-      'https://raw.githubusercontent.com/Fei2411/DS-Bot/v9.0.0/ds-bot/package.json',
-    ])
+    assert.equal((await rt.dshUpdateCheck()).verified, null)
+    assert.deepEqual(fetched, [])
   }
 })
 

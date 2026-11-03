@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#060010" />
+    <title>Nova Bots — Sign in</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #f4f3ff;
+        --ink-2: rgba(228, 228, 245, 0.62);
+        --ink-3: rgba(228, 228, 245, 0.38);
+        --line: rgba(255, 255, 255, 0.1);
+        --line-2: rgba(255, 255, 255, 0.16);
+        --panel: rgba(255, 255, 255, 0.045);
+        --panel-2: rgba(255, 255, 255, 0.075);
+        --violet: #7c5cff;
+        --violet-2: #a78bfa;
+        --cyan: #22d3ee;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        background: #060010;
+        color: var(--ink);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        overflow: hidden;
+      }
+      /* Aurora glow, dotted star-grid and two soft lights: the Nova look. */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: -20%;
+        background:
+          radial-gradient(60% 45% at 18% 8%, rgba(124, 92, 255, 0.3), transparent 62%),
+          radial-gradient(52% 42% at 86% 4%, rgba(34, 211, 238, 0.17), transparent 60%),
+          radial-gradient(70% 55% at 50% 108%, rgba(167, 139, 250, 0.12), transparent 65%);
+        pointer-events: none;
+      }
+      body::after {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.16) 1px, transparent 1.2px);
+        background-size: 26px 26px;
+        opacity: 0.35;
+        mask-image: radial-gradient(120% 90% at 50% 30%, #000 20%, transparent 78%);
+        -webkit-mask-image: radial-gradient(120% 90% at 50% 30%, #000 20%, transparent 78%);
+        pointer-events: none;
+      }
+      .wrap { position: relative; width: 100%; max-width: 400px; }
+      .mark {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        justify-content: center;
+        margin-bottom: 22px;
+      }
+      .mark span {
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .mark svg { filter: drop-shadow(0 2px 10px rgba(124, 92, 255, 0.55)); }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 26px 26px 22px;
+        backdrop-filter: blur(14px) saturate(140%);
+        -webkit-backdrop-filter: blur(14px) saturate(140%);
+        box-shadow: 0 32px 80px -34px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 21px;
+        font-weight: 600;
+        letter-spacing: -0.015em;
+      }
+      p.lead {
+        margin: 0 0 20px;
+        font-size: 13.5px;
+        line-height: 1.5;
+        color: var(--ink-2);
+      }
+      label {
+        display: block;
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--ink-2);
+        margin-bottom: 7px;
+      }
+      input {
+        width: 100%;
+        height: 42px;
+        padding: 0 13px;
+        border-radius: 10px;
+        border: 1px solid var(--line-2);
+        background: var(--panel-2);
+        color: var(--ink);
+        font: inherit;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+      }
+      input::placeholder { color: var(--ink-3); }
+      input:focus {
+        border-color: rgba(124, 92, 255, 0.85);
+        background: rgba(255, 255, 255, 0.09);
+        box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.22), 0 0 22px -6px rgba(124, 92, 255, 0.7);
+      }
+      button {
+        width: 100%;
+        height: 42px;
+        margin-top: 14px;
+        border: 0;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--violet) 0%, #5b8bff 52%, var(--cyan) 100%);
+        color: #06081a;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        box-shadow: 0 10px 30px -12px rgba(124, 92, 255, 0.9);
+        transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
+      }
+      button:hover { filter: brightness(1.06); box-shadow: 0 14px 34px -12px rgba(34, 211, 238, 0.75); }
+      button:active { transform: translateY(1px); }
+      .hint {
+        margin: 16px 0 0;
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--ink-3);
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 11.5px;
+        padding: 1px 5px;
+        border-radius: 5px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--ink-2);
+      }
+      .foot {
+        margin-top: 18px;
+        text-align: center;
+        font-size: 11.5px;
+        color: var(--ink-3);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <div class="mark">
+        <svg width="26" height="26" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="nova" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#C4B5FD" />
+              <stop offset="0.52" stop-color="#6D5EFC" />
+              <stop offset="1" stop-color="#22D3EE" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M24 2.5C26 15 33 22 45.5 24 33 26 26 33 24 45.5 22 33 15 26 2.5 24 15 22 22 15 24 2.5Z"
+            fill="url(#nova)"
+          />
+          <circle cx="37.6" cy="10.4" r="2.7" fill="#5EE7F7" opacity="0.9" />
+        </svg>
+        <span>Nova Bots</span>
+      </div>
+
+      <form class="card" method="get" action="/">
+        <h1>Sign in to Nova Bots</h1>
+        <p class="lead">Enter the login token of this Nova Bots workspace to continue.</p>
+
+        <label for="token">Login token</label>
+        <input
+          id="token"
+          name="token"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="Paste the token"
+          required
+          autofocus
+        />
+
+        <button type="submit">Sign in</button>
+
+        <p class="hint">
+          The token is printed on the host by <code>nova-bots.sh url</code>. It stays on this
+          machine and signs a cookie for 30 days.
+        </p>
+      </form>
+
+      <p class="foot">Nova Bots · a team of long-lived bots</p>
+    </main>
+  </body>
+</html>

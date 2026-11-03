@@ -1,9 +1,9 @@
-// Scheduled tasks. DSH's schedule service stores each task with the Session it belongs
+// Scheduled tasks. Nova's schedule service stores each task with the Session it belongs
 // to and, when it is due, sends its prompt to that Session as a new message. This
 // module lists the team's tasks for Settings, creates and removes them there, and moves
 // a Bot's tasks along when its chat goes on in a fresh part, so the Bot keeps seeing
 // them. A group chat's task lives on the group's own Session, so the reminder reaches
-// the group like a message from the user (see reminderText). DSH 0.2.0 mounts the service only with its Automation tasks bundle on, so
+// the group like a message from the user (see reminderText). Nova 0.2.0 mounts the service only with its Automation tasks bundle on, so
 // the service is optional and every endpoint reports whether it is there.
 
 const MAX_TITLE = 120
@@ -11,7 +11,7 @@ const TIME = /^([01]\d|2[0-3]):[0-5]\d$/
 
 const invalid = message => Object.assign(new Error(message), { code: 'bot/invalid' })
 
-// What a group sees of a due reminder: DSH frames it for one Session's model
+// What a group sees of a due reminder: Nova frames it for one Session's model
 // ("[SCHEDULE REMINDER]" with JSON fields); the group gets each prompt as one line.
 export function reminderText(text) {
   const prompts = []
@@ -75,7 +75,7 @@ export function install(rt) {
   const attach = (sub) => {
     const own = sub.schedule
     service = own
-    sub.effect(() => () => { if (service === own) service = null }, 'ds-bot: schedule service')
+    sub.effect(() => () => { if (service === own) service = null }, 'Nova Bots: schedule service')
   }
   if (typeof ctx.inject === 'function') ctx.inject(['schedule'], attach)
   else if (ctx.get?.('schedule') !== undefined) attach({ schedule: ctx.get('schedule'), effect: (execute, label) => ctx.effect(execute, label) })
@@ -105,7 +105,7 @@ export function install(rt) {
   const endpoints = {
     schedules: () => schedulesView(),
     async 'schedule-create'(body) {
-      if (service === null) throw invalid('Automation tasks are off in DSH')
+      if (service === null) throw invalid('Automation tasks are off in Nova')
       const bot = rt.botOf(body.target)
       const room = rt.roomOf(body.target)
       if (bot === undefined && room === undefined) throw invalid('No such Bot or group chat')
@@ -118,7 +118,7 @@ export function install(rt) {
       return schedulesView()
     },
     async 'schedule-delete'(body) {
-      if (service === null) throw invalid('Automation tasks are off in DSH')
+      if (service === null) throw invalid('Automation tasks are off in Nova')
       if (ownerOf(body.sessionId) === undefined) throw invalid('No such task')
       await service.delete({ sessionId: body.sessionId, id: body.id })
       return schedulesView()
@@ -140,7 +140,7 @@ export function install(rt) {
         await service.delete({ sessionId: fromId, id: record.id })
       } catch (error) {
         // The copy is safe; archiving the earlier part will remove its old task.
-        rt.warn('ds-bot: earlier copy of task %s not removed: %s', record.title, error?.message ?? error)
+        rt.warn('earlier copy of task %s not removed: %s', record.title, error?.message ?? error)
       }
     }
   }

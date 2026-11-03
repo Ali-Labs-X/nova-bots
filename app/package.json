@@ -1,12 +1,19 @@
 {
-  "name": "dsbot",
-  "productName": "DS Bot",
+  "name": "nova-bots",
+  "productName": "Nova Bots",
   "version": "0.2.6",
   "private": true,
-  "description": "DS Bot desktop app: the ds-bot team on its own pinned DeepSeek Harness.",
-  "author": "Fei2411",
-  "homepage": "https://github.com/Fei2411/DS-Bot",
-  "desktopName": "dsbot.desktop",
+  "description": "Nova Bots desktop app: the Nova Bots team on its own pinned runtime.",
+  "author": "alilabsx",
+  "homepage": "https://github.com/alilabsx/Nova-Bots",
+  "bugs": {
+    "url": "https://github.com/alilabsx/Nova-Bots/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alilabsx/Nova-Bots.git"
+  },
+  "desktopName": "novabots.desktop",
   "license": "Apache-2.0",
   "type": "module",
   "main": "src/main.mjs",
@@ -60,7 +67,7 @@
     "@deepseek-ai/dsh-workflow": "0.2.1-rc.4",
     "@deepseek-ai/libreoffice-kit": "0.1.5",
     "deep-view": "0.1.0",
-    "ds-bot": "file:../ds-bot",
+    "nova-bots": "file:../ds-bot",
     "electron-updater": "6.8.10",
     "pnpm": "11.7.0",
     "ws": "8.18.3",

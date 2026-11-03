@@ -11,7 +11,7 @@ const MENU_EXIT_MS = 120
 
 // -------------------------------------------------------------------------
 // A Bot's model: the picker in its details panel and settings, and the message its
-// chat opens on while it has none. Models come from DeepSeek Harness, grouped by provider.
+// chat opens on while it has none. Models come from Nova Bots, grouped by provider.
 
 export function groupModels(models) {
   const groups = new Map()
@@ -158,7 +158,7 @@ export function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onP
     : reasoning.efforts.find(effort => effort.id === currentEffort)?.name ?? currentEffort
   const toggle = () => {
     if (isOpen) { close(); return }
-    // DSH settings can change the list at any time, so opening asks again.
+    // Nova settings can change the list at any time, so opening asks again.
     void actions?.refreshModels?.()
     open()
   }
@@ -188,7 +188,7 @@ export function ModelMenu({ bot, roster, actions, run, wide = false, onPick, onP
     h(Caret)),
     shownPlace ? createPortal(h('div', { ref: menu, className: `bt-menu bt-model-menu${shownPlace.bottom !== undefined ? ' bt-menu-up' : ''}`, role: 'menu', 'aria-label': t('Model for {name}', { name: bot.name }), style: shownPlace, 'data-leaving': leaving || undefined },
       models.length > 0 ? h(ModelRows, { roster, current, onPick: pick })
-        : h('div', { className: 'bt-model-none' }, t('No models are set up in DeepSeek Harness yet.')),
+        : h('div', { className: 'bt-model-none' }, t('No models are set up in Nova Bots yet.')),
       effortRows(reasoning).length > 0 ? h(EffortRows, { reasoning, current: picked, onPick: pickEffort }) : null,
       manage ? h('div', { className: 'bt-menu-sep', role: 'separator' }) : null,
       manage ? h('button', { type: 'button', role: 'menuitem', onClick: () => { close(); manage() } }, h(SlidersIcon), h('span', { className: 'bt-menu-label' }, t('Models and providers…'))) : null), document.body) : null)
@@ -210,7 +210,7 @@ export function ModelChoiceDock({ sessionId, useRoster, actions }) {
   const lost = bot.model ? !models.some(model => model.ref === bot.model) : false
   // An unknown catalog (none listed) cannot tell a lost model from a slow provider.
   if (bot.model && (!lost || models.length === 0)) return null
-  // A window without DSH's own settings takes the missing key here.
+  // A window without Nova's own settings takes the missing key here.
   const keyFor = usable.length === 0 && actions.setProviderKey ? models.find(model => model.needsKey) : undefined
   const manage = manageModels(actions)
   const pick = (ref) => {
@@ -236,7 +236,7 @@ export function ModelChoiceDock({ sessionId, useRoster, actions }) {
           h('div', { className: 'bt-model-choice-chips' }, list.map(model => h('button', {
             key: model.ref, type: 'button', className: 'bt-model-chip', disabled: busy !== '', 'aria-busy': busy === model.ref || undefined,
             'aria-label': `${model.name} · ${provider}`,
-            title: model.ref === roster.defaultModel ? `${model.ref} · ${t('Harness default')}` : model.ref,
+            title: model.ref === roster.defaultModel ? `${model.ref} · ${t('Nova default')}` : model.ref,
             onClick: () => pick(model.ref),
           }, model.name, busy === model.ref ? h('span', { className: 'bt-model-spin', 'aria-label': t('Saving…') }) : null))))),
         manage ? h('button', { key: 'manage', type: 'button', className: 'bt-model-chip bt-model-chip-quiet', onClick: manage }, h(SlidersIcon), t('Manage models')) : null,
@@ -278,21 +278,21 @@ function ModelKeyCard({ model, actions }) {
       h('button', { type: 'button', className: 'bt-q-submit', disabled: !ready, onClick: save }, busy ? t('Saving…') : t('Save'))))
 }
 
-// Where the providers are set up: the window's own Models page, else DSH's settings.
+// Where the providers are set up: the window's own Models page, else Nova's settings.
 const manageModels = actions => actions.openModels ?? actions.openHarnessSettings
 
-// Ways to get a first model. The DeepSeek sign-in exists only where the shell carries
+// Ways to get a first model. The Nova sign-in exists only where the shell carries
 // its account plugin (the Desktop); the API key and custom models use the shell's
 // own editors.
 function setupChoices(actions) {
   return [
-    actions.canSignIn?.() ? [t('Sign in to DeepSeek'), () => actions.signIn()] : null,
-    actions.openHarnessOnboarding ? [t('Enter a DeepSeek API key'), () => actions.openHarnessOnboarding('deepseek-official')] : null,
+    actions.canSignIn?.() ? [t('Sign in to Nova'), () => actions.signIn()] : null,
+    actions.openHarnessOnboarding ? [t('Enter a Nova API key'), () => actions.openHarnessOnboarding('deepseek-official')] : null,
     actions.openHarnessSettings ? [t('Open settings to set up a custom model'), actions.openHarnessSettings] : null,
   ].filter(Boolean)
 }
 
-// The shell's own DeepSeek sign-in dialog, borrowed from its account plugin: the
+// The shell's own Nova sign-in dialog, borrowed from its account plugin: the
 // plugin's model sign-in entry renders here with the plugin's own operations.
 export function DeepSeekSignIn({ useUi, actions }) {
   const open = useUi(state => state.signIn)
@@ -333,7 +333,7 @@ export const MODEL_CSS = `
 .bt-model-tick{flex:none;width:16px;height:16px;display:inline-flex;color:var(--bt-ink-2)}
 .bt-model-tick svg{animation:bt-check-pop ${SPRING_POP.duration}ms ${SPRING_POP.easing} 60ms backwards}
 .bt-model-none{padding:8px;font-size:13px;line-height:18px;color:var(--bt-ink-2)}
-/* DSH centers the message column inside its scroll padding, which can sit a few px off this dock's center; the side shadows keep the band over the column's edges. */
+/* Nova centers the message column inside its scroll padding, which can sit a few px off this dock's center; the side shadows keep the band over the column's edges. */
 .bt-model-dock{width:100%;max-width:var(--dsh-chat-content-width,748px);margin:0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:0 0 10px;box-sizing:border-box;background:var(--bt-main);box-shadow:-12px 0 0 var(--bt-main),12px 0 0 var(--bt-main);animation:bt-model-in ${SPRING_POP.duration}ms ${SPRING_POP.easing} backwards}
 .bt-model-chips{display:flex;flex-wrap:wrap;gap:6px;margin-left:30px;max-width:min(560px,calc(100% - 30px));max-height:min(240px,36vh);max-height:min(240px,36dvh);overflow-y:auto;scrollbar-width:thin}
 .bt-model-choice-group{display:flex;flex-direction:column;gap:6px;width:100%;min-width:0}

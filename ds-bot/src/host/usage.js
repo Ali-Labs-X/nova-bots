@@ -1,15 +1,15 @@
-// Usage ledger: the tokens each model call in this DSH spent, for the Usage page.
+// Usage ledger: the tokens each model call in this Nova spent, for the Usage page.
 //
 // A call that a Session logs (one assistant settlement per attempt) is read from that
 // log, so calls made before this ledger existed count too. A call outside every log (a
-// checkpoint, a handoff note, the steward, an image reading, DSH titles and compaction)
-// is metered while it streams, from the time DS Bot runs. Rows go to usage.sqlite; like
+// checkpoint, a handoff note, the steward, an image reading, Nova titles and compaction)
+// is metered while it streams, from the time Nova Bots runs. Rows go to usage.sqlite; like
 // the chat index it is derived from the logs, and deleting it loses only the metered
 // calls and the names of deleted Bots.
 //
 // A call belongs to a Bot (its own chat, its group Sessions, their earlier parts, and
 // any Session forked or spawned under them), to a group chat's own Session, or to the
-// rest of DSH ("other").
+// rest of Nova ("other").
 import { randomUUID } from 'node:crypto'
 import { mkdir, unlink } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -45,7 +45,7 @@ const tokensOf = usage => ({
   output: count(usage.outputTokens),
 })
 
-// Folds Session events, oldest first, into one row per billed attempt, as DSH's own
+// Folds Session events, oldest first, into one row per billed attempt, as Nova's own
 // tokenUsage projection counts them: a later sample of one attempt replaces the earlier
 // one, and `llm/retry-started` begins a new attempt. The model is the one the latest
 // request header named. A fork's events up to its inherited cut are the parent's, so
@@ -139,7 +139,7 @@ function memoryLedger() {
 function sqliteLedger(DatabaseSync, path) {
   const db = new DatabaseSync(path)
   try {
-    // Desktop and Web may share one DSH home; the other writer holds the lock
+    // Desktop and Web may share one Nova home; the other writer holds the lock
     // briefly, and the timeout must be armed before the WAL pragma can block.
     db.exec('PRAGMA busy_timeout = 5000')
     db.exec('PRAGMA journal_mode = WAL')
@@ -261,7 +261,7 @@ export function install(rt) {
         ({ DatabaseSync } = await import('node:sqlite'))
         await mkdir(home, { recursive: true })
       } catch (error) {
-        rt.warn('ds-bot: usage is kept in memory only: %s', error)
+        rt.warn('usage is kept in memory only: %s', error)
         return memoryLedger()
       }
       // Only proven damage warrants a rebuild: Desktop and Web share this file,
@@ -274,7 +274,7 @@ export function install(rt) {
           return sqliteLedger(DatabaseSync, path)
         } catch (error) {
           if (fresh || !damaged(error)) {
-            rt.warn('ds-bot: usage is kept in memory only: %s', error)
+            rt.warn('usage is kept in memory only: %s', error)
             return memoryLedger()
           }
         }
@@ -295,7 +295,7 @@ export function install(rt) {
     ledger?.close()
     ledger = undefined
     opening = undefined
-  }, 'ds-bot: usage ledger')
+  }, 'Nova Bots: usage ledger')
 
   // Who each Session's calls belong to, from the team as it is now. Sessions forked or
   // spawned under one belong to the same owner, and a parent the team has lost
@@ -314,7 +314,7 @@ export function install(rt) {
         for (const segment of segments) owners.set(segment.sessionId, memberOwner(botId))
       }
     }
-    // The DSH Agent is part of the team: its Sessions count beside the Bots, not
+    // The Nova Agent is part of the team: its Sessions count beside the Bots, not
     // with the other sessions.
     for (const agent of Object.values(state.agents ?? {})) {
       for (const sessionId of agent.sessions ?? []) owners.set(sessionId, { owner: `agent:${agent.id}`, name: agent.name })
@@ -340,7 +340,7 @@ export function install(rt) {
     ...Object.values(room.segments ?? {}).flat().map(segment => segment.sessionId),
   ]))
 
-  // DSH reads a subagent Session only through its parent's address; the parent
+  // Nova reads a subagent Session only through its parent's address; the parent
   // need not exist any more. One with no parent on record cannot be read.
   const addressOf = item => (item.origin !== 'subagent'
     ? { kind: 'session', sessionId: item.sessionId }
@@ -410,7 +410,7 @@ export function install(rt) {
       try {
         listed = (await ctx.sessionController.list({}, signal)).items ?? []
       } catch (error) {
-        rt.warn('ds-bot: usage could not list the Sessions: %s', error)
+        rt.warn('usage could not list the Sessions: %s', error)
       }
       const stored = ledger.owners()
       const owners = liveOwners(listed, stored)
@@ -434,7 +434,7 @@ export function install(rt) {
       // Session's exact cursor is read below when no hint is usable.
       const listedCursor = item => (item.projections?.kind === 'sequenced' ? item.projections.asOfSeq : undefined)
       // A Session with no Agent attached is cold. Its listing carries the watermark of its
-      // checkpoint, which DSH rewrites at each turn end and when the Session is detached, so
+      // checkpoint, which Nova rewrites at each turn end and when the Session is detached, so
       // the watermark moves when the log does. A cold Session seals at that watermark only:
       // the watermark is compared with an earlier listing, never with a log sequence.
       const coldWatermarks = new Map(listed
@@ -473,7 +473,7 @@ export function install(rt) {
       // One line for the whole scan, not one per Session it could not read.
       const missed = failed.length + cut
       if (missed > 0) {
-        rt.warn('ds-bot: usage could not read %d Session%s%s%s', missed, missed === 1 ? '' : 's',
+        rt.warn('usage could not read %d Session%s%s%s', missed, missed === 1 ? '' : 's',
           cut > 0 ? ' before the scan ran out of time' : '',
           failed.length > 0 ? `: ${failed.map(([sessionId]) => sessionId).join(', ')} (first error: ${failed[0][1]})` : '')
       }
@@ -487,7 +487,7 @@ export function install(rt) {
 
   // Tokens per hour, owner, model, and use, for the browser to sum by day, week, or month.
   async function usageView({ timeZone } = {}) {
-    const job = scan().catch(error => rt.warn('ds-bot: usage scan failed: %s', error))
+    const job = scan().catch(error => rt.warn('usage scan failed: %s', error))
     let timer
     await Promise.race([job, new Promise((resolve) => { timer = setTimeout(resolve, VIEW_WAIT_MS) })])
     clearTimeout(timer)
@@ -569,7 +569,7 @@ export function install(rt) {
     }
   }
 
-  // DS Bot tags the requests it makes outside a Session with the Session they serve.
+  // Nova Bots tags the requests it makes outside a Session with the Session they serve.
   const tags = new WeakMap()
   const tagUsage = (messages, tag) => {
     if (messages !== null && typeof messages === 'object') tags.set(messages, tag)
@@ -579,7 +579,7 @@ export function install(rt) {
     const tag = from !== null && typeof from === 'object' ? tags.get(from) : undefined
     if (tag !== undefined) tagUsage(to, tag)
   }
-  // DS Bot's own requests name the Session they serve, as some routes require, so
+  // Nova Bots' own requests name the Session they serve, as some routes require, so
   // `sessionId` alone does not make a request that Session's own round; the tag does.
   const ownRequest = options => tags.has(options?.messages)
   // Owner and group use are journaled with the call itself: a Bot or room that
@@ -609,14 +609,14 @@ export function install(rt) {
       await rt.load()
       const book = ledger ?? await openLedger().catch(() => undefined)
       if (book === undefined) return
-      try { journal(book, sessionId) } catch (error) { rt.warn('ds-bot: usage could not journal %s: %s', sessionId, error) }
+      try { journal(book, sessionId) } catch (error) { rt.warn('usage could not journal %s: %s', sessionId, error) }
     })()
   }
   function record({ sessionId, kind, provider, model, usage }) {
     noteSession(sessionId)
     const row = { key: `live:${randomUUID()}`, session: sessionId ?? '', time: Date.now(), provider: provider ?? '', model: model ?? '', kind, ...tokensOf(usage) }
     if (ledger !== undefined) {
-      try { ledger.add(row) } catch (error) { rt.warn('ds-bot: usage could not record a call: %s', error) }
+      try { ledger.add(row) } catch (error) { rt.warn('usage could not record a call: %s', error) }
       return
     }
     early.push(row)

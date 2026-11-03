@@ -25,7 +25,7 @@ const seed = () => ({
   revision: 0,
 })
 
-// One DS Bot host on `home`; a second start on the same home is a restart.
+// One Nova Bots host on `home`; a second start on the same home is a restart.
 // Hosts by home: a home is removed only after its hosts stopped and their writes landed.
 let rt
 const started = new Map()
@@ -176,15 +176,15 @@ test('a request cut off by a restart goes on under the same exchange; own-chat w
   await settle(() => second.agentOf('b').calls.length === 1 && second.agentOf('a').calls.length === 1)
   const request = second.agentOf('b').calls[0]
   assert.deepEqual([request.source.role, request.source.exchangeId, request.source.senderSessionId, request.source.resumed], ['request', 'x1', 'a', true])
-  assert.match(text(request), /^\[Message from Chief · DeepSeek Harness restarted while you were working on it\]/)
+  assert.match(text(request), /^\[Message from Chief · Nova Bots restarted while you were working on it\]/)
   const own = second.agentOf('a').calls[0]
   assert.deepEqual([own.source.role, own.source.resumed], ['resume', true])
-  assert.match(text(own), /^\[DeepSeek Harness restarted while you were working\]/)
+  assert.match(text(own), /^\[Nova Bots restarted while you were working\]/)
   const state = JSON.parse(readFileSync(join(home, 'state.json'), 'utf8'))
   assert.equal(state.exchanges.length, 0)
 })
 
-test('when only DS Bot restarts, a turn still running or finished meanwhile is not picked up', async (t) => {
+test('when only Nova Bots restarts, a turn still running or finished meanwhile is not picked up', async (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] })
   const home = freshHome(t)
   const first = await start(home)
@@ -259,14 +259,14 @@ for (const role of ['reply', 'report', 'resume']) {
   })
 }
 
-test('an answer a turn produced while DS Bot was not watching goes to the Bot that waits for it, once', async (t) => {
+test('an answer a turn produced while Nova Bots was not watching goes to the Bot that waits for it, once', async (t) => {
   t.mock.timers.enable({ apis: ['setTimeout'] })
   const home = freshHome(t)
   const logs = new Map()
   const first = await start(home, logs)
   const request = await askWriter(first, home)
   const exchangeId = request.source.exchangeId
-  // Writer answers, and DS Bot restarts before it sees the end of that turn.
+  // Writer answers, and Nova Bots restarts before it sees the end of that turn.
   logs.set('b', writerLog(request, 'The plan is ready.'))
   await first.stop()
 
@@ -472,7 +472,7 @@ test('a message a shutdown cancelled is sent again once; one still waiting, take
   await send('Read the notes')
   await send('Never mind')
   const [plan, numbers, notesMessage, withdrawn] = first.agentOf('b').calls
-  // Taken up by a turn, or withdrawn while DS Bot runs (the user stopped the Bot).
+  // Taken up by a turn, or withdrawn while Nova Bots runs (the user stopped the Bot).
   first.emit('b', 'user/message', { content: notesMessage.content, source: notesMessage.source })
   for (const listener of first.ctx.listeners.get('agent/inbox/discarded')) listener({ message: withdrawn })
   await settle(() => (notes(home).queued.b ?? []).length === 2)
@@ -487,7 +487,7 @@ test('a message a shutdown cancelled is sent again once; one still waiting, take
   await settle(() => second.agentOf('b').calls.length === 1)
   const [again] = second.agentOf('b').calls
   assert.deepEqual([again.source.exchangeId, again.source.role], [plan.source.exchangeId, 'request'])
-  assert.match(text(again), /^\[Message from Chief · DeepSeek Harness restarted before it could reach you\]\nDraft the plan$/)
+  assert.match(text(again), /^\[Message from Chief · Nova Bots restarted before it could reach you\]\nDraft the plan$/)
   // The resend is the same exchange, not a new one.
   const exchanges = (await second.call('exchange', { a: 'a', b: 'b' })).value
   assert.equal(exchanges.length, 4)
@@ -521,7 +521,7 @@ test('a queued request kept over a restart is sent again however old, and the as
   await settle(() => second.agentOf('b').calls.length === 1)
   const [again] = second.agentOf('b').calls
   assert.deepEqual([again.source.exchangeId, again.source.role], [plan.source.exchangeId, 'request'])
-  assert.match(text(again), /^\[Message from Chief · DeepSeek Harness restarted before it could reach you\]/)
+  assert.match(text(again), /^\[Message from Chief · Nova Bots restarted before it could reach you\]/)
 
   // The work is marked, so the answer that goes up says the request arrived late.
   await settleState(t, home, () => stateOf(home).works?.[plan.source.exchangeId]?.late === true)
@@ -530,7 +530,7 @@ test('a queued request kept over a restart is sent again however old, and the as
   second.emit('b', 'turn/end', { turn: 1, reason: { kind: 'completed' } })
   await settle(() => second.agentOf('a').calls.length === 1)
   const reply = text(second.agentOf('a').calls[0])
-  assert.match(reply, /^\[Reply from Writer\]\n\[This request reached Writer only after DeepSeek Harness restarted\.\]/)
+  assert.match(reply, /^\[Reply from Writer\]\n\[This request reached Writer only after Nova Bots restarted\.\]/)
   assert.match(reply, /The plan is ready\./)
 })
 

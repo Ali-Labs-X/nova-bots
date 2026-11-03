@@ -6,13 +6,14 @@ import { initProfile, loadProfileDirectory, readProfileManifest, resolveProfileD
 export const PROFILE = 'ds-bot'
 // DSH's shared core, DSH's web front end (the window) and voice input, then the Bot team.
 // Bundles the user installs follow.
-export const BUNDLES = ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-experimental-voice-input-bundle', 'ds-bot']
+export const BUNDLES = ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app', '@deepseek-ai/dsh-experimental-voice-input-bundle', 'nova-bots']
 // The first-run check reads a copy of the team's chats without the Bot team running on them.
 // DSH reads a log the same way whatever the profile mounts.
 export const CHECK_PROFILE = 'import-check'
 export const CHECK_BUNDLES = ['@deepseek-ai/dsh-base', '@deepseek-ai/dsh-web-app']
-// Bundles that earlier builds of the app put in its profile: the engine layer of its own window (../engine).
-const RETIRED_BUNDLES = [LEGACY_ENGINE, 'dsbot-engine']
+// Bundles that earlier builds of the app put in its profile: the engine layer of its own window (../engine),
+// and the plugin under the name it had before the rename.
+const RETIRED_BUNDLES = [LEGACY_ENGINE, 'dsbot-engine', 'novabots-engine', 'ds-bot']
 // The app's own manifest is the installation: DSH imports plugins only from the installation's dependency
 // graph, resolves bundles there first, and keeps the bundles it names as direct dependencies from removal.
 export const INSTALL_ANCHOR = fileURLToPath(new URL('../package.json', import.meta.url))

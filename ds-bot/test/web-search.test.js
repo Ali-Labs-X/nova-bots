@@ -247,7 +247,7 @@ test('a DeepSeek account route sends only the account token, with the Session mo
   assert.equal(init.headers['x-api-key'], undefined)
   assert.equal(init.headers.authorization, undefined)
   assert.equal(JSON.parse(init.body).model, 'deepseek-v4-pro')
-  assert.match(result.content, /billed to the DeepSeek account sign-in/)
+  assert.match(result.content, /billed to the Nova account sign-in/)
 })
 
 test('profile headers go with the request, but cannot replace the credential', async () => {

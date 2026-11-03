@@ -13,3 +13,7 @@
 - id: bot
   config:
     workspace: /workspace
+    # The image is updated by rebuilding it, so the plugin never asks a
+    # registry or a repository whether a newer release exists. Nothing reaches
+    # the network to find out.
+    updateCheck: false

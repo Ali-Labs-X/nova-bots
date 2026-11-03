@@ -71,7 +71,7 @@ const contrast = (ink, paper) => {
 }
 
 test('the user ink reads on the user surface in every built-in theme and mode', () => {
-  for (const id of ['deepseek', 'mono', 'paper', 'moonlight']) {
+  for (const id of ['nova', 'mono', 'paper']) {
     for (const dark of [false, true]) {
       const vars = themeVars(allThemes()[id], dark)
       const ratio = contrast(over(vars['--bt-user-ink'], vars['--bt-user']), over(vars['--bt-user'], vars['--bt-main']))
@@ -90,11 +90,11 @@ const varsOf = (theme, accent, dark) => {
 
 test('the accent ink is the more readable of the two inks for every accent', () => {
   const cases = []
-  for (const id of ['deepseek', 'mono', 'paper', 'moonlight']) {
+  for (const id of ['nova', 'mono', 'paper']) {
     for (const dark of [false, true]) cases.push([`${id} ${dark ? 'dark' : 'light'}`, allThemes()[id], undefined, dark])
   }
   for (const ink of ACCENT_INKS) {
-    for (const dark of [false, true]) cases.push([`${ink} ${dark ? 'dark' : 'light'}`, allThemes().deepseek, INKS[ink][0], dark])
+    for (const dark of [false, true]) cases.push([`${ink} ${dark ? 'dark' : 'light'}`, allThemes().nova, INKS[ink][0], dark])
   }
   for (const [name, theme, accent, dark] of cases) {
     const vars = varsOf(theme, accent, dark)
@@ -116,7 +116,7 @@ test('a preset accent takes its dark value in dark mode; a custom accent stays t
       assert.ok(ratio >= 3, `${id} ${ink}: ${dark} on ${theme.dark.bg} is ${ratio.toFixed(2)}:1`)
     }
     // A color picked by hand is not a preset, even when it spells one in lower case.
-    for (const custom of ['#123456', INKS.deepseek[0].toLowerCase()]) {
+    for (const custom of ['#123456', INKS.nova[0].toLowerCase()]) {
       assert.equal(varsOf(theme, custom, true)['--bt-accent'], custom)
     }
     assert.equal(varsOf(theme, undefined, true)['--bt-accent'], theme.dark.accent)
@@ -150,7 +150,7 @@ const resolve = (value, vars) => {
 }
 
 test('a user message stays readable when a dark skin repaints the host bubble', () => {
-  for (const id of ['deepseek', 'mono', 'paper', 'moonlight']) {
+  for (const id of ['nova', 'mono', 'paper']) {
     const vars = { ...themeVars(allThemes()[id], true), ...DARK_SKIN }
     const page = vars['--bt-main']
     for (const selector of ['.bt-ubody', '[class*="_userRow"] [class*="_bubble"]']) {

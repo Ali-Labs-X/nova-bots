@@ -46,12 +46,12 @@ describe('claimBundles', () => {
 
   const write = (bundles) => {
     mkdirSync(dir, { recursive: true })
-    writeFileSync(join(dir, 'package.json'), `${JSON.stringify({ name: 'dsh-profile-ds-bot', private: true, dependencies: { 'a-plugin': '1.0.0' }, dsh: { profile: { bundles } } }, undefined, 2)}\n`)
+    writeFileSync(join(dir, 'package.json'), `${JSON.stringify({ name: 'dsh-profile-nova-bots', private: true, dependencies: { 'a-plugin': '1.0.0' }, dsh: { profile: { bundles } } }, undefined, 2)}\n`)
   }
   const read = () => JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'))
 
   test('puts the app bundles first, keeps the user bundles and drops the retired ones', () => {
-    write(['@deepseek-ai/dsh-base', LEGACY_ENGINE, 'dsbot-engine', 'ds-bot', 'a-plugin'])
+    write(['@deepseek-ai/dsh-base', LEGACY_ENGINE, 'dsbot-engine', 'novabots-engine', 'ds-bot', 'nova-bots', 'a-plugin'])
     claimBundles(dir)
     assert.deepEqual(read().dsh.profile.bundles, [...BUNDLES, 'a-plugin'])
     assert.deepEqual(read().dependencies, { 'a-plugin': '1.0.0' })

@@ -11,7 +11,7 @@ describe('office skill provider', () => {
     const list = await provider.list()
     assert.deepEqual(list.map(s => s.name), ['office', 'office-tools'])
     for (const skill of list) {
-      assert.equal(skill.provider, 'ds-bot-office')
+      assert.equal(skill.provider, 'nova-office')
       assert.equal(skill.source, 'bundled')
       assert.deepEqual(skill.invocation, { modelInvocable: true, userInvocable: true })
       assert.equal(skill.resourceBase.kind, 'directory')
@@ -31,7 +31,7 @@ describe('office skill provider', () => {
     const providers = [officeProvider(), fakeDsh]
     const all = (await Promise.all(providers.map(p => p.list()))).flat()
     const offices = all.filter(s => s.name === 'office').sort((a, b) => a.rank - b.rank)
-    assert.equal(offices[0].provider, 'ds-bot-office')
+    assert.equal(offices[0].provider, 'nova-office')
   })
 
   test('office-tools content carries the runtime block', async () => {

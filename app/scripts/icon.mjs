@@ -1,4 +1,4 @@
-// Draws the app icon from the Main Bot's whale in ../ds-bot and writes assets/icon.svg,
+// Draws the app icon from the Main Bot's Nova spark in ../ds-bot and writes assets/icon.svg,
 // assets/icon.png (1024 px), assets/icon.ico (Windows, 16 to 256 px) and the tray marks:
 // assets/tray.ico (Windows), assets/tray.png (Linux) and assets/trayTemplate.png with its
 // @2x (macOS).
@@ -17,12 +17,12 @@ const ICO_SIZES = [16, 20, 24, 32, 36, 40, 48, 64, 72, 96, 128, 256]
 const TRAY_ICO_SIZES = [16, 20, 24, 32]
 const TRAY_PNG_SIZE = 24
 // macOS draws a template image itself, in the colour of the menu bar: a black mark with the
-// shape of the whale.
+// shape of the spark.
 const TRAY_TEMPLATE_SIZES = [16, 32]
-const WHALE_INK = '#4D6BFE'
+const SPARK_INK = '#6D5EFC'
 
-// The whale's body spans x 4..95.9 and y 20.9..79 of its 100 box.
-const WHALE = { cx: 49.95, cy: 49.95, width: 91.9 }
+// The spark's body spans x 2..98 and y 2..98 of its 100 box.
+const SPARK = { cx: 50, cy: 50, width: 96 }
 
 // A superellipse close to the system's rounded-square app tile.
 function tile(size, inset) {
@@ -41,13 +41,13 @@ function tile(size, inset) {
 // draws its icons nearly edge to edge, so its sizes use a fuller tile.
 function iconSvg(plate, size = 1024) {
   const inset = (size * (1 - plate)) / 2
-  const whaleWidth = (size - 2 * inset) * 0.85
-  const scale = whaleWidth / WHALE.width
-  // The head carries the weight, so the whale sits a little left of and above center.
-  const x = size / 2 - WHALE.cx * scale - whaleWidth * 0.015
-  const y = size / 2 - WHALE.cy * scale - whaleWidth * 0.018
+  const sparkWidth = (size - 2 * inset) * 0.85
+  const scale = sparkWidth / SPARK.width
+  // The spark is drawn around its center, so it sits a little left of and above the middle.
+  const x = size / 2 - SPARK.cx * scale - sparkWidth * 0.015
+  const y = size / 2 - SPARK.cy * scale - sparkWidth * 0.018
   const path = tile(size, inset)
-  const whale = characterMarkup('whale', 'deepseek').replaceAll(MASK_ID, 'eyes').replaceAll('var(--bt-ink-deepseek)', WHALE_INK)
+  const spark = characterMarkup('nova', 'nova').replaceAll(MASK_ID, 'eyes').replaceAll('var(--bt-ink-nova)', SPARK_INK)
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
 <defs>
 <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#eef1f7"/></linearGradient>
@@ -55,22 +55,22 @@ function iconSvg(plate, size = 1024) {
 </defs>
 <path d="${path}" fill="url(#plate)" filter="url(#shadow)"/>
 <path d="${path}" fill="none" stroke="rgba(20,20,40,.1)" stroke-width="${size * 0.004}"/>
-<g transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${scale.toFixed(4)})">${whale}</g>
+<g transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${scale.toFixed(4)})">${spark}</g>
 </svg>
 `
 }
 
-// The tray mark: the whale alone, so that it still reads at the size of a tray icon. The
+// The tray mark: the spark alone, so that it still reads at the size of a tray icon. The
 // macOS template is the same shape in black, because macOS paints it in the colour of the
 // menu bar itself.
 function traySvg(size, ink) {
-  const whaleWidth = size * 0.94
-  const scale = whaleWidth / WHALE.width
-  const x = size / 2 - WHALE.cx * scale - whaleWidth * 0.015
-  const y = size / 2 - WHALE.cy * scale - whaleWidth * 0.018
-  const whale = characterMarkup('whale', 'deepseek').replaceAll(MASK_ID, 'eyes').replaceAll('var(--bt-ink-deepseek)', ink)
+  const sparkWidth = size * 0.94
+  const scale = sparkWidth / SPARK.width
+  const x = size / 2 - SPARK.cx * scale - sparkWidth * 0.015
+  const y = size / 2 - SPARK.cy * scale - sparkWidth * 0.018
+  const spark = characterMarkup('nova', 'nova').replaceAll(MASK_ID, 'eyes').replaceAll('var(--bt-ink-nova)', ink)
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-<g transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${scale.toFixed(4)})">${whale}</g>
+<g transform="translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${scale.toFixed(4)})">${spark}</g>
 </svg>
 `
 }
@@ -119,8 +119,8 @@ if (process.versions.electron) {
   const jobs = [
     { svg: iconSvg(0.805), size: 1024 },
     ...ICO_SIZES.map(size => ({ svg: iconSvg(0.92, size), size })),
-    ...TRAY_ICO_SIZES.map(size => ({ svg: traySvg(size, WHALE_INK), size })),
-    { svg: traySvg(TRAY_PNG_SIZE, WHALE_INK), size: TRAY_PNG_SIZE },
+    ...TRAY_ICO_SIZES.map(size => ({ svg: traySvg(size, SPARK_INK), size })),
+    { svg: traySvg(TRAY_PNG_SIZE, SPARK_INK), size: TRAY_PNG_SIZE },
     ...TRAY_TEMPLATE_SIZES.map(size => ({ svg: traySvg(size, '#000000'), size })),
   ]
   // Not awaited at the top: Electron is ready only after the main module has run.

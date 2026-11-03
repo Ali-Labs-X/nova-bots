@@ -1,6 +1,6 @@
-// Approvals. A member's group Session is hidden, so DSH's approval card never shows
-// there and the turn would wait forever: DS Bot answers those requests itself, from
-// the group chat. A Bot's own chat keeps DSH's card; its requests are only noted, so
+// Approvals. A member's group Session is hidden, so Nova's approval card never shows
+// there and the turn would wait forever: Nova Bots answers those requests itself, from
+// the group chat. A Bot's own chat keeps Nova's card; its requests are only noted, so
 // the team view can say who is waiting.
 import { randomUUID } from 'node:crypto'
 
@@ -11,7 +11,7 @@ export function install(rt) {
   /** @type {Map<string, {id:string, sessionId:string, botId:string, roomId?:string, tool:string, reason:string, detail:{text?:string, code?:string}, at:number, answer?:(outcome:string)=>void}>} */
   const pending = new Map()
 
-  // Ahead of DSH's own answerer, which would hold a hidden Session's request unseen.
+  // Ahead of Nova's own answerer, which would hold a hidden Session's request unseen.
   ctx.on('approval/request', (request, next) => {
     const sessionId = request.agent?.session?.id ?? request.agent?.id
     const owner = sessionId === undefined ? undefined : rt.groupOwners.get(sessionId)

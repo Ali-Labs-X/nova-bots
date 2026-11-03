@@ -7,7 +7,7 @@ import { reconcileSearchSelector, SEARCH_PATCH_NAME, searchSelectorPatch } from 
 
 const DSH_WEB = '@deepseek-ai/dsh-web'
 
-// A stand-in profile: dsh-base supplies the web row, ds-bot adds the auto
+// A stand-in profile: dsh-base supplies the web row, the plugin adds the auto
 // provider and points the selector at it, and `user` rows model the profile's
 // own cordis.patch.yml.
 function profile(user = [], { auto = true } = {}) {
@@ -16,15 +16,15 @@ function profile(user = [], { auto = true } = {}) {
     name: 'ds-bot', dir, patchPath: join(dir, 'cordis.patch.yml'), skippedBundles: [],
     layers: [
       { packageName: '@deepseek-ai/dsh-base', packageDir: '', patchPaths: [], patches: [{ insert: [{ id: 'web', name: DSH_WEB, config: { searchProvider: 'deepseek-official', fetchProvider: 'http' } }] }] },
-      { packageName: 'ds-bot', packageDir: '', patchPaths: [], patches: [
-        ...(auto ? [{ insert: [{ id: 'web-search-auto', name: 'ds-bot/web-search' }] }] : []),
+      { packageName: 'nova-bots', packageDir: '', patchPaths: [], patches: [
+        ...(auto ? [{ insert: [{ id: 'web-search-auto', name: 'nova-bots/web-search' }] }] : []),
         { id: 'web', config: { searchProvider: 'auto', fetchProvider: 'http' } },
       ] },
     ],
     patches: user,
   }
 }
-const disabledAuto = { id: 'web-search-auto', name: 'ds-bot/web-search', disabled: true }
+const disabledAuto = { id: 'web-search-auto', name: 'nova-bots/web-search', disabled: true }
 
 describe('searchSelectorPatch', () => {
   const made = []

@@ -3,7 +3,7 @@
 // DSH's own profile does not mount them, so when the payload is complete the Host adds them
 // through a `--patch` overlay it writes into its own data area next to the profiles
 // (`<DSH_HOME>/profiles/office.patch.yml`), which DSH reads only through `patchFiles`.
-// Follows DeepSeek Harness apps/desktop-host/src/office.ts (MIT); see NOTICE.
+// Follows the runtime's apps/desktop-host/src/office.ts (MIT); see NOTICE.
 import { existsSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'

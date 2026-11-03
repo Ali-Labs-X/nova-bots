@@ -342,7 +342,7 @@ const groupNote = review => [
   review ? ' The memory review after each turn here keeps in it what the group should know.' : '',
 ].join('')
 
-const SUMMARY_SYSTEM = 'You write the memory summary that a user reads in the memory panel of DS Bot, an app where a team of AI Bots works for the user. You only restate saved memory entries; you never add to them.'
+const SUMMARY_SYSTEM = 'You write the memory summary that a user reads in the memory panel of Nova Bots, an app where a team of AI Bots works for the user. You only restate saved memory entries; you never add to them.'
 
 const summaryRequest = ({ name, own, team, language }) => [
   `Here is everything ${name} remembers: its own memory, then the team memory that every Bot shares. Each line is one entry; [[name]] is a topic.`,
@@ -367,8 +367,8 @@ const groupSummaryRequest = ({ name, lines, language }) => [
 
 const askSystem = group => [
   group
-    ? 'You keep the memory of one group chat in DS Bot, an app where a team of AI Bots works for the user; its members share this memory in that group. The user is talking to you in the memory panel. You see every saved entry, numbered. Answer the user from the entries only, or change them as the user asks.'
-    : 'You keep the memory of one Bot in DS Bot, an app where a team of AI Bots works for the user. The user is talking to you in the memory panel. You see every saved entry, numbered. Answer the user from the entries only, or change them as the user asks.',
+    ? 'You keep the memory of one group chat in Nova Bots, an app where a team of AI Bots works for the user; its members share this memory in that group. The user is talking to you in the memory panel. You see every saved entry, numbered. Answer the user from the entries only, or change them as the user asks.'
+    : 'You keep the memory of one Bot in Nova Bots, an app where a team of AI Bots works for the user. The user is talking to you in the memory panel. You see every saved entry, numbered. Answer the user from the entries only, or change them as the user asks.',
   'Reply with one JSON object and nothing else: {"reply": "…", "changes": […]}',
   '- reply: one to three short sentences to the user. Say what you changed, or answer the question; when the entries do not say, say so. The user does not see the entry numbers, so never mention them.',
   '- changes: empty unless the user asks to add, correct, or remove something. Each change is one of',
@@ -382,8 +382,8 @@ const askSystem = group => [
 // which a Bot's review leaves out: only the members read it, and only there.
 const reviewSystem = ({ teamWrites = false, group = false } = {}) => [
   group
-    ? 'You keep the long-term memory of one group chat in DS Bot, an app where a team of AI Bots works for the user. The members read it in their later conversations in this group, which will not have these messages; no Bot reads it anywhere else. After each turn you read the new messages and decide what the group should still know. Most turns hold nothing worth keeping.'
-    : 'You keep the long-term memory of one Bot in DS Bot, an app where a team of AI Bots works for the user. After each turn of a conversation you read the new messages and decide what the Bot should still know in its later conversations, which will not have these messages. Most turns hold nothing worth keeping.',
+    ? 'You keep the long-term memory of one group chat in Nova Bots, an app where a team of AI Bots works for the user. The members read it in their later conversations in this group, which will not have these messages; no Bot reads it anywhere else. After each turn you read the new messages and decide what the group should still know. Most turns hold nothing worth keeping.'
+    : 'You keep the long-term memory of one Bot in Nova Bots, an app where a team of AI Bots works for the user. After each turn of a conversation you read the new messages and decide what the Bot should still know in its later conversations, which will not have these messages. Most turns hold nothing worth keeping.',
   'Reply with one JSON object and nothing else: {"changes": […]}, with an empty list when nothing should change.',
   `At most ${REVIEW_CHANGES_MAX} changes in one answer, the most lasting first; the rest can wait for the next review.`,
   'Keep, as a new entry:',
@@ -501,8 +501,8 @@ export function install(rt) {
   // An unreadable memory is not an empty one: callers that change it fail instead of
   // writing over what could not be read, the way store.js treats a broken state.json.
   const unreadable = (path, error) => {
-    rt.warn('ds-bot: unreadable memory file %s: %s', path, error)
-    throw Object.assign(new Error(`Memory file ${path} could not be read (${error?.code ?? error?.message}). DS Bot leaves it as it is; fix or move the file.`), { code: 'memory/unreadable' })
+    rt.warn('unreadable memory file %s: %s', path, error)
+    throw Object.assign(new Error(`Memory file ${path} could not be read (${error?.code ?? error?.message}). Nova Bots leaves it as it is; fix or move the file.`), { code: 'memory/unreadable' })
   }
   const readText = (path) => {
     try {
@@ -650,7 +650,7 @@ export function install(rt) {
       await journalRow(record.row)
       await unlink(pendingPath(root)).catch(error => { if (error?.code !== 'ENOENT') throw error })
     } catch (error) {
-      rt.warn('ds-bot: memory change %s is pending: %s', id, error)
+      rt.warn('memory change %s is pending: %s', id, error)
       throw error
     }
   }
@@ -678,8 +678,8 @@ export function install(rt) {
 
   // A change that was interrupted is finished when the host starts.
   ctx.effect(() => {
-    void rt.load().then(() => recover()).catch(error => rt.warn('ds-bot: memory recovery failed: %s', error?.message ?? error))
-  }, 'ds-bot: memory recovery')
+    void rt.load().then(() => recover()).catch(error => rt.warn('memory recovery failed: %s', error?.message ?? error))
+  }, 'Nova Bots: memory recovery')
 
   // Checked when the write runs: a Bot or group chat deleted after the write was
   // queued has its memory archived already, and writing would bring the folder back;
@@ -880,9 +880,9 @@ export function install(rt) {
       // The memory is in the archive from here: a log row that cannot be written must not
       // hide where it went, which the privacy guard needs to keep a private archive closed.
       await journalRow({ id: randomUUID(), time: new Date().toISOString(), op: 'archive', scope: scopeKey(ownScope(botId)), actor: 'user', actorName: 'user', botName: bot?.name, to: `archive/${name}` })
-        .catch(error => rt.warn('ds-bot: archive of the memory of %s not logged: %s', bot?.name ?? botId, error))
+        .catch(error => rt.warn('archive of the memory of %s not logged: %s', bot?.name ?? botId, error))
       return join(root, 'archive', name)
-    }).catch(error => rt.warn('ds-bot: memory of %s not archived: %s', bot?.name ?? botId, error))
+    }).catch(error => rt.warn('memory of %s not archived: %s', bot?.name ?? botId, error))
   }
 
   // A deleted group chat's memory moves to the archive, whole. Called before the
@@ -903,7 +903,7 @@ export function install(rt) {
       await mkdir(join(root, 'archive'), { recursive: true })
       await rename(dir, join(root, 'archive', name))
       await journalRow({ id: randomUUID(), time: new Date().toISOString(), op: 'archive', scope: scopeKey(groupScope(room.id)), actor: 'user', actorName: 'user', groupName: room.name, to: `archive/${name}` })
-    }).catch(error => rt.warn('ds-bot: memory of group %s not archived: %s', room.name, error))
+    }).catch(error => rt.warn('memory of group %s not archived: %s', room.name, error))
   }
 
   // ---------------------------------------------------------------------------
@@ -924,7 +924,7 @@ export function install(rt) {
       return { text: readFileSync(path, 'utf8') }
     } catch (error) {
       if (error?.code === 'ENOENT') return { text: '' }
-      rt.warn('ds-bot: unreadable memory file %s: %s', path, error)
+      rt.warn('unreadable memory file %s: %s', path, error)
       return { text: '', failed: `(this memory could not be read: ${error?.code ?? error?.name ?? 'error'})` }
     }
   }
@@ -982,7 +982,7 @@ export function install(rt) {
     try {
       return { pending: readPending(root) !== undefined }
     } catch (error) {
-      rt.warn('ds-bot: %s', error?.message ?? error)
+      rt.warn('%s', error?.message ?? error)
       return { failed: true }
     }
   }
@@ -1006,7 +1006,7 @@ export function install(rt) {
     const path = snapshotPath(sessionId)
     const snap = existsSync(path) ? sectionRead(path) : { text: '' }
     if (pending.pending === true || pending.failed === true) {
-      if (pending.pending === true) void recover().catch(error => rt.warn('ds-bot: memory recovery failed: %s', error?.message ?? error))
+      if (pending.pending === true) void recover().catch(error => rt.warn('memory recovery failed: %s', error?.message ?? error))
       // Only a previously committed snapshot is safe while files may be half-written.
       if (snap.text !== '' && holds(snap.text)) return snap.text
       return ['# Your memory', memoryRules(reviewOn), ...marks, '', 'Memory is unavailable until its pending change has been recovered. Use recall after recovery.'].join('\n')
@@ -1026,7 +1026,7 @@ export function install(rt) {
           writeFileSync(`${path}.tmp`, text, 'utf8')
           renameSync(`${path}.tmp`, path)
         } catch (error) {
-          rt.warn('ds-bot: memory snapshot for %s not saved: %s', bot.name, error)
+          rt.warn('memory snapshot for %s not saved: %s', bot.name, error)
         }
       }
     }
@@ -1045,7 +1045,7 @@ export function install(rt) {
     order: 645,
     interpolate: false,
     text: context => sectionFor(context?.agent?.id),
-  }), 'ds-bot: memory section')
+  }), 'Nova Bots: memory section')
 
   // ---------------------------------------------------------------------------
   // Tools.
@@ -1274,7 +1274,7 @@ export function install(rt) {
 
   async function modelFor(bot) {
     const route = splitRef(await rt.desiredModel(bot) ?? await rt.defaultModel())
-    if (route === undefined) throw new Error('No model is available. Add one in Harness settings.')
+    if (route === undefined) throw new Error('No model is available. Add one in Nova settings.')
     return route
   }
   // The panel's model calls belong to the Bot or group whose memory they serve;
@@ -1377,7 +1377,7 @@ export function install(rt) {
       if (rt.readOnly() === undefined) await writeText(summaryPath(panel.id), JSON.stringify(value, null, 2))
     })().catch((error) => {
       summaryFailures.set(panel.id, { hash, model, message: error?.message ?? String(error) })
-      rt.warn('ds-bot: memory summary for %s failed: %s', panel.name, error)
+      rt.warn('memory summary for %s failed: %s', panel.name, error)
     }).finally(() => summarizing.delete(panel.id))
     summarizing.set(panel.id, job)
   }
@@ -1521,7 +1521,7 @@ export function install(rt) {
     const lastUser = log.findLastIndex(line => line.who === 'User' && line.botId === undefined)
     let start = since === undefined ? Math.max(0, Math.min(log.length - REVIEW_FIRST_LINES, lastUser === -1 ? log.length : lastUser)) : log.findIndex(line => line.seq > since)
     const oldest = room.log?.[0]?.seq
-    if (since !== undefined && oldest !== undefined && oldest > since + 1) rt.warn('ds-bot: %d lines of group "%s" left its log before they were reviewed', oldest - since - 1, room.name)
+    if (since !== undefined && oldest !== undefined && oldest > since + 1) rt.warn('%d lines of group "%s" left its log before they were reviewed', oldest - since - 1, room.name)
     if (start === -1) start = log.length
     const line = (entry) => {
       const who = entry.botId === undefined && entry.who === 'User' ? 'user' : 'bot'
@@ -1581,7 +1581,7 @@ export function install(rt) {
         problem !== undefined ? (secretEntry(text) ? 'the entry looks like a key, token, password, or ID number, which memory never keeps' : `the entry "${clip(text, 160)}": ${problem}`) :
         undefined
       if (leftOut !== undefined) {
-        rt.warn('ds-bot: memory review of %s left out a change: %s', name, leftOut)
+        rt.warn('memory review of %s left out a change: %s', name, leftOut)
         continue
       }
       try {
@@ -1594,7 +1594,7 @@ export function install(rt) {
         // diagnostics say what was not kept, not only why.
         const held = op === 'remove' ? `the removal of "${clip(target.text, 160)}"` : `the entry "${clip(text, 160)}"`
         const aimed = `${fileName(op === 'add' ? { topic } : target.file)} of ${label}`
-        rt.warn('ds-bot: memory review of %s left out a change: %s for %s: %s', name, held, aimed, failure?.message ?? failure)
+        rt.warn('memory review of %s left out a change: %s for %s: %s', name, held, aimed, failure?.message ?? failure)
         if (!ROUTED.has(failure?.code)) failed ??= failure
       }
     }
@@ -1696,12 +1696,12 @@ export function install(rt) {
       // is said, and the place moves on — the same lines are not read again. A
       // change that is not well formed is set aside and said, one by one.
       if (parsed === undefined) {
-        rt.warn('ds-bot: memory review of %s got no list of changes from the model: %s', name, clip(reply.replace(/\s+/g, ' '), 120))
+        rt.warn('memory review of %s got no list of changes from the model: %s', name, clip(reply.replace(/\s+/g, ' '), 120))
       } else {
         const { changes, leftOut } = parsed
         for (const change of leftOut) {
           const whole = JSON.stringify(change)
-          rt.warn('ds-bot: memory review of %s left out a change: %s', name, secretEntry(whole) ? 'it looks like a key, token, password, or ID number, which memory never keeps' : `it is not a well-formed change: ${clip(whole, 160)}`)
+          rt.warn('memory review of %s left out a change: %s', name, secretEntry(whole) ? 'it looks like a key, token, password, or ID number, which memory never keeps' : `it is not a well-formed change: ${clip(whole, 160)}`)
         }
         // The limit is what one answer may hold, not a cut of the one the model
         // gave: every change in it is kept or set aside, none is dropped.
@@ -1755,7 +1755,7 @@ export function install(rt) {
       try {
         if (rt.readOnly() === undefined) await (waited.roomId === undefined ? reviewChat(waited) : reviewGroup(waited))
       } catch (error) {
-        rt.warn('ds-bot: memory review of %s failed: %s', waited.key, error?.message ?? error)
+        rt.warn('memory review of %s failed: %s', waited.key, error?.message ?? error)
       } finally {
         reviewsRunning -= 1
       }
@@ -1793,7 +1793,7 @@ export function install(rt) {
       for (const timer of reviewTimers.values()) clearTimeout(timer)
       reviewTimers.clear()
       turnOwners.clear()
-    }, 'ds-bot: memory review')
+    }, 'Nova Bots: memory review')
   }
 
   async function memoryEndpoint(endpoint, body) {

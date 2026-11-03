@@ -9,12 +9,12 @@ import { clockLabel, messageClock } from './text.js'
 import { useFold } from './fold.js'
 
 // -------------------------------------------------------------------------
-// The user's own messages. DSH draws every "@word" in them as a file reference, and
+// The user's own messages. Nova draws every "@word" in them as a file reference, and
 // cuts it at the first space, so "@新 Bot" showed as a file "新". Here the Bot mentions
-// are cut out first, by the rule the group host calls them with; DSH's own drawing
+// are cut out first, by the rule the group host calls them with; Nova's own drawing
 // keeps everything else (files, conversation references, skills).
 
-// DSH releases without the text projection keep their own bubble.
+// Nova releases without the text projection keep their own bubble.
 export const canDrawUserMessages = () => typeof ui.projectUserText === 'function'
 
 export function contentParts(content) {

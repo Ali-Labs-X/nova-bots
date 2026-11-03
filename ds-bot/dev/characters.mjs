@@ -1,10 +1,11 @@
-// Source of DS Bot's characters. Each one is a small 3D model made of
+// Source of Nova Bots' characters. Each one is a small 3D model made of
 // signed-distance primitives (spheres, ellipsoids, round cones, a torus, extrusions, and
 // the first mascots' design outlines inflated into soft slabs), seen from one fixed
 // three-quarter view and traced into flat layers in a 100-unit box: the body, decals,
 // a shade on the side away from the light, and a highlight facing it. The eyes are
 // capsules laid on the model's front surface and projected the same way, so the near
-// eye is wider than the far one and both lean with the surface.
+// eye is wider than the far one and both lean with the surface. The Nova spark is
+// drawn by hand, so it is written out as it is.
 //
 //   node dev/characters.mjs                   prints the CHARACTERS block for src/client/characters.js
 //   node dev/characters.mjs --preview a.html  also writes a preview gallery
@@ -239,16 +240,6 @@ const WAVE_HEART = 'M50 78C38 70 22 59 20 45C18.5 35 25 27 34 27C41 27 46.5 31.5
 
 // The first mascots: their original outlines, inflated into soft 3D bodies.
 const MASCOTS = {
-  whale: {
-    label: 'Whale',
-    sdf: smin(0.14,
-      ellipsoid([0.12, -0.06, 0], [0.8, 0.68, 0.66]),
-      roundCone([-0.42, -0.34, 0], [-1.0, 0.16, 0], 0.18, 0.065),
-      ellipsoid([-0.96, 0.5, 0], [0.13, 0.36, 0.09], 14),
-      ellipsoid([-1.28, 0.22, 0], [0.13, 0.34, 0.09], 74)),
-    eyes: [[-0.06, 0.12], [0.34, 0.12]],
-    paints: [{ region: p => Math.max(sphere([0.42, -0.98, 0.52], 0.72)(p), -0.04 - p[2]), fill: '#fff', opacity: 1 }],
-  },
   moon: {
     label: 'Moon',
     sdf: puffy(outline([MOON_BODY], box512(244, 288)), 0.1, 0.24),
@@ -358,8 +349,16 @@ const GEOMETRIC = {
   },
 }
 
-// Picker order: the mascots lead, the star second.
-const ORDER = ['whale', 'star', 'moon', 'wave', 'squircle', 'zed', 'hex']
+// The Nova spark: drawn by hand, not modelled, so it keeps its own path.
+const SPARK = {
+  label: 'Nova Spark',
+  body: 'M50 2 C53 28 72 47 98 50 C72 53 53 72 50 98 C47 72 28 53 2 50 C28 47 47 28 50 2 Z',
+  paints: [['M33 20 L35.4 28.6 L44 31 L35.4 33.4 L33 42 L30.6 33.4 L22 31 L30.6 28.6 Z', '#fff', 0.6]],
+  eyes: [[45.5, 52, 6.4, 17, -9], [58.5, 48, 6.4, 17, 9]],
+}
+
+// Picker order: the Nova spark leads, then the mascots.
+const ORDER = ['star', 'moon', 'wave', 'squircle', 'zed', 'hex']
 const MODELS = { ...Object.fromEntries(ORDER.map(id => [id, MASCOTS[id]])), ...GEOMETRIC }
 
 function contours(field) {
@@ -556,7 +555,7 @@ function build(model) {
   }
 }
 
-export const CHARACTERS = Object.fromEntries(Object.entries(MODELS).map(([id, model]) => [id, build(model)]))
+export const CHARACTERS = { nova: SPARK, ...Object.fromEntries(Object.entries(MODELS).map(([id, model]) => [id, build(model)])) }
 
 const block = Object.entries(CHARACTERS).map(([id, character]) => `  ${id}: ${JSON.stringify(character).replace(/"(\w+)":/g, '$1:').replaceAll('"', "'")},`).join('\n')
 console.log(`export const CHARACTERS = {\n${block}\n}`)
@@ -564,14 +563,17 @@ console.log(`export const CHARACTERS = {\n${block}\n}`)
 const out = process.argv.indexOf('--preview')
 if (out > 0) {
   const colors = ['#A27952', '#FF3E51', '#FF781C', '#FFAF38', '#00C972', '#1CC3B0', '#2A92FE', '#A97EFE', '#FF5EB1', '#959595']
-  const INK = { whale: '#4D6BFE', moon: '#141416', zed: '#2D2D2D', wave: '#EC2F6B', star: '#0AA8D6', squircle: '#FF6900', hex: '#082DFF' }
+  const INK = { nova: '#6D5EFC', moon: '#141416', zed: '#2D2D2D', wave: '#EC2F6B', star: '#0AA8D6', squircle: '#FF6900', hex: '#082DFF' }
   const INK_DARK = { moon: '#F1F2F4', zed: '#D6D6DA' }
   let serial = 0
   const mark = (c, color, size) => {
     serial += 1
     const holes = c.eyes.map(([ex, ey, w, h, tilt]) => `<g transform="translate(${ex} ${ey}) rotate(${tilt})"><rect x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${w / 2}" fill="#000"/></g>`).join('')
     const paint = (c.paints ?? []).map(([d, fill, opacity]) => `<path d="${d}" fill="${fill}" fill-opacity="${opacity}"/>`).join('')
-    return `<svg width="${size}" height="${size}" viewBox="0 0 100 100"><defs><mask id="m${serial}" maskUnits="userSpaceOnUse" x="-100" y="-100" width="300" height="300"><rect x="-100" y="-100" width="300" height="300" fill="#fff"/>${holes}</mask></defs><g mask="url(#m${serial})" fill-rule="evenodd"><path d="${c.body}" fill="${color}"/>${paint}<path d="${c.shade}" fill="#000" fill-opacity=".14"/><path d="${c.light}" fill="#fff" fill-opacity=".16"/></g></svg>`
+    // A drawn shape may have no shade or highlight; the flat fill carries it.
+    const shade = c.shade ? `<path d="${c.shade}" fill="#000" fill-opacity=".14"/>` : ''
+    const light = c.light ? `<path d="${c.light}" fill="#fff" fill-opacity=".16"/>` : ''
+    return `<svg width="${size}" height="${size}" viewBox="0 0 100 100"><defs><mask id="m${serial}" maskUnits="userSpaceOnUse" x="-100" y="-100" width="300" height="300"><rect x="-100" y="-100" width="300" height="300" fill="#fff"/>${holes}</mask></defs><g mask="url(#m${serial})" fill-rule="evenodd"><path d="${c.body}" fill="${color}"/>${paint}${shade}${light}</g></svg>`
   }
   const cells = dark => Object.entries(CHARACTERS).map(([id, c], index) => {
     const color = (dark && INK_DARK[id]) || INK[id] || colors[index % colors.length]

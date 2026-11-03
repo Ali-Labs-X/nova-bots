@@ -1,5 +1,5 @@
 // Runs the Host in plain Node on Linux, Electron's Node mode elsewhere, and owns its lifetime.
-// Follows DeepSeek Harness apps/desktop/src/host-process.ts (MIT); see NOTICE.
+// Follows the runtime's apps/desktop/src/host-process.ts (MIT); see NOTICE.
 import { spawn } from 'node:child_process'
 import { join } from 'node:path'
 

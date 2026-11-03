@@ -47,7 +47,7 @@ const expandHome = (text) => {
 async function readLocal(path, baseDir, isData) {
   const full = resolve(baseDir ?? process.cwd(), expandHome(path))
   // Checked and read at the real path, where links lead, so a link cannot reach into
-  // DSH's data, and one changed after the check is not followed.
+  // Nova's data, and one changed after the check is not followed.
   let real
   let info
   try {
@@ -58,7 +58,7 @@ async function readLocal(path, baseDir, isData) {
     throw new Error(`Cannot read the image at ${full}: ${error?.code === 'EACCES' ? 'permission denied' : error.message}`)
   }
   if (!info.isFile()) throw new Error(`${full} is not an image file. Pass the path of an image file.`)
-  if (await isData?.(real)) throw new Error(`${full} is in DeepSeek Harness data, so it cannot be a Bot's photo. Pass an image from another folder.`)
+  if (await isData?.(real)) throw new Error(`${full} is in Nova Bots data, so it cannot be a Bot's photo. Pass an image from another folder.`)
   if (info.size > MAX_BYTES) throw new Error(tooLarge(info.size))
   let bytes
   try {

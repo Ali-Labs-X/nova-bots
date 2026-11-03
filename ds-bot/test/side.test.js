@@ -25,7 +25,7 @@ const team = (extra = {}) => ({
   revision: 3,
   bots: {
     b1: {
-      id: 'b1', sessionId: 's-now', name: 'Chief', capabilities: [], color: 'deepseek', createdAt: 1,
+      id: 'b1', sessionId: 's-now', name: 'Orion', capabilities: [], color: 'nova', createdAt: 1,
       segments: [{ sessionId: 's-old', endedAt: 1 }],
     },
   },
@@ -289,7 +289,7 @@ test('a side question answers from a snapshot and writes nothing into the sessio
   }
   const usage = await env.call('usage', { timeZone: 'UTC' })
   assert.equal(usage.ok, true)
-  assert.equal(totals(usage.value)['Chief/side'], 15)
+  assert.equal(totals(usage.value)['Orion/side'], 15)
 })
 
 test('a finished tool batch and its tool history go through unchanged', async (t) => {
@@ -488,7 +488,7 @@ test('a restart marks an entry that was still answering as failed', async (t) =>
   t.after(() => env.stop())
   const [live, old] = chatOf(env.rt, 'chat').entries
   assert.equal(live.status, 'failed')
-  assert.equal(live.error, 'DS Bot restarted before this answer finished.')
+  assert.equal(live.error, 'Nova Bots restarted before this answer finished.')
   assert.equal(typeof live.finishedAt, 'number')
   assert.equal(old.status, 'done')
   const file = chatsFile(env.home)
@@ -558,7 +558,7 @@ test('an empty answer, a provider abort, and a cut-off answer fail the entry', a
 
 test('deleting a Bot aborts its flights and removes the chat file', async (t) => {
   const state = team()
-  state.bots.b2 = { id: 'b2', sessionId: 's-b2', name: 'Side', capabilities: [], color: 'deepseek', createdAt: 2 }
+  state.bots.b2 = { id: 'b2', sessionId: 's-b2', name: 'Side', capabilities: [], color: 'nova', createdAt: 2 }
   const env = await setup({ state, gate: true })
   t.after(() => env.stop())
   env.sessions.set('s-b2', makeSession('s-b2', {

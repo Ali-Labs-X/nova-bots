@@ -41,13 +41,13 @@ export const clientErrors = () => entries.map(entry => (entry.count > 1 ? { ...e
 
 export function clientFacts() {
   return {
-    surface: window.dshDesktop ? 'DSH Desktop' : 'DSH Web',
+    surface: window.dshDesktop ? 'Nova Desktop' : 'Nova Web',
     language: language(),
     userAgent: navigator.userAgent,
   }
 }
 
-// Short words for the provider-neutral failure codes of DSH's LLM layer.
+// Short words for the provider-neutral failure codes of Nova's LLM layer.
 const FAILURES = {
   AUTH: 'The API key was rejected',
   QUOTA: 'The account is out of quota',
@@ -70,8 +70,8 @@ export function failureLabel(code, message) {
 // GitHub refuses very long addresses; past this the diagnostics go by the clipboard.
 const URL_LIMIT = 7000
 export const WHAT_MAX = 2000
-const PASTE_NOTE = 'DS Bot copied the diagnostics to the clipboard. Paste them here.'
-const REST_NOTE = 'The recent errors do not fit in the link. DS Bot copied the diagnostics to the clipboard: paste them below this line.'
+const PASTE_NOTE = 'Nova Bots copied the diagnostics to the clipboard. Paste them here.'
+const REST_NOTE = 'The recent errors do not fit in the link. Nova Bots copied the diagnostics to the clipboard: paste them below this line.'
 
 export function issueUrl(base, { what = '', diagnostics }) {
   const text = what.trim().slice(0, WHAT_MAX)

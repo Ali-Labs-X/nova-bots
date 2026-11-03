@@ -1,6 +1,6 @@
 // Generated from src/client by `npm run build` (scripts/build-client.mjs). Do not edit by hand.
 window.__ModuleLoader__.load({
-  id: 'ds-bot',
+  id: 'nova-bots',
   factory: (require) => {
 const module = { exports: {} }
 var __create = Object.create;
@@ -40,7 +40,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 
 // src/client/i18n.js
-var NAMESPACE = "ds-bot";
+var NAMESPACE = "nova";
 var ZH = {
   // Shared
   "Main Bot": "主 Bot",
@@ -116,7 +116,7 @@ var ZH = {
   Command: "命令",
   "Arguments (one per line)": "参数（每行一个）",
   "Environment (JSON)": "环境变量（JSON）",
-  '{"API_KEY": "$DSH_SECRET_MY_KEY"}': '{"API_KEY": "$DSH_SECRET_MY_KEY"}',
+  '{"API_KEY": "$NOVA_SECRET_MY_KEY"}': '{"API_KEY": "$NOVA_SECRET_MY_KEY"}',
   URL: "URL",
   "Headers (JSON)": "请求头（JSON）",
   "Skill instructions": "技能说明",
@@ -155,7 +155,7 @@ var ZH = {
   "GitHub did not say who this token belongs to": "GitHub 没有返回这个 token 的账号",
   "Paste a token first": "请先粘贴 token",
   "GitHub addresses must start with https://": "GitHub 地址必须以 https:// 开头",
-  "This DSH cannot load connectors": "这个 DSH 不能加载连接器",
+  "This Nova cannot load connectors": "这个 Nova 不能加载连接器",
   "No such connector": "没有这个连接器",
   "Classic Agent mode": "经典 Agent 模式",
   "Switch": "切换",
@@ -171,16 +171,16 @@ var ZH = {
   "An API key has no spaces or special characters": "API key 里不能有空格或特殊字符",
   "Another provider": "其他服务商",
   // Models page
-  "This DSH cannot set up model providers.": "这个 DSH 不能设置模型服务商。",
-  "This DSH cannot set up model providers": "这个 DSH 不能设置模型服务商",
+  "This Nova cannot set up model providers.": "这个 Nova 不能设置模型服务商。",
+  "This Nova cannot set up model providers": "这个 Nova 不能设置模型服务商",
   "Model providers · {count}": "模型服务商 · {count}",
   "Add a provider": "添加服务商",
   "Needs an API key": "需要 API key",
   "Key set": "已设置 key",
-  "Key set outside DS Bot": "key 在 DS Bot 之外设置",
+  "Key set outside Nova Bots": "key 在 Nova Bots 之外设置",
   "No models": "没有模型",
   "{count} models": "{count} 个模型",
-  "This key comes from outside DS Bot, such as an environment variable, and cannot be changed here.": "这个 key 来自 DS Bot 之外（例如环境变量），这里改不了。",
+  "This key comes from outside Nova Bots, such as an environment variable, and cannot be changed here.": "这个 key 来自 Nova Bots 之外（例如环境变量），这里改不了。",
   "and {count} more": "还有 {count} 个",
   "Remove {name}? Bots on its models need another model.": "删除 {name}？用它的模型的 Bot 要换一个模型。",
   "Remove provider": "删除服务商",
@@ -209,10 +209,10 @@ var ZH = {
   "Add at least one model": "至少添加一个模型",
   "Two models have the same id": "有两个模型的 ID 相同",
   "Mode": "模式",
-  "Sign in to DeepSeek": "登录 DeepSeek 账号",
-  "Enter a DeepSeek API key": "填入 DeepSeek API key",
+  "Sign in to Nova": "登录 Nova 账号",
+  "Enter a Nova API key": "填入 Nova API key",
   "Open settings to set up a custom model": "打开设置配置自定义模型",
-  "DS Bot": "DS Bot",
+  "Nova Bots": "Nova Bots",
   // Header
   "Message {name}": "给 {name} 发消息",
   Message: "发消息",
@@ -295,7 +295,7 @@ var ZH = {
   Rename: "重命名",
   "Add instructions in Bot settings": "在 Bot 设置里添加说明",
   "No scheduled tasks yet. To add one, tell the Bot in its chat what to do and when.": "还没有定时任务。要添加，在对话里告诉 Bot 做什么、什么时候做。",
-  "The browser is in DSH Desktop and the DS Bot app.": "浏览器在 DSH 桌面版和 DS Bot 应用里。",
+  "The browser is in Nova Desktop and the Nova Bots app.": "浏览器在 Nova 桌面版和 Nova Bots 应用里。",
   "New tab": "新标签页",
   "Close tab": "关闭标签页",
   "Open {title}": "打开 {title}",
@@ -422,7 +422,7 @@ var ZH = {
   "Upload photo": "上传照片",
   "A Bot named {name} already exists": "已经有叫 {name} 的 Bot 了",
   "The Bot runs on this model. You can change it later in its details.": "Bot 会使用这个模型。以后可以在详情里修改。",
-  "Add a provider and a model in DeepSeek Harness first, or pick one in the Bot's chat later.": "请先在 DeepSeek Harness 里添加服务商和模型，或者稍后在 Bot 的对话里选择。",
+  "Add a provider and a model in Nova Bots first, or pick one in the Bot's chat later.": "请先在 Nova Bots 里添加服务商和模型，或者稍后在 Bot 的对话里选择。",
   "Creating…": "创建中…",
   Create: "创建",
   // Model menu
@@ -433,14 +433,14 @@ var ZH = {
   "Choose a model": "选择模型",
   "{provider} · not available": "{provider} · 不可用",
   "Model for {name}": "{name} 的模型",
-  "No models are set up in DeepSeek Harness yet.": "DeepSeek Harness 里还没有设置模型。",
+  "No models are set up in Nova Bots yet.": "Nova Bots 里还没有设置模型。",
   "Models and providers…": "模型和服务商…",
   Models: "模型",
-  "Harness default": "Harness 默认",
+  "Nova default": "Nova 默认",
   Saving: "保存中",
   "Manage models": "管理模型",
   // Shapes
-  Whale: "鲸鱼",
+  "Nova Spark": "Nova 星芒",
   Star: "星星",
   Moon: "月亮",
   Wave: "声波",
@@ -475,7 +475,7 @@ var ZH = {
   Magenta: "品红",
   Gray: "灰",
   Aurora: "极光",
-  Deepseek: "DeepSeek 蓝",
+  Deepseek: "Nova 蓝",
   Charcoal: "炭黑",
   Graphite: "石墨",
   Rose: "玫瑰",
@@ -483,10 +483,10 @@ var ZH = {
   Tangerine: "橘",
   Cobalt: "钴蓝",
   // Themes
-  DeepSeek: "DeepSeek",
+  Nova: "新星",
+  "Nova Galaxy": "新星银河",
   Mono: "黑白",
   Paper: "纸张",
-  Moonlight: "月光",
   // Settings dialog
   General: "通用",
   Bots: "Bot",
@@ -516,10 +516,10 @@ var ZH = {
   "No group chats yet.": "还没有群聊。",
   "A group chat lets several Bots work on one thing with you.": "在群聊里，几个 Bot 和你一起做一件事。",
   "Back to group chats": "返回群聊列表",
-  "DS Bot settings": "DS Bot 设置",
+  "Nova Bots settings": "Nova Bots 设置",
   "Settings pages": "设置页面",
-  "Models, providers, and the rest of DeepSeek Harness": "模型、服务商和 DeepSeek Harness 的其他设置",
-  "Harness settings": "Harness 设置",
+  "Models, providers, and the rest of Nova Bots": "模型、服务商和 Nova Bots 的其他设置",
+  "Nova settings": "Nova 设置",
   "Back to Bots": "返回 Bot 列表",
   "Close settings": "关闭设置",
   // Context menu
@@ -533,37 +533,37 @@ var ZH = {
   "Copy conversation ID": "复制对话 ID",
   "Hide from sidebar": "从侧栏隐藏",
   "{name} actions": "{name} 的操作",
-  // The DSH Agent's own row and Session list. "DSH Agent" is a product name and
+  // The Nova Agent's own row and Session list. "Nova Agent" is a product name and
   // stays in English.
-  "Add DSH Agent": "添加 DSH Agent",
-  "Remove DSH Agent": "移除 DSH Agent",
+  "Add Nova Agent": "添加 Nova Agent",
+  "Remove Nova Agent": "移除 Nova Agent",
   "New session": "新会话",
   Archive: "归档",
   "Session actions": "会话操作",
-  "Plain dsh session": "原生 dsh 会话",
+  "Nova Agent session": "Nova Agent 会话",
   "just now": "刚刚",
   "{n} min": "{n} 分钟",
   "{n} h": "{n} 小时",
   "{n} d": "{n} 天",
   // Plugin updates
-  "DS Bot {version} is available": "DS Bot {version} 可以更新",
-  "Updating DS Bot…": "正在更新 DS Bot…",
-  "DS Bot {version} is installed. Restart DSH to use it.": "DS Bot {version} 已安装，重启 DSH 后生效",
-  "DS Bot {version} is installed.": "DS Bot {version} 已安装。",
-  "DS Bot update": "DS Bot 更新",
-  "DS Bot {version}": "DS Bot {version}",
+  "Nova Bots {version} is available": "Nova Bots {version} 可以更新",
+  "Updating Nova Bots…": "正在更新 Nova Bots…",
+  "Nova Bots {version} is installed. Restart Nova to use it.": "Nova Bots {version} 已安装，重启 Nova 后生效",
+  "Nova Bots {version} is installed.": "Nova Bots {version} 已安装。",
+  "Nova Bots update": "Nova Bots 更新",
+  "Nova Bots {version}": "Nova Bots {version}",
   "Update installed": "更新已安装",
-  "Restart DSH to start using DS Bot {version}.": "重启 DSH 后开始使用 DS Bot {version}。",
+  "Restart Nova to start using Nova Bots {version}.": "重启 Nova 后开始使用 Nova Bots {version}。",
   "You have {version}.": "当前版本 {version}。",
   "The update did not finish: {reason}": "更新没有完成：{reason}",
   "What's new": "更新说明",
   "Updating…": "正在更新…",
-  "DSH {version} is available": "DSH {version} 可以更新",
-  "Updating DSH…": "正在更新 DSH…",
-  "DSH update": "DSH 更新",
-  "DSH {version}": "DSH {version}",
-  "Restart DSH to start using DSH {version}.": "重启 DSH 后开始使用 DSH {version}。",
-  "Update DS Bot {version} first.": "先更新 DS Bot {version}。",
+  "Nova {version} is available": "Nova {version} 可以更新",
+  "Updating Nova…": "正在更新 Nova…",
+  "Nova update": "Nova 更新",
+  "Nova {version}": "Nova {version}",
+  "Restart Nova to start using Nova {version}.": "重启 Nova 后开始使用 Nova {version}。",
+  "Update Nova Bots {version} first.": "先更新 Nova Bots {version}。",
   "Open updates": "打开更新",
   // Command palette
   Messages: "消息",
@@ -953,11 +953,11 @@ var ZH = {
   "Compared with the {count} days before": "与再往前 {count} 天相比",
   "{share}% of all usage from {span}": "占 {span} 全部用量的 {share}%",
   // About
-  "About DS Bot": "关于 DS Bot",
+  "About Nova Bots": "关于 Nova Bots",
   "Version {version}": "版本 {version}",
-  "Star DS Bot on GitHub": "在 GitHub 上给 DS Bot 点 Star",
+  "Star Nova Bots on GitHub": "在 GitHub 上给 Nova Bots 点 Star",
   "{count} stars": "{count} 个 Star",
-  "If DS Bot helps you, a star on GitHub helps more people find it.": "如果 DS Bot 对你有用，欢迎在 GitHub 上点个 Star，让更多人看到它。",
+  "If Nova Bots helps you, a star on GitHub helps more people find it.": "如果 Nova Bots 对你有用，欢迎在 GitHub 上点个 Star，让更多人看到它。",
   Updates: "更新",
   "Check for updates": "检查更新",
   "Checking…": "正在检查…",
@@ -972,7 +972,7 @@ var ZH = {
   "{version} is available": "{version} 已发布",
   "Installed from a local folder; update it there.": "从本地文件夹安装，请在那里更新。",
   "Updates are not offered for this install.": "这种安装方式不提供更新。",
-  "Updates come with the DS Bot app.": "随 DS Bot 应用一起更新。",
+  "Updates come with the Nova Bots app.": "随 Nova Bots 应用一起更新。",
   Links: "链接",
   "Source code": "源代码",
   "Release notes": "发布说明",
@@ -988,7 +988,7 @@ var ZH = {
   Show: "查看",
   Hide: "收起",
   "GitHub issue": "GitHub issue",
-  "Opens a new issue in the DS Bot repository with all of this filled in. Nothing is sent until you submit it there.": "在 DS Bot 仓库新建一个 issue，并填好以上内容。你在 GitHub 上提交之前，什么都不会发出。",
+  "Opens a new issue in the Nova Bots repository with all of this filled in. Nothing is sent until you submit it there.": "在 Nova Bots 仓库新建一个 issue，并填好以上内容。你在 GitHub 上提交之前，什么都不会发出。",
   "Report on GitHub": "在 GitHub 上报告",
   "Copied the diagnostics.": "已复制诊断信息。",
   "Could not copy. Select the text below and copy it.": "无法复制。请选中下面的文字手动复制。",
@@ -1000,14 +1000,14 @@ var ZH = {
   "Recent errors": "最近的错误",
   "Recent errors · {count}": "最近的错误 · {count}",
   "No errors recorded.": "没有错误记录。",
-  "Failed model calls and DS Bot problems show here, newest first.": "模型调用失败和 DS Bot 的问题会显示在这里，最新的在前。",
+  "Failed model calls and Nova Bots problems show here, newest first.": "模型调用失败和 Nova Bots 的问题会显示在这里，最新的在前。",
   "Model call": "模型调用",
   "This window": "这个窗口",
   "Error log": "错误日志",
   "Kept on this computer across restarts, up to about 1 MB.": "保存在这台电脑上，重启后仍在，最多约 1 MB。",
   Clear: "清空",
   "Settings → Feedback has the details.": "详情见 设置 → 反馈。",
-  "Could not reach DSH. Check that it is still running.": "连不上 DSH，请确认它还在运行。",
+  "Could not reach Nova. Check that it is still running.": "连不上 Nova，请确认它还在运行。",
   "{name} could not answer: {reason}": "{name} 没能回答：{reason}",
   "Unknown error": "未知错误",
   "The API key was rejected": "API 密钥无效",
@@ -1068,13 +1068,13 @@ var ZH = {
   "How many": "数量",
   Unit: "单位",
   "Create task": "创建任务",
-  "Turn on Automation tasks in DSH": "在 DSH 里打开「自动化任务」",
-  "Switch on Automation tasks on the Plugins page in Harness settings.": "在 Harness 设置的插件页启用「自动化任务」。",
-  "Open Harness settings": "打开 Harness 设置",
+  "Turn on Automation tasks in Nova": "在 Nova 里打开「自动化任务」",
+  "Switch on Automation tasks on the Plugins page in Nova settings.": "在 Nova 设置的插件页启用「自动化任务」。",
+  "Open Nova settings": "打开 Nova 设置",
   "New task": "新建任务",
   "No scheduled tasks yet.": "还没有定时任务。",
   "No scheduled tasks yet. Add one": "还没有定时任务，去添加",
-  "Automation tasks are off in DSH": "DSH 的「自动化任务」没有打开",
+  "Automation tasks are off in Nova": "Nova 的「自动化任务」没有打开",
   "No such Bot": "没有这个 Bot",
   "No such Bot or group chat": "没有这个 Bot 或群聊",
   "Give the task a name": "给任务起个名字",
@@ -1120,11 +1120,11 @@ var ZH = {
 };
 var HOST_ERRORS = [
   [/^Model (.+) is not available\. Available: (.*)$/, "模型 $1 不可用。可用的：$2"],
-  [/^The API key for (.+) is set outside DS Bot and cannot be changed here$/, "$1 的 API key 是在 DS Bot 之外设置的，这里改不了"],
+  [/^The API key for (.+) is set outside Nova Bots and cannot be changed here$/, "$1 的 API key 是在 Nova Bots 之外设置的，这里改不了"],
   [/^(.+) takes no API key here$/, "$1 不能在这里填 API key"],
   [/^(.+) is already set up$/, "$1 已经设置过了"],
-  [/^DSH offers no provider (.+)$/, "DSH 没有服务商 $1"],
-  [/^DSH already offers (.+); add it from its list$/, "DSH 已经提供 $1，请在常用服务商里添加"],
+  [/^Nova offers no provider (.+)$/, "Nova 没有服务商 $1"],
+  [/^Nova already offers (.+); add it from its list$/, "Nova 已经提供 $1，请在常用服务商里添加"],
   [/^The protocol must be one of (.+)$/, "协议只能是 $1"],
   [/^(.+) is not set up$/, "$1 还没有设置"],
   [/^(.+) comes with this setup and cannot be removed$/, "$1 是这个配置自带的，不能删除"],
@@ -1139,7 +1139,7 @@ var HOST_ERRORS = [
   [/^A key must have at least (\d+) characters$/, "密钥至少 $1 个字符"],
   [/^A key can have at most (\d+) characters$/, "密钥最多 $1 个字符"],
   [/^(.+) is not saved yet$/, "$1 还没有保存"],
-  [/^The Bot team in (.+) is open in another dsh \((.+)\)\. This window shows the team but cannot change it; close the other one and reload\.$/, "$1 里的 Bot 团队已在另一个 dsh 中打开（$2）。这个窗口只能查看，不能修改；关掉另一个后刷新。"],
+  [/^The Bot team in (.+) is open in another Nova instance \((.+)\)\. This window shows the team but cannot change it; close the other one and reload\.$/, "$1 里的 Bot 团队已在另一个 Nova 实例 中打开（$2）。这个窗口只能查看，不能修改；关掉另一个后刷新。"],
   [/^HTTP (\d+)$/, "请求失败（HTTP $1）"],
   [/^GitHub answered (\d+)$/, "GitHub 返回了 $1"],
   [/^Keep the name under (\d+) characters$/, "名字不能超过 $1 个字"],
@@ -1149,7 +1149,7 @@ var HOST_ERRORS = [
   [/^The avatar image is too large: .+$/, "头像图片太大了"],
   [/^There is no folder at (.+)$/, "找不到文件夹 $1"],
   [/^(.+) is a file, not a folder$/, "$1 是文件，不是文件夹"],
-  [/^(.+) holds DeepSeek Harness data, so Bots cannot work there$/, "$1 里有 DeepSeek Harness 的数据，Bot 不能在这里工作"],
+  [/^(.+) holds Nova Bots data, so Bots cannot work there$/, "$1 里有 Nova Bots 的数据，Bot 不能在这里工作"],
   [/^(.+) needs a folder of its own to be private$/, "$1 需要有自己的工作文件夹，才能设为隐私 Bot"],
   [/^(.+) is a Main Bot, so it cannot be private$/, "$1 是主 Bot，不能设为隐私 Bot"],
   [/^(.+) is in a group chat, where every member reads what is said\. Remove it from its groups first$/, "$1 还在群聊里，群成员都能看到群里的内容。请先把它移出群聊"],
@@ -1170,11 +1170,11 @@ var HOST_ERRORS = [
   [/^There is no entry (.+)\.$/, "没有第 $1 条"],
   [/^No entry in [\s\S]* matches "([\s\S]*)"\.[\s\S]*$/, "找不到「$1」这条记忆"],
   [/^"([\s\S]*)" matches (\d+) entries in [\s\S]*$/, "「$1」对应了 $2 条记忆，请说得更具体"],
-  [/^Memory cannot change now: [\s\S]*$/, "现在不能修改记忆：另一个 dsh 正在使用这个 Bot 团队"]
+  [/^Memory cannot change now: [\s\S]*$/, "现在不能修改记忆：另一个 Nova 实例 正在使用这个 Bot 团队"]
 ];
 var HOST_ZH = {
   "Request failed": "请求失败",
-  "Permissions are not available in this DeepSeek Harness": "这个 DeepSeek Harness 不支持权限设置",
+  "Permissions are not available in this Nova Bots": "这个 Nova Bots 不支持权限设置",
   "Avatar images must be PNG, JPEG, WebP, or GIF": "头像图片必须是 PNG、JPEG、WebP 或 GIF",
   "Avatar image is too large": "头像图片太大了",
   "A Bot needs a name": "Bot 需要一个名字",
@@ -1200,12 +1200,12 @@ var HOST_ZH = {
   "A name uses capitals, digits, and underscores, and starts with a letter": "名字只能用大写字母、数字和下划线，并以字母开头",
   "No such key": "没有这个密钥",
   "Type a question or a change first": "请先输入问题或要改的内容",
-  "No model is available. Add one in Harness settings.": "没有可用的模型，请先在 Harness 设置里添加模型。",
+  "No model is available. Add one in Nova settings.": "没有可用的模型，请先在 Nova 设置里添加模型。",
   "Memory is turned off on this host": "这台主机关闭了记忆功能",
   "The model wrote nothing": "模型没有输出内容",
   "Write the entry to save.": "请写下要保存的内容。",
-  "This DeepSeek Harness has no folder chooser": "这个 DeepSeek Harness 没有文件夹选择窗口",
-  "This DeepSeek Harness cannot list folders": "这个 DeepSeek Harness 不能列出文件夹",
+  "This Nova Bots has no folder chooser": "这个 Nova Bots 没有文件夹选择窗口",
+  "This Nova Bots cannot list folders": "这个 Nova Bots 不能列出文件夹",
   "Side chat is only available in a Bot's private chat.": "侧边对话只在 Bot 的私聊里可用。",
   "Write a question.": "写上问题。",
   "Write a question after /side.": "在 /side 后面写上问题。",
@@ -1214,14 +1214,14 @@ var HOST_ZH = {
   "This side chat is no longer here.": "这个侧边对话已经不在了。",
   "This side question is no longer here.": "这个侧边提问已经不在了。",
   "This Bot has not called a model yet. Send a normal message first.": "这个 Bot 还没有调用过模型，请先正常发一条消息。",
-  "DS Bot restarted before this answer finished.": "DS Bot 在回答完成前重启了。",
+  "Nova Bots restarted before this answer finished.": "Nova Bots 在回答完成前重启了。",
   "The model called a tool again after being told not to, so this aside was not answered.": "模型在被要求不要调用工具之后又调用了工具，所以这次没有回答。",
   "The model wrote nothing.": "模型没有写任何内容。",
   "Nothing to ask": "没有要问的内容",
   "Nothing to open": "没有要打开的内容",
   "Nothing to cancel": "没有要取消的内容",
   "Nothing to close": "没有要关闭的内容",
-  "DS Bot is still loading this chat.": "DS Bot 还在加载这个对话。"
+  "Nova Bots is still loading this chat.": "Nova Bots 还在加载这个对话。"
 };
 Object.assign(ZH, HOST_ZH);
 var fill = (text, params) => params ? text.replace(/\{(\w+)\}/g, (match, name) => name in params ? String(params[name]) : match) : text;
@@ -1241,16 +1241,30 @@ function installLocale(locale) {
     if (typeof off === "function") off();
   };
 }
+var BRAND = [
+  [/DeepSeek Harness/g, "Nova Bots"],
+  [/\bDS Bot's\b/g, "Nova Bots'"],
+  [/\bDS Bot\b/g, "Nova Bots"],
+  [/\bDSH Desktop\b/g, "Nova Desktop"],
+  [/\bDSH Web\b/g, "Nova Web"],
+  [/\bDSH's\b/g, "Nova's"],
+  [/\bDSH\b/g, "Nova"],
+  [/DeepSeek's/g, "Nova's"],
+  [/DeepSeek/g, "Nova"],
+  [/\bHarness's\b/g, "Nova's"],
+  [/\bHarness\b/g, "Nova"]
+];
+var brand = (text) => typeof text === "string" ? BRAND.reduce((out, [pattern, name]) => out.replace(pattern, name), text) : text;
 function t(key, params) {
-  return bound ? bound(key, params) : fill(key, params);
+  return brand(bound ? bound(key, params) : fill(key, params));
 }
 function hostText(message) {
-  if (!language().startsWith("zh")) return message;
+  if (!language().startsWith("zh")) return brand(message);
   if (Object.hasOwn(ZH, message)) return t(message);
   for (const [pattern, template] of HOST_ERRORS) {
-    if (pattern.test(message)) return message.replace(pattern, template);
+    if (pattern.test(message)) return brand(message.replace(pattern, template));
   }
-  return message;
+  return brand(message);
 }
 function language() {
   const active = service?.getLocale?.().active;
@@ -1293,7 +1307,7 @@ var clearClientErrors = () => {
 var clientErrors = () => entries.map((entry) => entry.count > 1 ? { ...entry, text: `${entry.text} (×${entry.count})` } : { ...entry });
 function clientFacts() {
   return {
-    surface: window.dshDesktop ? "DSH Desktop" : "DSH Web",
+    surface: window.dshDesktop ? "Nova Desktop" : "Nova Web",
     language: language(),
     userAgent: navigator.userAgent
   };
@@ -1317,8 +1331,8 @@ function failureLabel(code, message) {
 }
 var URL_LIMIT = 7e3;
 var WHAT_MAX = 2e3;
-var PASTE_NOTE = "DS Bot copied the diagnostics to the clipboard. Paste them here.";
-var REST_NOTE = "The recent errors do not fit in the link. DS Bot copied the diagnostics to the clipboard: paste them below this line.";
+var PASTE_NOTE = "Nova Bots copied the diagnostics to the clipboard. Paste them here.";
+var REST_NOTE = "The recent errors do not fit in the link. Nova Bots copied the diagnostics to the clipboard: paste them below this line.";
 function issueUrl(base, { what = "", diagnostics }) {
   const text = what.trim().slice(0, WHAT_MAX);
   const title = text.split("\n")[0].slice(0, 80);
@@ -1347,7 +1361,7 @@ var call = async (endpoint, payload, signal) => {
   } catch (error) {
     if (error?.name === "AbortError") throw error;
     noteClientError(endpoint, Object.assign(new Error(`network error: ${error?.message ?? error}`), { code: "NETWORK" }));
-    throw markNoted(Object.assign(new Error(t("Could not reach DSH. Check that it is still running.")), { code: "NETWORK", cause: error }));
+    throw markNoted(Object.assign(new Error(t("Could not reach Nova. Check that it is still running.")), { code: "NETWORK", cause: error }));
   }
   if (!response.ok) {
     const error = Object.assign(new Error(hostText(`HTTP ${response.status}`)), { code: `HTTP_${response.status}` });
@@ -1370,7 +1384,7 @@ var call = async (endpoint, payload, signal) => {
 
 // src/client/inks.js
 var INKS = {
-  deepseek: ["#4D6BFE", "#6A84FF"],
+  nova: ["#6D5EFC", "#A78BFA"],
   charcoal: ["#141416", "#F1F2F4"],
   graphite: ["#2D2D2D", "#D6D6DA"],
   rose: ["#EC2F6B", "#FF5A7A"],
@@ -1391,8 +1405,8 @@ var INKS = {
   aurora: ["#00B8D4", "#2EE6E0"]
 };
 var GRADIENTS = { aurora: [[0, "#A4FFB0"], [0.42, "#00F0E4"], [1, "#2E9EF7"]] };
-var ACCENT_INKS = ["deepseek", "charcoal", "graphite", "rose", "sky", "tangerine", "cobalt"];
-var LEGACY_INKS = { kimi: "charcoal", zai: "graphite", minimax: "rose", stepfun: "sky", mimo: "tangerine", qwen: "cobalt" };
+var ACCENT_INKS = ["nova", "charcoal", "graphite", "rose", "sky", "tangerine", "cobalt"];
+var LEGACY_INKS = { deepseek: "nova", kimi: "charcoal", zai: "graphite", minimax: "rose", stepfun: "sky", mimo: "tangerine", qwen: "cobalt" };
 var isHex = (color) => typeof color === "string" && /^#[0-9a-f]{6}$/i.test(color);
 var luminance = (hex) => [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16) / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4).reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
 var inkName = (color) => INKS[color] ? color : INKS[LEGACY_INKS[color]] ? LEGACY_INKS[color] : "gray";
@@ -1402,7 +1416,7 @@ var paintCss = (color) => GRADIENTS[color] ? `linear-gradient(135deg,${GRADIENTS
 
 // src/client/characters.js
 var CHARACTERS = {
-  whale: { label: "Whale", body: "M65.3 20.9l5.1 .1 4.8 .9 4.8 1.7 4.3 2.3 3.8 3.1 3 3.4 2.3 3.8 1.6 4.3 .9 4.3 0 4.8-.8 4.8-1.4 4.3-2.3 4.3-3.2 4.3-3.4 3.3-4.3 3.1-7.2 3.5-7.6 1.7-7.2 .1-9.6-1.6-3.3-1-2.9-1.7-8.8-8.9-6-4.7-3.3-.5-7.7 1.1-4.8-.1-4.7-1.2-1.9-1.2-1-1-.5-1.5 .4-1.4 1.1-1.3 1.9-1.3 4.7-1.5 7.7-.6 1.1-.5 .7-1 0-1.4-2.8-7.2-1.2-5.3-.1-4.3 .4-1.4 .9-1.2 1.9-.2 2 1 2.2 2.3 2.2 3.4 3.2 7.6 1.9 9.7 .5-.1 1.1-7.2 1.8-4.8 3.2-5.2 3.9-4.3 4.9-3.9 5.6-2.9 5.8-1.9z", paints: [["M93.3 55.8l1-.3 .1 1.2-2.4 5.3-3.4 4.8-3.8 3.8-4.8 3.4-5.7 2.8-4.8 1.5-4.8 .4 20.1-17.4 5.2-3.7z", "#fff", 1]], shade: "M88.6 29.5l2.4 2.9 1.9 2.8 2.4 6.3 .5 3.3 .1 5.3-1.5 6.6-1.9 4.3-2 3.3-4.8 5.4-5.7 4.3-7.2 3.3-6.2 1.5-6.7 .1-3.3-.2-9.6-1.8-3.3-1.5-2.4-1.9-8.6-8.9-5.3-3.9-3.3-.1-2.9 .2-3.3 .8-5.8 0-4.3-1-2.9-1.9 .6-.6 3.8-1.3 10.5-2.5 4.3 .9 1.4-.1 2.2-1.7 .5-1.4-.3-1.5-1.2-1.4-2.2-1.4-1.2-1.9-.6-12 .4-3.3 .5-.5 2.9 3.8 2.4 4.8 1.9 5.7 .7 5.8 .7 2.8 2.1 2.4 2.7 5.5 3.8 4.3 2.9 2.2 3.3 1 3.4-.4 6.2-3 7.1-4.5 7.3-5.6 6.6-5.9 5.9-6.5 3.7-5.3 1.7-4.2 .1-2.9z", light: "M55.6 22.8l1.9-.3 1.5 .3 .6 1 .1 .9-2 4.3-3.8 5.3-5.8 6.2-5.4 4.4-4.8 2.3-1.4 0-1.2-.5-.8-1.9 .5-3.3 2.5-4.8 3.3-4.3 2.4-2.4 5.3-3.9zM19.3 28.1l-1.4 2 .3-1.1zM21.7 49.1l.6 .5-.3 .5-.8 0zM35.8 52l1.2-.4 .9 .7 .7 1.6-.4 .9-1.2 .1-2.6-.5zM7.2 52.9l-2.9 2.9 1.2-1.6z", eyes: [[72.5, 48.4, 9.3, 23, -15.8], [85.6, 43.4, 7, 22.9, -21.2]] },
+  nova: { label: "Nova Spark", body: "M50 2 C53 28 72 47 98 50 C72 53 53 72 50 98 C47 72 28 53 2 50 C28 47 47 28 50 2 Z", paints: [["M33 20 L35.4 28.6 L44 31 L35.4 33.4 L33 42 L30.6 33.4 L22 31 L30.6 28.6 Z", "#fff", 0.6]], eyes: [[45.5, 52, 6.4, 17, -9], [58.5, 48, 6.4, 17, 9]] },
   star: { label: "Star", body: "M40.1 4.4l1.5-.4 1.9 .1 5.2 1.1 1.9 .9 13.2 14.9 17.1-.8 5.2 1.1 1.8 .9 1.7 1.6 .7 2.4-.4 1.9-9.7 23.6 5.6 23.7 .1 1.9-.6 1.4-2.1 1.8-2.3 .5-19.9-1.8-16.6 15.5-1.9 1-1.9 .3-7-1.5-2.6-2.1-.9-2.4-2.8-24.1-16-13.6-1.1-1.5-.5-1.9 .4-1.9 1.2-1.5 18.9-13.6 7.1-24.6 1-1.7z", shade: "M52 7.7l14.3 16.1 1 2.9 .3 3.1 19.4-1.3 2-1.4 .7-2.3-.4-1 .5 .5 .5 1.9-.4 1.9-9.8 23.2 5.5 23.1 .1 3.4-2 2.4-2.8 .8-19.4-2.1-1.9 1.4-14.7 14-2.4 1.4-3.3 .1-4.7-1-2-1 .6-.2 3.3 .8 2.8 .1 5.1-2.1 .7-.9 .4-2.4-2.6-22.7-.3-.3-1.4 .2-1.4 .7-5.7 .7-5.6-1.2-16.7-13.8 1-.1 5.2 1 3.8-1.1 1-.7 1.9-.4 .4-.4 1.5 .3 .4-.4 1 .2 18-12.8 6.7-23.5 0-1.8-.4-.5-.3-1.9 .4-2.4z", light: "M40.1 4.4l2-.1 4.7 1 .7 1-.5 1.4-2.8 1.5-6.6 23.1 .7 1.2 .6 .3-18.1 12.5-1.8 2.1-3.4 .7-5.2-1.2-.3-.4 .3-.9 1.4-1.4 18.3-12.9 .9-2.3 6.4-22.7 .8-1.4z", eyes: [[53.9, 53.4, 7.2, 18.8, -10], [65.1, 49.2, 7.2, 18.8, -10]] },
   moon: { label: "Moon", body: "M45.8 4.2l4.7-.2 4.2 .4 10.2 2.4 3.7 1.6 3.6 2.1 3.3 2.5 3 3.1 4.6 6.7 3.4 8.3 1.5 8.8 .1 4.6-.8 7.8-2.6 8.8-3.9 7.7-5.1 6.7-6.1 5.3-4.1 2.6-3.6 1.6-27.2 10.2-2.8 .7-2.6 0-5.7-1.3-2-.8-1.9-1.7-1.1-2.6-6.5-37.7-.2-5.2 .8-7.7 1.3-5.2 3.1-7.8 4.2-6.7 3-3.6 3.9-3.6 6.3-4.2 4.1-1.8z", paints: [["M57.6 9.9l.2-.3 .2 .3 2 4.7 1.9 1.9 2.6 .5 1.5-.7 1.1-1.1 .4 .4-.1 1.6-.7 1.5-2.2 2.5-1.6 .7-2 0-1.6-.8-1.3-1.4-.8-2-.4-2.6 .1-3.1z", "#1783FF", 1]], shade: "M74.3 13.5l2.1 1.5 .3-.4-.3-.6 2.1 2.1 4.6 6.7 3.1 7.4 1.5 7.6 .1 10.4-.6 4.6-2.5 8.3-4.2 8.2-3.1 4.2-5.7 5.7-6.2 4.2-4.6 2-28 10.3-4.1 0-5.2-1.1-2-.9-.5-.7 .5 .5 1.5 0 3.6 1 2.6-.3 5.7-2.1 2.1-2.1-5.4-31.5-.2-4.1 .4-1.1-.1-2.6 .5-3.6 1.8-7.7 2.8-6.7 1.9-3.1 3.9-5.2 3.2-3.1 2.5-2 5.2-2.9 3.1-1.1 3.1-.8 2.1 0 .5-.4 2.6 .2 1-.3 1.6 .4 1-.5 2.1 .8 1-.8 2.1 1.2z", light: "M38 6.3l1.7-.3 2.5 .2 .6 .4 1.5 0 .5 .5 1.6 .3-3.1 1.3 .4 .7-2.5 1.6-.5 1-2.5 2.1-2.7 2.9-6.2 7.9-1.5 2.7-1 .9-1.2 2.6-1.4 1-1.3 3.7-1.3 .3-6-1.4-1 3.6-.8 0 .9-3.6-.5-1 1.1-3.6 2.7-5.7 4.1-6.2 5.7-5.8 3.1-2.4 3.6-2.2z", eyes: [[51.6, 48.5, 8.4, 22.1, -10], [66.8, 42.9, 8.4, 22.1, -10]] },
   wave: { label: "Wave", body: "M46.1 4l6.1 .3 9.6 2.1 4.5 1.8 4.1 2.4 3.5 2.8 4.4 4.8 2.6 4 2.1 4.1 2.2 6 4.8 26 .5 5.3-.3 4.1-1.2 3.8-1.5 2.8-2.4 2.5-2.1 1.4-3.1 1-3 .3-8.1-1.5-3.2 5.3-2.1 2.1-2.5 1.5-2.8 1-3 .4-9.1-1.6-2.7 4.2-3.4 3.1-4 1.7-4.6 .1-7-1.5-3.5-1.9-3.4-3.5-2.1-4-1.5-5.6-3.7-20.7-.6-5.6-.1-5 .5-6.1 2.3-9.6 2.3-5.5 2.7-4.9 2.7-3.7 3.2-3.6 4.2-3.6 4.7-2.9 4.4-2 4-1.2z", paints: [["M61.6 48.5l2.2-.3 2 1.1 1.1 2.2 .3 3-.6 3.1-1.5 3.5-2.5 4.1-2.4 2.8-5-2.2-3-2.2-2.3-3-.7-3.5 .6-2.6 1.8-2.1 1.6-.7 1.5 0 1.5 .6 1.5 1.3 2-3.6z", "#fff", 0.4]], shade: "M69.3 13.6l2.6 1.3 .5-.3 .5-1.3 2 1.7 .5 0 2.5 2.7 3.5 5.5 3.6 8.6 1.5 6.6 3.5 19.7 .5 5.5-.4 4.6-2 5-1 1.6-2.6 2.5-3 1.5-2.1 .5-4 0-6.6-1.4-1.4 2.9-1.9 2.5-2.7 2.6-3.1 1.5-2.5 .6-4 .1-7.1-1.5-1.5 2.8-2.6 3-2 1.6-3 1.4-4.5 .6-7.1-1.5-3.6-1.5-3.5-3.1 6.6 1.5 2.8-.5 .5-.5-.3-.5 3.2-2-.4-1 1.4-1.5-.3-1 .7-1.6-.2-2.5-3.4-19.2 .3-.5-.6-5 .5-.5-.1-4.6 .4-.5 .3-4 1-4.1 1.5-4.5 3.8-7.7 5.5-6.9 3.1-2.6 6.5-3.9 7.6-2.2 3.1 0 .5-.4 3 .5 1-.5 2.5 1z", light: "M36.5 6.1l2-.3 .5 .6 4.1 .5 1 .7-3.3 1.5-.3 1.2-3 2-.3 .8-2.8 2.6-3.5 4-3.9 5-2 3.6-1 .5-1.7 4-1.5 .5-1.4 4.6-1.6 .2-.5-.4-5.6-.9-.4-.4 1.4-5.1 1.5-3.5 2.6-5.1 4-5.5 6.6-6.2 4-2.5z", eyes: [[47.5, 37.2, 8.4, 22.1, -10], [61.6, 31.9, 8.4, 22.1, -10]] },
@@ -1425,10 +1439,10 @@ var CHARACTERS = {
 };
 var PICKER_SHAPES = Object.keys(CHARACTERS);
 var PICKER_COLUMNS = 6;
-var DEFAULT_SHAPES = ["star", "moon", "gumdrop", "peanut", "bunny", "kitty", "acorn"];
+var DEFAULT_SHAPES = ["nova", "star", "moon", "gumdrop", "peanut", "bunny", "kitty", "acorn"];
 var FALLBACK_SHAPE = "gumdrop";
-var MAIN_LOOK = Object.freeze({ shape: "whale", color: "deepseek" });
-var CHARACTER_COLORS = ["black", "brown", "red", "orange", "yellow", "green", "cyan", "blue", "violet", "magenta", "gray", "aurora"];
+var MAIN_LOOK = Object.freeze({ shape: "nova", color: "nova" });
+var CHARACTER_COLORS = ["nova", "black", "brown", "red", "orange", "yellow", "green", "cyan", "blue", "violet", "magenta", "gray", "aurora"];
 var DEFAULT_COLORS = CHARACTER_COLORS.filter((color) => !["black", "gray", "brown"].includes(color) && !GRADIENTS[color]);
 var isColor = (color) => isHex(color) || Object.hasOwn(INKS, color);
 function fnv1a(text) {
@@ -1452,7 +1466,7 @@ var colorOf = (bot) => isColor(bot?.color) ? bot.color : bot?.id ? defaultColor(
 function lookOf(bot) {
   const avatar = bot?.avatar ?? {};
   return {
-    shape: hasShape(avatar.shape) ? avatar.shape : bot?.id ? defaultShape(String(bot.id)) : FALLBACK_SHAPE,
+    shape: currentShape(avatar.shape) ?? (bot?.id ? defaultShape(String(bot.id)) : FALLBACK_SHAPE),
     image: avatar.image,
     color: colorOf(bot)
   };
@@ -1461,13 +1475,16 @@ var SHAPES = {};
 for (const [id, character] of Object.entries(CHARACTERS)) {
   const layers = [
     ...(character.paints ?? []).map(([d, fill2, opacity]) => `<path d="${d}" fill="${fill2}" fill-opacity="${opacity}"/>`),
-    `<path d="${character.shade}" fill="#000" fill-opacity=".14"/>`,
-    `<path d="${character.light}" fill="#fff" fill-opacity=".16"/>`
+    ...character.shade ? [`<path d="${character.shade}" fill="#000" fill-opacity=".14"/>`] : [],
+    ...character.light ? [`<path d="${character.light}" fill="#fff" fill-opacity=".16"/>`] : []
   ].join("");
   SHAPES[id] = { label: character.label ?? id[0].toUpperCase() + id.slice(1), size: 100, path: character.body, layers, eyes: character.eyes };
 }
-var hasShape = (id) => typeof id === "string" && Object.hasOwn(SHAPES, id);
-var shapeId = (id) => hasShape(id) ? id : FALLBACK_SHAPE;
+var LEGACY_SHAPES = { whale: "nova" };
+var knownShape = (id) => typeof id === "string" && Object.hasOwn(SHAPES, id);
+var hasShape = (id) => knownShape(id) || typeof id === "string" && Object.hasOwn(LEGACY_SHAPES, id);
+var currentShape = (id) => knownShape(id) ? id : hasShape(id) ? LEGACY_SHAPES[id] : void 0;
+var shapeId = (id) => currentShape(id) ?? FALLBACK_SHAPE;
 var shapeOf = (id) => SHAPES[shapeId(id)];
 function bodyOf(def, paint, flat = false) {
   if (def.path) return `<g fill-rule="evenodd"><path d="${def.path}" fill="${paint}"/>${flat ? "" : def.layers}</g>`;
@@ -1787,11 +1804,131 @@ function teamActions({ call: call2, after, partFor, roster, ui: ui2, live, cards
 
 // src/client/themes.js
 var THEME_KEYS = ["bg", "sidebar", "bubble", "card", "text", "user", "userText", "accent"];
+var NOVA_CSS = `
+/* Nova Galaxy: deep-space panels, a slow aurora, and a field of quiet stars. */
+html body{background:var(--bt-main)}
+html body[data-ds-dark-theme]{
+  background:
+    radial-gradient(1200px 760px at 6% -14%, rgba(124,92,255,.26), transparent 60%),
+    radial-gradient(980px 680px at 104% -6%, rgba(34,211,238,.17), transparent 58%),
+    radial-gradient(820px 640px at 52% 118%, rgba(236,47,107,.11), transparent 62%),
+    radial-gradient(520px 520px at 74% 18%, rgba(94,231,247,.08), transparent 70%),
+    var(--bt-main);
+  background-attachment:fixed;
+}
+html body:not([data-ds-dark-theme]){
+  background:
+    radial-gradient(900px 600px at 6% -10%, rgba(124,92,255,.14), transparent 60%),
+    radial-gradient(760px 520px at 104% 0%, rgba(34,211,238,.12), transparent 55%),
+    var(--bt-main);
+  background-attachment:fixed;
+}
+/* The star field sits behind the app, never over it. */
+html body .nova-stars{
+  position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55;
+  background-image:
+    radial-gradient(1.2px 1.2px at 22px 34px,rgba(255,255,255,.9),transparent 60%),
+    radial-gradient(1px 1px at 118px 86px,rgba(196,181,253,.65),transparent 60%),
+    radial-gradient(1.4px 1.4px at 206px 178px,rgba(94,231,247,.6),transparent 60%),
+    radial-gradient(1px 1px at 302px 58px,rgba(255,255,255,.55),transparent 60%),
+    radial-gradient(1px 1px at 72px 252px,rgba(255,255,255,.45),transparent 60%),
+    radial-gradient(1.6px 1.6px at 342px 302px,rgba(139,124,255,.7),transparent 60%),
+    radial-gradient(1px 1px at 168px 338px,rgba(255,255,255,.5),transparent 60%);
+  background-size:380px 380px;
+  animation:nova-twinkle 12s ease-in-out infinite alternate,nova-drift 180s linear infinite;
+}
+html body .nova-stars::after{
+  content:"";position:absolute;inset:0;opacity:.5;
+  background-image:
+    radial-gradient(1.6px 1.6px at 60px 80px,rgba(255,255,255,.8),transparent 60%),
+    radial-gradient(1.1px 1.1px at 250px 40px,rgba(94,231,247,.65),transparent 60%),
+    radial-gradient(1.2px 1.2px at 460px 210px,rgba(255,255,255,.6),transparent 60%),
+    radial-gradient(1.8px 1.8px at 540px 420px,rgba(167,139,250,.7),transparent 60%),
+    radial-gradient(1px 1px at 340px 520px,rgba(255,255,255,.45),transparent 60%);
+  background-size:620px 620px;
+  animation:nova-drift-reverse 240s linear infinite;
+}
+html body #root{position:relative;z-index:1}
+/* Glass side rail and settings surface. */
+html body [class*="_sidebarCol"]{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--bt-sidebar) 92%,transparent),color-mix(in srgb,var(--bt-sidebar) 80%,transparent))!important;
+  backdrop-filter:blur(22px) saturate(1.15);
+  border-right:1px solid var(--bt-line);
+}
+html body .bt-settings{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--bt-card) 96%,transparent),color-mix(in srgb,var(--bt-main) 92%,transparent))!important;
+  box-shadow:0 40px 120px -30px rgba(0,0,0,.7),0 0 0 1px rgba(139,124,255,.12),0 0 90px -30px rgba(109,94,252,.45),inset 0 1px 0 rgba(255,255,255,.05)!important;
+}
+/* The wordmark is the brand: an aurora that keeps moving, quietly. */
+.bt-brand{font-weight:650!important;letter-spacing:-.02em!important}
+.bt-brand svg,.bt-brand img{filter:drop-shadow(0 0 10px rgba(139,124,255,.5))}
+.bt-brand-name{
+  background:linear-gradient(100deg,#f4f1ff 0%,#c4b5fd 20%,#8b7cff 42%,#5ee7f7 66%,#f4f1ff 100%);
+  background-size:220% auto;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:nova-shimmer 8s linear infinite;
+}
+html body:not([data-ds-dark-theme]) .bt-brand-name{
+  background:linear-gradient(100deg,#2b2350 0%,#5b46d6 50%,#0e8ea8 100%);
+  background-size:220% auto;
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+/* Composer: floating glass with an accent bloom on focus. */
+html body [data-composer-card]{
+  background:color-mix(in srgb,var(--bt-main) 76%,transparent)!important;
+  backdrop-filter:blur(18px) saturate(1.1);
+  box-shadow:0 18px 50px -18px rgba(2,6,23,.8),inset 0 1px 0 rgba(255,255,255,.045),0 0 0 1px rgba(139,124,255,.12)!important;
+  transition:box-shadow .3s ease,border-color .3s ease;
+}
+html body [data-composer-card]:focus-within{
+  border-color:color-mix(in srgb,var(--bt-accent) 60%,transparent)!important;
+  box-shadow:0 18px 60px -18px rgba(2,6,23,.85),0 0 0 3px color-mix(in srgb,var(--bt-accent) 18%,transparent),0 0 42px -8px rgba(139,124,255,.55),inset 0 1px 0 rgba(255,255,255,.07)!important;
+}
+/* Primary actions carry the aurora and a light sweep. */
+html body button[class*="_primary"],html body [data-composer-card] button[class*="_primary"]{
+  position:relative;isolation:isolate;overflow:hidden;
+  background:linear-gradient(135deg,#9b8cff 0%,#6d5efc 52%,#22d3ee 135%)!important;
+  box-shadow:0 8px 24px -8px rgba(109,94,252,.8),inset 0 1px 0 rgba(255,255,255,.18);
+  transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;
+}
+html body button[class*="_primary"]::after,html body [data-composer-card] button[class*="_primary"]::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  transform:translateX(-130%) skewX(-18deg);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);
+  transition:transform .65s ease;
+}
+html body button[class*="_primary"]:hover,html body [data-composer-card] button[class*="_primary"]:hover{
+  transform:translateY(-1px);
+  box-shadow:0 12px 34px -8px rgba(109,94,252,.95),0 0 28px rgba(94,231,247,.22),inset 0 1px 0 rgba(255,255,255,.22);
+}
+html body button[class*="_primary"]:hover::after,html body [data-composer-card] button[class*="_primary"]:hover::after{transform:translateX(130%) skewX(-18deg)}
+/* Soft actions glow at the edge instead of shouting. */
+html body .bt-soft{transition:box-shadow .2s ease,border-color .2s ease,background .2s ease}
+html body .bt-soft:hover{
+  border-color:color-mix(in srgb,var(--bt-accent) 42%,transparent)!important;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--bt-accent) 18%,transparent),0 0 24px -8px color-mix(in srgb,var(--bt-accent) 55%,transparent);
+}
+/* The active place in the interface gets a quiet halo. */
+html body [aria-current="page"],html body [data-active="true"]{
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--bt-accent) 22%,transparent),0 0 20px -8px color-mix(in srgb,var(--bt-accent) 55%,transparent);
+}
+/* Selection and scrollbar, quietly in the same family. */
+html body ::selection{background:color-mix(in srgb,var(--bt-accent) 34%,transparent)}
+html body *{scrollbar-color:color-mix(in srgb,var(--bt-ink) 22%,transparent) transparent}
+@keyframes nova-shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+@keyframes nova-twinkle{0%{opacity:.34}100%{opacity:.68}}
+@keyframes nova-drift{0%{background-position:0 0}100%{background-position:-380px 260px}}
+@keyframes nova-drift-reverse{0%{background-position:0 0}100%{background-position:620px -420px}}
+@media (prefers-reduced-motion:reduce){
+  html body .nova-stars,html body .nova-stars::after,.bt-brand-name,html body button[class*="_primary"]::after{animation:none!important}
+}
+`;
 var THEMES = {
-  deepseek: {
-    label: "DeepSeek",
-    light: { bg: "#fcfcfc", sidebar: "#f7f7f7", bubble: "#eeeeee", card: "#ffffff", text: "#141414", user: "#070707", userText: "#fcfcfc", accent: "#4d6bfe" },
-    dark: { bg: "#141414", sidebar: "#1b1b1b", bubble: "#262626", card: "#1f1f1f", text: "#f2f2f2", user: "#f2f2f2", userText: "#141414", accent: "#5b7bff" }
+  nova: {
+    label: "Nova Galaxy",
+    light: { bg: "#f7f8fd", sidebar: "#eef1fb", bubble: "#e7ebf9", card: "#ffffff", text: "#111528", user: "#6d5efc", userText: "#ffffff", accent: "#6d5efc" },
+    dark: { bg: "#070a16", sidebar: "#0b1022", bubble: "#111a33", card: "#0e1530", text: "#e9edfb", user: "#6d5efc", userText: "#ffffff", accent: "#8b7cff" },
+    css: NOVA_CSS
   },
   mono: {
     label: "Mono",
@@ -1802,11 +1939,6 @@ var THEMES = {
     label: "Paper",
     light: { bg: "#faf9f5", sidebar: "#f3f0e8", bubble: "#ebe7dc", card: "#ffffff", text: "#1f1e1b", user: "#2b2a26", userText: "#faf9f5", accent: "#d97757" },
     dark: { bg: "#1f1e1b", sidebar: "#262521", bubble: "#34322d", card: "#2a2925", text: "#f3f0e8", user: "#f3f0e8", userText: "#1f1e1b", accent: "#e08a6d" }
-  },
-  moonlight: {
-    label: "Moonlight",
-    light: { bg: "#f7f9fc", sidebar: "#eef2f8", bubble: "#e5ebf5", card: "#ffffff", text: "#121826", user: "#1e3a8a", userText: "#ffffff", accent: "#1e86ff" },
-    dark: { bg: "#0b1020", sidebar: "#10172a", bubble: "#1a2340", card: "#141c33", text: "#e8edf7", user: "#3b6fd8", userText: "#ffffff", accent: "#4f9dff" }
   }
 };
 var DARK_INK = "#141414";
@@ -2406,7 +2538,7 @@ function useLinger(value, ms) {
 
 // src/client/styles.js
 var SHELL_CSS = `
-body{--bt-ink:#141414;--bt-danger:#e02135;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#eeeeee;--bt-sidebar:#f7f7f7;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56);--bt-knob:#ffffff;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;--bt-font:var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif)}
+body{--bt-ink:#141414;--bt-danger:#e02135;--bt-ink-2:rgba(20,20,20,.6);--bt-ink-3:rgba(20,20,20,.36);--bt-bubble:#eeeeee;--bt-sidebar:#f7f7f7;--bt-main:#fcfcfc;--bt-line:rgba(20,20,20,.08);--bt-line-2:rgba(20,20,20,.15);--bt-line-weak:rgba(20,20,20,.1);--bt-hover:rgba(119,119,119,.09);--bt-active:rgba(119,119,119,.17);--bt-card:#ffffff;--bt-accent:#4d6bfe;--bt-green:#00c972;--bt-star:#ff9800;--bt-user:#070707;--bt-user-ink:#fcfcfc;--bt-tag-bg:rgba(20,20,20,.06);--bt-tag-ink:rgba(20,20,20,.56);--bt-knob:#ffffff;--bt-nova-1:#C4B5FD;--bt-nova-2:#6D5EFC;--bt-nova-3:#22D3EE;--bt-nova-4:#5EE7F7;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%;--bt-font:var(--dsw-font-family,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif)}
 /* iOS waits out a double-tap zoom on buttons; the plugin's own controls never zoom. */
 :is(.bt-tool,.bt-uaction,.bt-menu button,.bt-menu-item,.bt-icon-btn,.bt-round,.bt-pill,.bt-account,.bt-set-row,.bt-settings-item,.bt-react-strip button,.bt-palette-row,.bt-palette-clear,.bt-tab,.bt-ptab,.bt-ptab-x,.bt-bcard-x,.bt-plus,.bt-q-btn,.bt-q-x,.bt-x,.bt-nc-send,.bt-send,.bt-soft,.bt-mini,.bt-shape,.bt-swatch,.bt-color,.bt-newchat,.bt-task-day,.bt-task-remove,.bt-fb-btn){touch-action:manipulation}
 body[data-ds-dark-theme]{--bt-ink:#f2f2f2;--bt-ink-2:rgba(242,242,242,.6);--bt-ink-3:rgba(242,242,242,.36);--bt-bubble:#262626;--bt-sidebar:#1b1b1b;--bt-main:#141414;--bt-line:rgba(255,255,255,.08);--bt-line-2:rgba(255,255,255,.15);--bt-line-weak:rgba(255,255,255,.1);--bt-hover:rgba(160,160,160,.12);--bt-active:rgba(160,160,160,.2);--bt-card:#1f1f1f;--bt-user:#f2f2f2;--bt-user-ink:#141414;--bt-tag-bg:rgba(255,255,255,.09);--bt-tag-ink:rgba(242,242,242,.62)}
@@ -2511,7 +2643,8 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-side{display:flex;flex-direction:column;min-height:0;flex:1 1 auto;gap:2px;padding:0 12px 8px 0;color:var(--bt-ink);font-family:var(--bt-font)}
 .bt-side-top{display:flex;justify-content:flex-end;align-items:center;gap:8px;padding:6px 5px 0 0}
 .bt-brand{display:inline-flex;align-items:center;gap:6px;margin-right:auto;padding:4px 8px 4px 4px;border:0;border-radius:8px;background:none;cursor:pointer;font-family:inherit;font-size:15px;line-height:20px;font-weight:600;letter-spacing:-.01em;color:var(--bt-ink);white-space:nowrap}
-.bt-brand-whale{display:inline-flex;color:var(--bt-accent)}
+.bt-brand-mark{display:inline-flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 8px color-mix(in srgb,var(--bt-accent) 45%,transparent))}
+.bt-brand-mark svg{display:block}
 .bt-round{width:36px;height:36px;border-radius:50%;border:1px solid var(--bt-line);background:var(--bt-main);color:var(--bt-ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;transition:background-color .12s ease,transform .12s ease}
 .bt-round:hover{background:var(--bt-hover)}
 .bt-round:active{transform:scale(.94)}
@@ -2540,7 +2673,7 @@ body[data-bt-motion=quiet] .bt-mark[data-poke]{cursor:default}
 .bt-unread-wait{background:var(--bt-star)}
 /* Our own left column, portalled over the shell's collapsed sidebar. It reaches
    the window's top edge so the title band and the column share one fill (under
-   Mica the app styles DSH's sidebar the same way, via --bt-leftcol-fill there);
+   Mica the app styles Nova's sidebar the same way, via --bt-leftcol-fill there);
    it stays under the shell's title-bar switch (z 30) and the popovers (z 60),
    and the floating drawer keeps the opaque fill over the conversation. */
 .bt-leftcol{position:fixed;left:0;top:0;bottom:0;z-index:25;display:flex;--bt-lc-clear:var(--dsh-frame-top-clearance,var(--dsh-windows-titlebar-height,0px));background:var(--bt-leftcol-fill,var(--bt-sidebar));border-right:.5px solid var(--bt-line);box-sizing:border-box;padding:calc(var(--bt-lc-clear) + 6px) 12px 6px;color:var(--bt-ink);font-family:var(--bt-font)}
@@ -2768,7 +2901,7 @@ html[data-windows-titlebar]:not([data-fullscreen]) :is(.bt-pane,.bt-panel)::befo
 .bt-fold{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;margin-top:4px;white-space:normal}
 .bt-fold-code{position:relative}
 .bt-fold-code>.bt-tool{position:absolute;right:6px;bottom:6px}
-/* The part of a cut code block the preview keeps, drawn by DS Bot so the host's
+/* The part of a cut code block the preview keeps, drawn by Nova Bots so the host's
    Markdown draws no copy control of its own for it. */
 .bt-fold-code>.bt-fold-pre{margin:0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,currentColor 6%,transparent);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:20px;overflow-x:auto}
 .bt-fold-code>*+.bt-fold-pre{margin-top:6px}
@@ -2994,11 +3127,11 @@ html[data-windows-titlebar] .bt-title-toggle:hover{background:var(--bt-hover)}
 /* Elsewhere the switch shows only while the column is hidden, where the column's
    own top row had it. */
 html:not([data-windows-titlebar]) .bt-title-toggle{position:fixed;left:12px;top:calc(var(--dsh-frame-top-clearance,0px) + 6px);z-index:30}
-/* The footer ends in the Bot row: the whale's settings seat, then the account menu
+/* The footer ends in the Bot row: the Nova spark's settings seat, then the account menu
    when no plugin holds that seat. Every other plugin's entry takes a whole row above
    it, in the shell's order, so none of them squeezes the Bot row. */
 [class*="_footArea"]{grid-template-columns:auto minmax(0,1fr);grid-auto-flow:row dense;align-items:center;gap:4px 9px;padding:8px 6px 6px!important}
-/* DSH hides the footer of a collapsed sidebar under a Windows title bar; the grid
+/* Nova hides the footer of a collapsed sidebar under a Windows title bar; the grid
    stays out of that one place. */
 html:not([data-windows-titlebar]) [class*="_footArea"],:not([class*="_collapsed"])>[class*="_footArea"]{display:grid!important}
 [class*="_footArea"]>[class*="_footerActions"],[class*="_footArea"]>[class*="_footerActions"]>div{display:contents!important}
@@ -3357,7 +3490,7 @@ body[data-bt-layout=flat] .bt-think{max-width:calc(var(--bt-flat-w) * 100%)}
 .bt-activity{display:flex;align-items:center;gap:10px;margin:8px 0 4px 2px;font-size:14px;color:var(--bt-ink-2)}
 .bt-group-replies{display:contents}
 /* A Bot chat is flat in every work-details mode, without changing the user's mode
-   (it is a DSH-wide setting): step groups lose their header and stay open, and what a
+   (it is a Nova-wide setting): step groups lose their header and stay open, and what a
    mode folds away in a finished turn stays shown. TurnProcessCell also opens that
    fold; these rules cover the first frame before it does. */
 [data-step-process]>div:first-child{display:none!important}
@@ -3367,7 +3500,7 @@ body[data-bt-layout=flat] .bt-think{max-width:calc(var(--bt-flat-w) * 100%)}
 /* A turn's process seat is a flow child of its own, not a flowItem: a seat whose
    member cells all emptied themselves (a hidden exchange turn, a turn whose
    calls draw nothing) still kept its margin, stacking a blank band per hidden
-   call. Only the slot a DS Bot cell marked counts, so a seat another renderer
+   call. Only the slot a Nova Bots cell marked counts, so a seat another renderer
    fills — even with plain text and no element child — is never taken for empty. */
 [data-step-process]:has(> [data-step-process-body] [data-slot="conversation.chat.node"][data-bt-emptied]):not(:has(> [data-step-process-body] [data-slot="conversation.chat.node"]:not([data-bt-emptied]))){display:none!important}
 [class*="_header"]:has(.bt-head){border-bottom-color:transparent!important;box-shadow:none!important}
@@ -3390,7 +3523,7 @@ html[data-platform=darwin] header[class*="_header"]:has(.bt-head) :is(a,button,i
    group chat. Kept on the root alone, a write restyles one element. */
 @property --dsh-conversation-column-width{syntax:"*";inherits:false}
 @property --dsh-chat-user-width{syntax:"*";inherits:false}
-/* DSH's turn tail keeps what plugins put in it (delivered files, the Bot's separators),
+/* Nova's turn tail keeps what plugins put in it (delivered files, the Bot's separators),
    without its copy and branch row; a tail with nothing in it takes no room. */
 [data-turn-tail]>:not([data-slot="conversation.chat.turnTail"]){display:none!important}
 [class*="_flowItem"][data-chat-flow-kind="turn-tail"]:not(:has([data-slot="conversation.chat.turnTail"]:not(:empty))){display:none!important}
@@ -3470,7 +3603,7 @@ html[data-platform=darwin] header[class*="_header"]:has(.bt-head) :is(a,button,i
 [data-composer-card] [class*="_modes"]:empty{display:none!important}
 [data-composer-card] [class*="_activity"]:not(:has([data-slot] > *)){display:none!important}
 [data-composer-card] [class*="_trailing"]{gap:8px!important}
-/* No display here: DSH hides these controls with [hidden] while the Bot works. */
+/* No display here: Nova hides these controls with [hidden] while the Bot works. */
 [data-composer-card] [class*="_standardControls"]{align-items:center!important;gap:8px!important}
 [data-composer-card] button[class*="_primary"]{width:28px!important;height:28px!important;background:var(--bt-accent)!important;color:var(--bt-accent-ink,#fff)!important;border-radius:50%!important;transition:opacity .15s ease,${spring(SPRING_TAP, "scale")};animation:bt-icon-swap ${SPRING_POP.duration}ms ${SPRING_POP.easing}}
 [data-composer-card] button[class*="_primary"]:hover:not(:disabled){opacity:.9}
@@ -3593,7 +3726,7 @@ div:has(> nav [class*="_marks"]){display:none!important}
 .bt-btw-fail{margin:0 0 6px;color:var(--bt-danger);font-size:13px;line-height:18px}
 @media (prefers-reduced-motion:reduce){.bt-btw-chevron{transition:none}}
 `;
-var PLUGIN_ID = "ds-bot";
+var PLUGIN_ID = "nova";
 function installStyles(text, tag) {
   const style = document.createElement("style");
   style.dataset.dshBot = tag;
@@ -7019,7 +7152,7 @@ function SecretCard({ sessionId, bot, request, roster, actions, inline = false }
       "div",
       { className: "bt-secret-note", id: noteId },
       t("{bot} never sees the value. It reaches {bot}'s shell as ", { bot: bot.name }),
-      (0, import_react14.createElement)("code", null, `$DSH_SECRET_${request.name}`),
+      (0, import_react14.createElement)("code", null, `$NOVA_SECRET_${request.name}`),
       ".",
       filling && value !== "" && !long ? t(" At least {count} characters.", { count: MIN_VALUE }) : ""
     ),
@@ -7245,7 +7378,7 @@ function SecretsPage({ roster, actions, run: run2, Section }) {
       "p",
       { key: "about", className: "bt-secret-about" },
       t("Keys your Bots asked for. Bots never see the values: they use them as "),
-      (0, import_react14.createElement)("code", null, "$DSH_SECRET_NAME"),
+      (0, import_react14.createElement)("code", null, "$NOVA_SECRET_NAME"),
       t(" in their shell, and every value is replaced by "),
       (0, import_react14.createElement)("code", null, "[secret:NAME]"),
       t(" before anything goes to a model.")
@@ -9117,18 +9250,19 @@ function showsDshRow(dsh, app) {
 
 // src/client/storage.js
 var STORAGE = {
-  unread: "ds-bot:unread",
-  reactions: "ds-bot:reactions",
-  seen: "ds-bot:seen",
-  prefs: "ds-bot:prefs",
-  surface: "ds-bot:surface",
-  agentSessions: "ds-bot:agent-sessions",
-  browserWidth: "ds-bot:browser-width",
-  sidebar: "ds-bot:sidebar",
-  browsers: "ds-bot.browser.v2"
+  unread: "nova-bots:unread",
+  reactions: "nova-bots:reactions",
+  seen: "nova-bots:seen",
+  prefs: "nova-bots:prefs",
+  surface: "nova-bots:surface",
+  agentSessions: "nova-bots:agent-sessions",
+  browserWidth: "nova-bots:browser-width",
+  sidebar: "nova-bots:sidebar",
+  browsers: "nova-bots.browser.v2"
 };
-var LEGACY_PREFIXES = ["dsh-bot:", "dsh-bot-team:"];
+var LEGACY_PREFIXES = ["ds-bot:", "dsh-bot:", "dsh-bot-team:"];
 var LEGACY_BROWSER_KEYS = ["ds-bot.browser.v1", "dsh-bot.browser.v1"];
+var LEGACY_BROWSER_V2 = "ds-bot.browser.v2";
 var LEGACY_THEMES = { grok: "mono" };
 function legacyKeys(key) {
   if (key === STORAGE.browsers) return LEGACY_BROWSER_KEYS;
@@ -9137,8 +9271,17 @@ function legacyKeys(key) {
 }
 var migrateBrowsers = (storage) => {
   if (storage.getItem(STORAGE.browsers) !== null) {
-    for (const key of LEGACY_BROWSER_KEYS) storage.removeItem(key);
+    for (const key of [...LEGACY_BROWSER_KEYS, LEGACY_BROWSER_V2]) storage.removeItem(key);
     return;
+  }
+  try {
+    const value = storage.getItem(LEGACY_BROWSER_V2);
+    if (value !== null) {
+      storage.setItem(STORAGE.browsers, value);
+      storage.removeItem(LEGACY_BROWSER_V2);
+      return;
+    }
+  } catch {
   }
   for (const key of LEGACY_BROWSER_KEYS) {
     try {
@@ -9557,7 +9700,7 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, 
   const unread = sessions.some((session) => session.unread) || marked && !active;
   useMarkedUnread(agent.id, active, marked, actions);
   const preview = sessions[0]?.title ?? t("New session");
-  const label = ["DSH Agent", running ? t("Working") : "", unread ? t("Unread activity") : ""].filter(Boolean).join(", ");
+  const label = ["Nova Agent", running ? t("Working") : "", unread ? t("Unread activity") : ""].filter(Boolean).join(", ");
   const open = active && wide;
   return (0, import_react19.createElement)(
     "div",
@@ -9570,7 +9713,7 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, 
         "aria-label": label,
         "aria-current": active ? "page" : void 0,
         "data-agent-id": agent.id,
-        title: wide ? void 0 : "DSH Agent",
+        title: wide ? void 0 : "Nova Agent",
         onClick: () => actions.openAgent(agent.id),
         onContextMenu: (event) => {
           event.preventDefault();
@@ -9581,7 +9724,7 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, 
       wide ? (0, import_react19.createElement)(
         "span",
         { className: "bt-row-body" },
-        (0, import_react19.createElement)("span", { className: "bt-row-name" }, "DSH Agent"),
+        (0, import_react19.createElement)("span", { className: "bt-row-name" }, "Nova Agent"),
         preview ? (0, import_react19.createElement)("span", { className: "bt-row-preview" }, preview) : null
       ) : null,
       wide && unread && !active ? (0, import_react19.createElement)("span", { className: "bt-unread", "aria-hidden": true }) : !wide && unread && !active ? (0, import_react19.createElement)("span", { className: "bt-dot", "aria-hidden": true }) : null
@@ -9979,10 +10122,10 @@ function UpdateButton({ useUpdate, actions }) {
     setDshError("");
     void actions.installDshUpdate().catch((failure) => setDshError(hostText(failure?.message ?? String(failure))));
   };
-  const label = phase === "installing" ? t("Updating DS Bot…") : dshPhase === "installing" ? t("Updating DSH…") : phase === "installed" ? t("DS Bot {version} is installed. Restart DSH to use it.", { version: update.installed ?? update.latest }) : phase === "updated" ? t("DS Bot {version} is installed.", { version: update.installed ?? update.latest }) : dshPhase === "installed" ? t("Restart DSH to start using DSH {version}.", { version: dsh.installed ?? dsh.verified }) : update?.available ? t("DS Bot {version} is available", { version: update.latest }) : t("DSH {version} is available", { version: dsh?.verified });
+  const label = phase === "installing" ? t("Updating Nova Bots…") : dshPhase === "installing" ? t("Updating Nova…") : phase === "installed" ? t("Nova Bots {version} is installed. Restart Nova to use it.", { version: update.installed ?? update.latest }) : phase === "updated" ? t("Nova Bots {version} is installed.", { version: update.installed ?? update.latest }) : dshPhase === "installed" ? t("Restart Nova to start using Nova {version}.", { version: dsh.installed ?? dsh.verified }) : update?.available ? t("Nova Bots {version} is available", { version: update.latest }) : t("Nova {version} is available", { version: dsh?.verified });
   const message = error || (phase === "failed" ? update.error : "");
   const dshMessage = dshError || (dshPhase === "failed" ? dsh?.error : "");
-  const dshText = dshPhase === "installed" ? t("Restart DSH to start using DSH {version}.", { version: dsh.installed ?? dsh.verified }) : dsh?.available === false && dsh?.blockedBy ? t("Update DS Bot {version} first.", { version: dsh.blockedBy }) : t("You have {version}.", { version: dsh?.current });
+  const dshText = dshPhase === "installed" ? t("Restart Nova to start using Nova {version}.", { version: dsh.installed ?? dsh.verified }) : dsh?.available === false && dsh?.blockedBy ? t("Update Nova Bots {version} first.", { version: dsh.blockedBy }) : t("You have {version}.", { version: dsh?.current });
   return (0, import_react19.createElement)(
     import_react19.Fragment,
     null,
@@ -9999,12 +10142,12 @@ function UpdateButton({ useUpdate, actions }) {
     }, (0, import_react19.createElement)(CloudDownloadIcon, { done: phase === "installed" || phase === "updated" }), phase === "failed" || dshPhase === "failed" ? (0, import_react19.createElement)("span", { className: "bt-update-dot", "aria-hidden": true }) : null),
     open && box ? (0, import_react_dom3.createPortal)((0, import_react19.createElement)(
       "div",
-      { className: "bt-update-pop", role: "dialog", "aria-label": update?.available || phase !== "idle" ? t("DS Bot update") : t("DSH update"), style: box },
+      { className: "bt-update-pop", role: "dialog", "aria-label": update?.available || phase !== "idle" ? t("Nova Bots update") : t("Nova update"), style: box },
       update?.available || phase !== "idle" ? (0, import_react19.createElement)(
         import_react19.Fragment,
         null,
-        (0, import_react19.createElement)("div", { className: "bt-update-title" }, phase === "installed" || phase === "updated" ? t("Update installed") : t("DS Bot {version}", { version: update.latest })),
-        (0, import_react19.createElement)("div", { className: "bt-update-text" }, phase === "installed" ? t("Restart DSH to start using DS Bot {version}.", { version: update.installed ?? update.latest }) : phase === "updated" ? t("DS Bot {version} is installed.", { version: update.installed ?? update.latest }) : t("You have {version}.", { version: update.current })),
+        (0, import_react19.createElement)("div", { className: "bt-update-title" }, phase === "installed" || phase === "updated" ? t("Update installed") : t("Nova Bots {version}", { version: update.latest })),
+        (0, import_react19.createElement)("div", { className: "bt-update-text" }, phase === "installed" ? t("Restart Nova to start using Nova Bots {version}.", { version: update.installed ?? update.latest }) : phase === "updated" ? t("Nova Bots {version} is installed.", { version: update.installed ?? update.latest }) : t("You have {version}.", { version: update.current })),
         message ? (0, import_react19.createElement)("div", { className: "bt-update-error", role: "alert" }, t("The update did not finish: {reason}", { reason: message })) : null,
         (0, import_react19.createElement)(
           "div",
@@ -10021,7 +10164,7 @@ function UpdateButton({ useUpdate, actions }) {
       dshRow ? (0, import_react19.createElement)(
         "div",
         { className: "bt-update-dsh" },
-        (0, import_react19.createElement)("div", { className: "bt-update-title" }, t("DSH {version}", { version: dsh.verified })),
+        (0, import_react19.createElement)("div", { className: "bt-update-title" }, t("Nova {version}", { version: dsh.verified })),
         (0, import_react19.createElement)("div", { className: "bt-update-text" }, dshText),
         dshMessage ? (0, import_react19.createElement)("div", { className: "bt-update-error", role: "alert" }, t("The update did not finish: {reason}", { reason: dshMessage })) : null,
         (0, import_react19.createElement)(
@@ -10303,9 +10446,9 @@ function BotReturn({ wide, useSurface, actions }) {
   if (mode !== "agent") return null;
   return (0, import_react19.createElement)(
     "button",
-    { type: "button", className: "bt-return", "aria-label": t("DS Bot"), title: t("DS Bot"), onClick: () => actions.setSurface("bot") },
+    { type: "button", className: "bt-return", "aria-label": t("Nova Bots"), title: t("Nova Bots"), onClick: () => actions.setSurface("bot") },
     (0, import_react19.createElement)(BotMark, { look: MAIN_LOOK, size: 20 }),
-    wide ? (0, import_react19.createElement)("span", { className: "bt-return-name" }, t("DS Bot")) : null
+    wide ? (0, import_react19.createElement)("span", { className: "bt-return-name" }, t("Nova Bots")) : null
   );
 }
 var RETURN_CSS = `
@@ -10319,10 +10462,33 @@ var RETURN_CSS = `
 .bt-return-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 `;
 function BrandMark({ size = 24 }) {
-  return (0, import_react19.createElement)("span", { className: "bt-brand-whale" }, (0, import_react19.createElement)(BotMark, { look: MAIN_LOOK, size }));
+  return (0, import_react19.createElement)(
+    "span",
+    { className: "bt-brand-mark" },
+    (0, import_react19.createElement)(
+      "svg",
+      { width: size, height: size, viewBox: "0 0 48 48", fill: "none", "aria-hidden": true },
+      (0, import_react19.createElement)(
+        "defs",
+        null,
+        (0, import_react19.createElement)(
+          "linearGradient",
+          { id: "bt-nova-grad", x1: 6, y1: 4, x2: 42, y2: 44, gradientUnits: "userSpaceOnUse" },
+          (0, import_react19.createElement)("stop", { offset: 0, stopColor: "var(--bt-nova-1)" }),
+          (0, import_react19.createElement)("stop", { offset: 0.52, stopColor: "var(--bt-nova-2)" }),
+          (0, import_react19.createElement)("stop", { offset: 1, stopColor: "var(--bt-nova-3)" })
+        )
+      ),
+      (0, import_react19.createElement)("path", {
+        d: "M24 2.5C26 15 33 22 45.5 24 33 26 26 33 24 45.5 22 33 15 26 2.5 24 15 22 22 15 24 2.5Z",
+        fill: "url(#bt-nova-grad)"
+      }),
+      (0, import_react19.createElement)("circle", { cx: 37.6, cy: 10.4, r: 2.7, fill: "var(--bt-nova-4)", opacity: 0.9 })
+    )
+  );
 }
 function BrandName() {
-  return (0, import_react19.createElement)("span", { style: { fontWeight: 600, fontSize: 14 } }, "DS Bot");
+  return (0, import_react19.createElement)("span", { className: "bt-brand-name", style: { fontWeight: 650, fontSize: 14, letterSpacing: "-.02em" } }, "Nova Bots");
 }
 var SIDEBAR_CSS = `
 .bt-confirm{width:260px;max-width:72vw;padding:10px 12px 12px;display:flex;flex-direction:column;gap:10px}
@@ -10345,7 +10511,7 @@ var SIDEBAR_CSS = `
 [class*="_footArea"]:has(.bt-foot-account)>[class*="_settingsArea"]{grid-column:3}
 [class*="_footArea"]:has(.bt-foot-account)>[class*="_settingsArea"] button[class*="_trigger"] [class*="_label"]{display:none!important}
 
-/* The update cloud springs in when a newer DS Bot shows up; its arrow drops in a
+/* The update cloud springs in when a newer Nova Bots shows up; its arrow drops in a
    loop while the install runs. */
 .bt-round.bt-update{position:relative;color:var(--bt-accent,#4D6BFE);animation:bt-update-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
 .bt-round.bt-update svg{width:17px;height:17px}
@@ -10369,8 +10535,8 @@ var SIDEBAR_CSS = `
 .bt-update-dsh:not(:first-child){margin-top:12px;padding-top:12px;border-top:.5px solid var(--bt-line-2)}
 @media (prefers-reduced-motion:reduce){.bt-round.bt-update,.bt-update-pop,.bt-update .bt-cloud-arrow{animation:none}}
 
-/* The DSH Agent row and its expanding Session list. The black whale is the
-   harness's own mark, so the row reads as "plain dsh" next to the Bot marks. */
+/* The Nova Agent row and its expanding Session list. The black mark is the
+   runtime's own mark, so the row reads as "plain dsh" next to the Bot marks. */
 .bt-agent-ava{flex:none;width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--bt-hover);color:var(--bt-ink)}
 .bt-agent-ava.bt-run{animation:bt-agent-pulse 1.4s ease-in-out infinite}
 @keyframes bt-agent-pulse{0%,100%{opacity:1}50%{opacity:.55}}
@@ -10822,8 +10988,8 @@ function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
 }
 
 // src/client/at-menu.js
-var BOTS_SOURCE = "ds-bot";
-var CHATS_SOURCE = "ds-bot-chats";
+var BOTS_SOURCE = "nova";
+var CHATS_SOURCE = "nova-bots-chats";
 var ROOM_ALL = ["all", "everyone", "所有人", "全体"];
 var OTHER_CHATS_MAX = 8;
 var conversationOf = (roster, sessionId) => {
@@ -10910,12 +11076,12 @@ function atSources({ roster, sessions, launched, iconFor }) {
 }
 
 // src/client/side-model.js
-var SIDE_SOURCE = "ds-bot-side";
+var SIDE_SOURCE = "nova-bots-side";
 var SIDE_TOKEN = "/side ";
 var GROUP_REFUSAL = "Side chat is only available in a Bot's private chat.";
 var ATTACHMENT_REFUSAL = "/side does not take attachments.";
 var EMPTY_REFUSAL = "Write a question after /side.";
-var LOADING_REFUSAL = "DS Bot is still loading this chat.";
+var LOADING_REFUSAL = "Nova Bots is still loading this chat.";
 function sideSurface(roster, sessionId) {
   if (!roster?.ready) return "unknown";
   if (roster.roomsById?.[sessionId]) return "group";
@@ -11366,7 +11532,7 @@ function disposeAll(disposers, label) {
     try {
       dispose?.();
     } catch (error) {
-      console.warn(`[ds-bot] ${label}`, error);
+      console.warn(`[nova] ${label}`, error);
     }
   }
 }
@@ -11385,7 +11551,7 @@ function surfaceGroups(install, { onError } = {}) {
       return true;
     } catch (error) {
       disposeAll(disposers, `roll back ${group}`);
-      console.warn(`[ds-bot] install ${group}`, error);
+      console.warn(`[nova] install ${group}`, error);
       onError?.(group, error);
       return false;
     }
@@ -11567,14 +11733,14 @@ function CommandPalette({ start, token, roster, actions, useSessions }) {
     }))
   ];
   if (people.length) sections.push([t("Bots"), people]);
-  const agents = (roster.agents ?? []).filter(() => matchesName("DSH Agent")).map((agent) => ({
+  const agents = (roster.agents ?? []).filter(() => matchesName("Nova Agent")).map((agent) => ({
     key: agent.id,
     avatar: (0, import_react24.createElement)("span", { className: "bt-palette-agent" }, (0, import_react24.createElement)(import_dsh_client_ui_primitives.FishLogo, { size: 18 })),
-    title: "DSH Agent",
-    subtitle: t("Plain dsh session"),
+    title: "Nova Agent",
+    subtitle: t("Nova Agent session"),
     run: () => actions.openAgent(agent.id)
   }));
-  if (agents.length) sections.push(["DSH Agent", agents]);
+  if (agents.length) sections.push(["Nova Agent", agents]);
   const messages = JSON.parse(found).map(([id, turn, snippet]) => {
     const bot = roster.byId[id];
     const room2 = roster.roomsById[id];
@@ -11900,7 +12066,7 @@ function ModelMenu({ bot, roster, actions, run: run2, wide = false, onPick, onPi
     shownPlace ? (0, import_react_dom6.createPortal)((0, import_react25.createElement)(
       "div",
       { ref: menu, className: `bt-menu bt-model-menu${shownPlace.bottom !== void 0 ? " bt-menu-up" : ""}`, role: "menu", "aria-label": t("Model for {name}", { name: bot.name }), style: shownPlace, "data-leaving": leaving || void 0 },
-      models.length > 0 ? (0, import_react25.createElement)(ModelRows, { roster, current, onPick: pick2 }) : (0, import_react25.createElement)("div", { className: "bt-model-none" }, t("No models are set up in DeepSeek Harness yet.")),
+      models.length > 0 ? (0, import_react25.createElement)(ModelRows, { roster, current, onPick: pick2 }) : (0, import_react25.createElement)("div", { className: "bt-model-none" }, t("No models are set up in Nova Bots yet.")),
       effortRows(reasoning).length > 0 ? (0, import_react25.createElement)(EffortRows, { reasoning, current: picked, onPick: pickEffort }) : null,
       manage ? (0, import_react25.createElement)("div", { className: "bt-menu-sep", role: "separator" }) : null,
       manage ? (0, import_react25.createElement)("button", { type: "button", role: "menuitem", onClick: () => {
@@ -11947,7 +12113,7 @@ function ModelChoiceDock({ sessionId, useRoster, actions }) {
         disabled: busy !== "",
         "aria-busy": busy === model.ref || void 0,
         "aria-label": `${model.name} · ${provider}`,
-        title: model.ref === roster.defaultModel ? `${model.ref} · ${t("Harness default")}` : model.ref,
+        title: model.ref === roster.defaultModel ? `${model.ref} · ${t("Nova default")}` : model.ref,
         onClick: () => pick2(model.ref)
       }, model.name, busy === model.ref ? (0, import_react25.createElement)("span", { className: "bt-model-spin", "aria-label": t("Saving…") }) : null)))
     )),
@@ -12003,8 +12169,8 @@ function ModelKeyCard({ model, actions }) {
 var manageModels = (actions) => actions.openModels ?? actions.openHarnessSettings;
 function setupChoices(actions) {
   return [
-    actions.canSignIn?.() ? [t("Sign in to DeepSeek"), () => actions.signIn()] : null,
-    actions.openHarnessOnboarding ? [t("Enter a DeepSeek API key"), () => actions.openHarnessOnboarding("deepseek-official")] : null,
+    actions.canSignIn?.() ? [t("Sign in to Nova"), () => actions.signIn()] : null,
+    actions.openHarnessOnboarding ? [t("Enter a Nova API key"), () => actions.openHarnessOnboarding("deepseek-official")] : null,
     actions.openHarnessSettings ? [t("Open settings to set up a custom model"), actions.openHarnessSettings] : null
   ].filter(Boolean);
 }
@@ -12048,7 +12214,7 @@ var MODEL_CSS = `
 .bt-model-tick{flex:none;width:16px;height:16px;display:inline-flex;color:var(--bt-ink-2)}
 .bt-model-tick svg{animation:bt-check-pop ${SPRING_POP.duration}ms ${SPRING_POP.easing} 60ms backwards}
 .bt-model-none{padding:8px;font-size:13px;line-height:18px;color:var(--bt-ink-2)}
-/* DSH centers the message column inside its scroll padding, which can sit a few px off this dock's center; the side shadows keep the band over the column's edges. */
+/* Nova centers the message column inside its scroll padding, which can sit a few px off this dock's center; the side shadows keep the band over the column's edges. */
 .bt-model-dock{width:100%;max-width:var(--dsh-chat-content-width,748px);margin:0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:0 0 10px;box-sizing:border-box;background:var(--bt-main);box-shadow:-12px 0 0 var(--bt-main),12px 0 0 var(--bt-main);animation:bt-model-in ${SPRING_POP.duration}ms ${SPRING_POP.easing} backwards}
 .bt-model-chips{display:flex;flex-wrap:wrap;gap:6px;margin-left:30px;max-width:min(560px,calc(100% - 30px));max-height:min(240px,36vh);max-height:min(240px,36dvh);overflow-y:auto;scrollbar-width:thin}
 .bt-model-choice-group{display:flex;flex-direction:column;gap:6px;width:100%;min-width:0}
@@ -12451,9 +12617,9 @@ function AutomationOff({ actions }) {
     "div",
     { className: "bt-set-card bt-task-off" },
     (0, import_react27.createElement)("span", { className: "bt-task-off-mark" }, (0, import_react27.createElement)(ClockIcon)),
-    (0, import_react27.createElement)("span", { className: "bt-task-off-title" }, t("Turn on Automation tasks in DSH")),
-    (0, import_react27.createElement)("span", { className: "bt-set-hint" }, t("Switch on Automation tasks on the Plugins page in Harness settings.")),
-    actions.openHarnessSettings ? (0, import_react27.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", onClick: actions.openHarnessSettings }, t("Open Harness settings")) : null
+    (0, import_react27.createElement)("span", { className: "bt-task-off-title" }, t("Turn on Automation tasks in Nova")),
+    (0, import_react27.createElement)("span", { className: "bt-set-hint" }, t("Switch on Automation tasks on the Plugins page in Nova settings.")),
+    actions.openHarnessSettings ? (0, import_react27.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", onClick: actions.openHarnessSettings }, t("Open Nova settings")) : null
   );
 }
 function SchedulesPage({ roster, actions, start }) {
@@ -12493,8 +12659,8 @@ function BotSchedules({ bot, roster, actions }) {
       !view.available ? (0, import_react27.createElement)(
         "div",
         { className: "bt-set-row bt-bs-row" },
-        (0, import_react27.createElement)("span", { className: "bt-set-copy" }, (0, import_react27.createElement)("span", { className: "bt-set-hint" }, t("Switch on Automation tasks on the Plugins page in Harness settings."))),
-        actions.openHarnessSettings ? (0, import_react27.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", onClick: actions.openHarnessSettings }, t("Open Harness settings")) : null
+        (0, import_react27.createElement)("span", { className: "bt-set-copy" }, (0, import_react27.createElement)("span", { className: "bt-set-hint" }, t("Switch on Automation tasks on the Plugins page in Nova settings."))),
+        actions.openHarnessSettings ? (0, import_react27.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", onClick: actions.openHarnessSettings }, t("Open Nova settings")) : null
       ) : [
         ...tasks.map((task) => (0, import_react27.createElement)(TaskRow, { key: task.id, task, actions, roster, onView: publish })),
         (0, import_react27.createElement)("button", { key: "new", type: "button", className: "bt-set-row bt-bs-row bt-gs-add", onClick: () => actions.openSettings("schedules", bot.id) }, (0, import_react27.createElement)(PlusIcon), t("New task"))
@@ -12509,7 +12675,7 @@ function ScheduleSummary({ bot, actions }) {
     "div",
     null,
     (0, import_react27.createElement)("div", { className: "bt-section-title" }, t("Scheduled tasks")),
-    tasks.length === 0 ? (0, import_react27.createElement)("button", { type: "button", className: "bt-more", onClick: () => actions.openSettings("schedules", bot.id) }, view?.available === false ? t("Switch on Automation tasks on the Plugins page in Harness settings.") : t("No scheduled tasks yet. Add one")) : (0, import_react27.createElement)("div", { className: "bt-task-list" }, tasks.slice(0, 3).map((task) => (0, import_react27.createElement)(
+    tasks.length === 0 ? (0, import_react27.createElement)("button", { type: "button", className: "bt-more", onClick: () => actions.openSettings("schedules", bot.id) }, view?.available === false ? t("Switch on Automation tasks on the Plugins page in Nova settings.") : t("No scheduled tasks yet. Add one")) : (0, import_react27.createElement)("div", { className: "bt-task-list" }, tasks.slice(0, 3).map((task) => (0, import_react27.createElement)(
       "button",
       { key: task.id, type: "button", className: "bt-task-line", onClick: () => actions.openSettings("schedules") },
       (0, import_react27.createElement)(ClockIcon),
@@ -12657,13 +12823,13 @@ function CapabilityForm({ draft, setDraft, items, actions, onClose }) {
       null,
       (0, import_react28.createElement)(Field, { label: "Command", value: draft.command, onChange: (value) => set("command", value) }),
       (0, import_react28.createElement)(Field, { label: "Arguments (one per line)", value: draft.argsText, onChange: (value) => set("argsText", value), multiline: true }),
-      (0, import_react28.createElement)(Field, { label: "Environment (JSON)", value: draft.envText, onChange: (value) => set("envText", value), multiline: true, placeholder: t('{"API_KEY": "$DSH_SECRET_MY_KEY"}') })
+      (0, import_react28.createElement)(Field, { label: "Environment (JSON)", value: draft.envText, onChange: (value) => set("envText", value), multiline: true, placeholder: t('{"API_KEY": "$NOVA_SECRET_MY_KEY"}') })
     ) : null,
     draft.kind === "mcp" && draft.transport === "streamable-http" ? (0, import_react28.createElement)(
       "div",
       null,
       (0, import_react28.createElement)(Field, { label: "URL", value: draft.url, onChange: (value) => set("url", value) }),
-      (0, import_react28.createElement)(Field, { label: "Headers (JSON)", value: draft.headersText, onChange: (value) => set("headersText", value), multiline: true, placeholder: t('{"API_KEY": "$DSH_SECRET_MY_KEY"}') })
+      (0, import_react28.createElement)(Field, { label: "Headers (JSON)", value: draft.headersText, onChange: (value) => set("headersText", value), multiline: true, placeholder: t('{"API_KEY": "$NOVA_SECRET_MY_KEY"}') })
     ) : null,
     draft.kind === "skill" ? (0, import_react28.createElement)(Field, { label: "Skill instructions", value: draft.content, onChange: (value) => set("content", value), multiline: true }) : null,
     draft.kind === "pack" ? (0, import_react28.createElement)(
@@ -13888,7 +14054,7 @@ function CreateBot({ roster, actions, start, brief = "", onBack, canGoBack, onCr
         setModel(ref);
         setEffort(void 0);
       }, onPickEffort: (picked) => setEffort(picked ?? null) }),
-      (0, import_react32.createElement)("span", { className: "bt-note" }, (roster.models ?? []).length > 0 ? t("The Bot runs on this model. You can change it later in its details.") : t("Add a provider and a model in DeepSeek Harness first, or pick one in the Bot's chat later."))
+      (0, import_react32.createElement)("span", { className: "bt-note" }, (roster.models ?? []).length > 0 ? t("The Bot runs on this model. You can change it later in its details.") : t("Add a provider and a model in Nova Bots first, or pick one in the Bot's chat later."))
     ),
     error ? (0, import_react32.createElement)("div", { className: "bt-error", role: "alert", style: { padding: 0 } }, error) : null,
     (0, import_react32.createElement)(
@@ -14018,7 +14184,7 @@ function NewChat({ mode, roster, actions }) {
       inputRef.current?.focus();
     } });
     if ((roster.agents ?? []).length === 0 && actions.addAgent) {
-      options.push({ key: "agent", icon: (0, import_react33.createElement)(import_dsh_client_ui_primitives.FishLogo, { size: 16 }), label: t("Add DSH Agent"), run: () => run2(async () => {
+      options.push({ key: "agent", icon: (0, import_react33.createElement)(import_dsh_client_ui_primitives.FishLogo, { size: 16 }), label: t("Add Nova Agent"), run: () => run2(async () => {
         await actions.addAgent();
         close();
       }) });
@@ -15186,7 +15352,7 @@ function ownerFace(owner, roster) {
   if (owner.kind === "agent") {
     return {
       kind: "agent",
-      name: owner.name || "DSH Agent",
+      name: owner.name || "Nova Agent",
       sub: owner.deleted ? t("Deleted") : "",
       paint: "var(--bt-us-rest)",
       glyph: (size) => glyphBox(size, ChatsIcon)
@@ -16239,11 +16405,12 @@ function entrySummary(entry) {
   if (entry.source === "turn") return failureLabel(entry.code, entry.text);
   return entry.text;
 }
-var SOURCES = { turn: "Model call", host: "DS Bot", api: "DS Bot", browser: "This window" };
+var SOURCES = { turn: "Model call", host: "Nova Bots", api: "Nova Bots", browser: "This window" };
 function issueWindow() {
   if (window.dshDesktop !== void 0) return { go: (url) => {
     window.open(url, "_blank");
     return true;
+  }, close: () => {
   } };
   const reserved = window.open("", "_blank");
   if (reserved !== null) reserved.opener = null;
@@ -16252,7 +16419,8 @@ function issueWindow() {
       if (reserved === null) return false;
       reserved.location.href = url;
       return true;
-    }
+    },
+    close: () => reserved?.close?.()
   };
 }
 function FeedbackPage({ actions, run: run2, Section, Row: Row3 }) {
@@ -16274,9 +16442,17 @@ function FeedbackPage({ actions, run: run2, Section, Row: Row3 }) {
     if (!copied) setPreview(true);
   }));
   const [issueLink, setIssueLink] = (0, import_react42.useState)(null);
+  const issueBase = report?.issuesUrl ?? "";
   const openIssue = () => {
     const target = issueWindow();
     run2(fetchReport().then(async (next) => {
+      if (!next.issuesUrl) {
+        target.close?.();
+        const copied2 = await copy(next.markdown);
+        setNote(copied2 ? t("Copied the diagnostics.") : t("Could not copy. Select the text below and copy it."));
+        if (!copied2) setPreview(true);
+        return;
+      }
       const copied = await copy(next.markdown);
       const { url, inline } = issueUrl(next.issuesUrl, { what, diagnostics: next.markdown });
       if (target.go(url)) {
@@ -16290,7 +16466,7 @@ function FeedbackPage({ actions, run: run2, Section, Row: Row3 }) {
     }));
   };
   const downloadLog = () => run2(actions.diagnosticsLog().then((text) => {
-    download("ds-bot-diagnostics.log", text || "No entries.\n");
+    download("nova-diagnostics.log", text || "No entries.\n");
     setNote(t("Downloaded the log. Keys, tokens, and your home folder are hidden in it."));
   }));
   const clearLog = () => run2(actions.diagnosticsClear().then(clearClientErrors).then(load).then(() => setNote(t("Cleared the error log."))));
@@ -16320,11 +16496,11 @@ function FeedbackPage({ actions, run: run2, Section, Row: Row3 }) {
         (0, import_react42.createElement)("button", { type: "button", className: "bt-soft bt-soft-sm", onClick: copyReport }, t("Copy"))
       ),
       preview ? (0, import_react42.createElement)("div", { className: "bt-set-row bt-fb-preview" }, (0, import_react42.createElement)("pre", { tabIndex: 0, "aria-label": t("Diagnostics") }, report?.markdown || t("Loading…"))) : null,
-      (0, import_react42.createElement)(
+      report === null || issueBase ? (0, import_react42.createElement)(
         Row3,
-        { label: t("GitHub issue"), hint: t("Opens a new issue in the DS Bot repository with all of this filled in. Nothing is sent until you submit it there.") },
+        { label: t("GitHub issue"), hint: t("Opens a new issue in the Nova Bots repository with all of this filled in. Nothing is sent until you submit it there.") },
         (0, import_react42.createElement)("button", { type: "button", className: "bt-fb-primary", onClick: openIssue }, t("Report on GitHub"))
-      )
+      ) : null
     ),
     note ? (0, import_react42.createElement)(
       "div",
@@ -16335,7 +16511,7 @@ function FeedbackPage({ actions, run: run2, Section, Row: Row3 }) {
     (0, import_react42.createElement)(
       Section,
       { key: "errors", title: report ? t("Recent errors · {count}", { count: total }) : t("Recent errors") },
-      shown.length === 0 ? (0, import_react42.createElement)(Row3, { label: t("No errors recorded."), hint: t("Failed model calls and DS Bot problems show here, newest first.") }) : shown.map((entry, index) => (0, import_react42.createElement)(
+      shown.length === 0 ? (0, import_react42.createElement)(Row3, { label: t("No errors recorded."), hint: t("Failed model calls and Nova Bots problems show here, newest first.") }) : shown.map((entry, index) => (0, import_react42.createElement)(
         "div",
         { key: `${entry.time}-${index}`, className: "bt-set-row bt-fb-entry", title: entry.text },
         (0, import_react42.createElement)("span", { className: "bt-fb-dot", "data-level": entry.level, "aria-hidden": true }),
@@ -16343,7 +16519,7 @@ function FeedbackPage({ actions, run: run2, Section, Row: Row3 }) {
           "div",
           { className: "bt-set-copy" },
           (0, import_react42.createElement)("span", { className: "bt-fb-text" }, entrySummary(entry)),
-          (0, import_react42.createElement)("span", { className: "bt-set-hint" }, [whenText(entry.time), entry.bot, entry.where, t(SOURCES[entry.source] ?? "DS Bot")].filter(Boolean).join(" · "))
+          (0, import_react42.createElement)("span", { className: "bt-set-hint" }, [whenText(entry.time), entry.bot, entry.where, t(SOURCES[entry.source] ?? "Nova Bots")].filter(Boolean).join(" · "))
         ),
         entry.code ? (0, import_react42.createElement)("span", { className: "bt-tag bt-fb-code" }, entry.status ? `${entry.code} ${entry.status}` : entry.code) : null
       )),
@@ -16415,12 +16591,12 @@ var import_react43 = require("react");
 var CHEER_MS = 1800;
 var starCount = (count) => new Intl.NumberFormat(dateLocale(), { notation: "compact", maximumFractionDigits: 1 }).format(count);
 function botHint(update) {
-  if (update.phase === "installing") return t("Updating DS Bot…");
-  if (update.phase === "installed") return t("Restart DSH to start using DS Bot {version}.", { version: update.installed ?? update.latest });
-  if (update.phase === "updated") return t("DS Bot {version} is installed.", { version: update.installed ?? update.latest });
+  if (update.phase === "installing") return t("Updating Nova Bots…");
+  if (update.phase === "installed") return t("Restart Nova to start using Nova Bots {version}.", { version: update.installed ?? update.latest });
+  if (update.phase === "updated") return t("Nova Bots {version} is installed.", { version: update.installed ?? update.latest });
   if (update.phase === "failed") return t("The update did not finish: {reason}", { reason: hostText(update.error ?? "") });
-  if (update.available) return t("DS Bot {version} is available", { version: update.latest });
-  if (update.source === "app") return t("Updates come with the DS Bot app.");
+  if (update.available) return t("Nova Bots {version} is available", { version: update.latest });
+  if (update.source === "app") return t("Updates come with the Nova Bots app.");
   if (update.enabled === false) return t("Update checks are off.");
   if (update.source === "path") return t("Installed from a local folder; update it there.");
   if (!update.checkedAt) return null;
@@ -16449,11 +16625,11 @@ function ownAppRow(ownApp) {
   }
 }
 function dshHint(dsh, shown) {
-  if (dsh.phase === "installing") return t("Updating DSH…");
-  if (dsh.phase === "installed") return t("Restart DSH to start using DSH {version}.", { version: dsh.installed ?? dsh.verified });
+  if (dsh.phase === "installing") return t("Updating Nova…");
+  if (dsh.phase === "installed") return t("Restart Nova to start using Nova {version}.", { version: dsh.installed ?? dsh.verified });
   if (dsh.phase === "failed") return t("The update did not finish: {reason}", { reason: hostText(dsh.error ?? "") });
-  if (dsh.available === false && dsh.blockedBy) return t("Update DS Bot {version} first.", { version: dsh.blockedBy });
-  if (shown) return t("DSH {version} is available", { version: dsh.verified });
+  if (dsh.available === false && dsh.blockedBy) return t("Update Nova Bots {version} first.", { version: dsh.blockedBy });
+  if (shown) return t("Nova {version} is available", { version: dsh.verified });
   return t("Version {version}", { version: dsh.current });
 }
 var linkProps = (href) => ({ className: "bt-soft bt-soft-sm bt-about-link", href, target: "_blank", rel: "noopener noreferrer" });
@@ -16505,7 +16681,7 @@ function AboutPage({ useUpdate, actions, run: run2, Section, Row: Row3 }) {
     { type: "button", className: "bt-fb-primary", disabled: dshPhase === "installing", onClick: () => run2(actions.installDshUpdate()) },
     dshPhase === "installing" ? t("Updating…") : dshPhase === "failed" ? t("Try again") : t("Update")
   ) : null;
-  const repo = update.repoUrl;
+  const repo = null;
   return [
     (0, import_react43.createElement)(
       "div",
@@ -16514,7 +16690,7 @@ function AboutPage({ useUpdate, actions, run: run2, Section, Row: Row3 }) {
       (0, import_react43.createElement)(
         "div",
         { className: "bt-about-copy" },
-        (0, import_react43.createElement)("span", { className: "bt-about-name" }, "DS Bot"),
+        (0, import_react43.createElement)("span", { className: "bt-about-name" }, "Nova Bots"),
         update.current ? (0, import_react43.createElement)("span", { className: "bt-about-version" }, t("Version {version}", { version: update.current })) : null
       ),
       repo ? (0, import_react43.createElement)(
@@ -16524,19 +16700,19 @@ function AboutPage({ useUpdate, actions, run: run2, Section, Row: Row3 }) {
           href: repo,
           target: "_blank",
           rel: "noopener noreferrer",
-          title: t("Star DS Bot on GitHub"),
-          "aria-label": stars === null ? t("Star DS Bot on GitHub") : `${t("Star DS Bot on GitHub")} · ${t("{count} stars", { count: stars })}`
+          title: t("Star Nova Bots on GitHub"),
+          "aria-label": stars === null ? t("Star Nova Bots on GitHub") : `${t("Star Nova Bots on GitHub")} · ${t("{count} stars", { count: stars })}`
         },
         (0, import_react43.createElement)("span", { className: "bt-star-main" }, (0, import_react43.createElement)("span", { className: "bt-star-icon" }, (0, import_react43.createElement)(StarLineIcon)), "Star"),
         stars === null ? null : (0, import_react43.createElement)("span", { className: "bt-star-count" }, starCount(stars))
       ) : null
     ),
-    repo ? (0, import_react43.createElement)("p", { key: "ask", className: "bt-about-ask" }, t("If DS Bot helps you, a star on GitHub helps more people find it.")) : null,
+    repo ? (0, import_react43.createElement)("p", { key: "ask", className: "bt-about-ask" }, t("If Nova Bots helps you, a star on GitHub helps more people find it.")) : null,
     (0, import_react43.createElement)(
       Section,
       { key: "updates", title: t("Updates") },
-      (0, import_react43.createElement)(Row3, { label: "DS Bot", hint: ownRow?.hint ?? botHint(update) }, botControl, update.available && update.notesUrl ? (0, import_react43.createElement)("a", linkProps(update.notesUrl), t("What's new")) : null),
-      dsh?.current ? (0, import_react43.createElement)(Row3, { label: "DeepSeek Harness", hint: dshHint(dsh, dshShown) }, dshControl) : null
+      (0, import_react43.createElement)(Row3, { label: "Nova Bots", hint: ownRow?.hint ?? botHint(update) }, botControl, update.available && update.notesUrl ? (0, import_react43.createElement)("a", linkProps(update.notesUrl), t("What's new")) : null),
+      dsh?.current ? (0, import_react43.createElement)(Row3, { label: "Nova Engine", hint: dshHint(dsh, dshShown) }, dshControl) : null
     ),
     (0, import_react43.createElement)(
       Section,
@@ -16594,7 +16770,7 @@ function ProvidersPage({ actions, run: run2, Section }) {
     void apply2(actions.providers());
   }, []);
   if (view === null) return null;
-  if (!view.available) return (0, import_react44.createElement)("p", { className: "bt-set-hint" }, t("This DSH cannot set up model providers."));
+  if (!view.available) return (0, import_react44.createElement)("p", { className: "bt-set-hint" }, t("This Nova cannot set up model providers."));
   return [
     (0, import_react44.createElement)(
       Section,
@@ -16615,7 +16791,7 @@ function ProvidersPage({ actions, run: run2, Section }) {
 function keyState(key) {
   if (key === null) return null;
   if (!key.configured) return ["missing", t("Needs an API key")];
-  return key.writable ? ["set", t("Key set")] : ["outside", t("Key set outside DS Bot")];
+  return key.writable ? ["set", t("Key set")] : ["outside", t("Key set outside Nova Bots")];
 }
 function ProviderRow({ provider, apply: apply2, actions, open, onToggle }) {
   const [confirm, setConfirm] = (0, import_react44.useState)(false);
@@ -16643,7 +16819,7 @@ function ProviderRow({ provider, apply: apply2, actions, open, onToggle }) {
       "div",
       { className: "bt-secret-edit" },
       provider.key?.writable ? (0, import_react44.createElement)(KeyEditor, { provider, apply: apply2, actions }) : null,
-      provider.key && !provider.key.writable ? (0, import_react44.createElement)("div", { className: "bt-set-hint" }, t("This key comes from outside DS Bot, such as an environment variable, and cannot be changed here.")) : null,
+      provider.key && !provider.key.writable ? (0, import_react44.createElement)("div", { className: "bt-set-hint" }, t("This key comes from outside Nova Bots, such as an environment variable, and cannot be changed here.")) : null,
       provider.models.length > 0 ? (0, import_react44.createElement)(
         "div",
         { className: "bt-secret-edit-block" },
@@ -16855,7 +17031,7 @@ var PROVIDERS_CSS = `
 // src/client/settings.js
 var import_react45 = require("react");
 var capitalize2 = (word) => word[0].toUpperCase() + word.slice(1);
-var SETTINGS_PAGES = [["general", "General"], ["models", "Models"], ["bots", "Bots"], ["groups", "Group chats"], ["connectors", "Connectors"], ["capabilities", "Capabilities"], ["browser", "Browser"], ["schedules", "Scheduled tasks"], ["usage", "Usage"], ["secrets", "Secrets"], ["feedback", "Feedback"], ["about", "About DS Bot"]];
+var SETTINGS_PAGES = [["general", "General"], ["models", "Models"], ["bots", "Bots"], ["groups", "Group chats"], ["connectors", "Connectors"], ["capabilities", "Capabilities"], ["browser", "Browser"], ["schedules", "Scheduled tasks"], ["usage", "Usage"], ["secrets", "Secrets"], ["feedback", "Feedback"], ["about", "About Nova Bots"]];
 var PAGE_ICONS = { ...SETTINGS_ICONS, models: SlidersIcon, connectors: ConnectorIcon, capabilities: PlugIcon, browser: ConnectorIcon, schedules: ClockIcon, secrets: KeyIcon, feedback: FeedbackIcon, about: InfoIcon };
 function SetSection({ title, className = "", children }) {
   return (0, import_react45.createElement)("section", { className: `bt-set-section ${className}`.trim() }, (0, import_react45.createElement)("h3", null, title), (0, import_react45.createElement)("div", { className: "bt-set-card" }, children));
@@ -16914,7 +17090,7 @@ function WidthSlider({ label, value, save }) {
 function GeneralPage({ roster, actions, run: run2 }) {
   const prefs = roster.prefs ?? {};
   const themes = allThemes();
-  const current = themes[prefs.theme] ? prefs.theme : "deepseek";
+  const current = themes[prefs.theme] ? prefs.theme : "nova";
   const [custom, setCustom] = (0, import_react45.useState)(prefs.accent ?? "#4d6bfe");
   const timer = (0, import_react45.useRef)(0);
   (0, import_react45.useEffect)(() => () => clearTimeout(timer.current), []);
@@ -17175,7 +17351,7 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
     (0, import_react45.createElement)("div", { className: "bt-scrim", onMouseDown: close }),
     (0, import_react45.createElement)(
       "div",
-      { className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("DS Bot settings") },
+      { className: "bt-settings", role: "dialog", "aria-modal": true, "aria-label": t("Nova Bots settings") },
       (0, import_react45.createElement)(
         "nav",
         { ref: nav.box, className: "bt-settings-nav", "aria-label": t("Settings pages") },
@@ -17190,12 +17366,12 @@ function SettingsDialog({ page, id, roster, actions, useUpdate, leaving = false 
         actions.openHarnessSettings ? (0, import_react45.createElement)("button", {
           type: "button",
           className: "bt-settings-item bt-settings-shell",
-          title: t("Models, providers, and the rest of DeepSeek Harness"),
+          title: t("Models, providers, and the rest of Nova Bots"),
           onClick: () => {
             close();
             actions.openHarnessSettings();
           }
-        }, (0, import_react45.createElement)(SlidersIcon), t("Harness settings")) : null
+        }, (0, import_react45.createElement)(SlidersIcon), t("Nova settings")) : null
       ),
       (0, import_react45.createElement)(
         "div",
@@ -17322,7 +17498,7 @@ function AgentMenu({ menu, roster, actions, leaving }) {
       [agent.pinned ? t("Unpin") : t("Pin"), PinIcon, () => actions.setFlags(agent.id, { pinned: !agent.pinned })]
     ],
     [
-      [t("Remove DSH Agent"), TrashIcon, () => actions.removeAgent(agent.id), true]
+      [t("Remove Nova Agent"), TrashIcon, () => actions.removeAgent(agent.id), true]
     ]
   ] : [
     [
@@ -17334,7 +17510,7 @@ function AgentMenu({ menu, roster, actions, leaving }) {
   ];
   return (0, import_react46.createElement)(
     "div",
-    { ref, className: "bt-menu", role: "menu", "aria-label": menu.kind === "agent" ? "DSH Agent" : t("Session actions"), style: place, "data-leaving": leaving || void 0 },
+    { ref, className: "bt-menu", role: "menu", "aria-label": menu.kind === "agent" ? "Nova Agent" : t("Session actions"), style: place, "data-leaving": leaving || void 0 },
     groups.map((group, index) => (0, import_react46.createElement)(
       import_react46.Fragment,
       { key: index },
@@ -17346,7 +17522,7 @@ function AgentMenu({ menu, roster, actions, leaving }) {
         className: danger ? "bt-danger" : void 0,
         onClick: () => {
           actions.closeMenu();
-          void Promise.resolve(run2()).catch((error) => console.warn("[ds-bot]", error));
+          void Promise.resolve(run2()).catch((error) => console.warn("[nova]", error));
         }
       }, (0, import_react46.createElement)(Icon), label))
     ))
@@ -17611,7 +17787,7 @@ function PermissionRow({ bot, roster, actions, run: run2 }) {
     "div",
     { className: "bt-drawer-permission" },
     (0, import_react48.createElement)("div", { className: "bt-section-title" }, t("Permissions")),
-    // A Bot without its own preset may run on another one set in DSH, so its first pick always applies.
+    // A Bot without its own preset may run on another one set in Nova, so its first pick always applies.
     (0, import_react48.createElement)(PermissionPicker, { catalog, saved: bot.permission ?? catalog.defaultPreset, repick: bot.permission === void 0, onPick: (permission) => run2(actions.updateBot(bot.id, { permission })) })
   );
 }
@@ -17652,7 +17828,7 @@ function BrowserCards({ bot, sessionId, roster, actions, useBrowserTabs, useBrow
     actions.browserEnsure?.(bot.id);
   }, [bot.id]);
   if (roster.browser !== true || !actions.browserShow) {
-    return (0, import_react48.createElement)("div", { className: "bt-muted" }, t("The browser is in DSH Desktop and the DS Bot app."));
+    return (0, import_react48.createElement)("div", { className: "bt-muted" }, t("The browser is in Nova Desktop and the Nova Bots app."));
   }
   if (state.ids.length === 0) {
     return (0, import_react48.createElement)(
@@ -19757,7 +19933,7 @@ function createBotBrowsers({ bridge, createSource: createSource2, storage = glob
     let job = opening.get(tabId);
     if (job === void 0) {
       job = create(tabId).catch((error) => {
-        console.warn("[ds-bot] browser acquire", error);
+        console.warn("[nova] browser acquire", error);
         publish2(tabId, { loading: false, error: String(error?.message ?? error) });
         return void 0;
       }).finally(() => opening.delete(tabId));
@@ -19781,7 +19957,7 @@ function createBotBrowsers({ bridge, createSource: createSource2, storage = glob
     entry.stop();
     entry.element.remove();
     publish2(tabId, { live: false, loading: false });
-    await bridge.release(entry.lease).catch((error) => console.warn("[ds-bot] browser release", error));
+    await bridge.release(entry.lease).catch((error) => console.warn("[nova] browser release", error));
   }
   function openTab(botId, url) {
     ensureTabs(botId);
@@ -19895,7 +20071,7 @@ function createBotBrowsers({ bridge, createSource: createSource2, storage = glob
     });
     save(botId, void 0);
     seen.delete(botId);
-    await bridge.forget?.(`bot:${botId}`)?.catch((error) => console.warn("[ds-bot] browser forget", error));
+    await bridge.forget?.(`bot:${botId}`)?.catch((error) => console.warn("[nova] browser forget", error));
   }
   return {
     tabs,
@@ -19997,7 +20173,7 @@ function serveBrowserReads({ browsers, post, clientId = globalThis.crypto.random
       answered.set(id, job);
       if (answered.size > 200) answered.delete(answered.keys().next().value);
     }
-    await post("browser-result", await job).catch((error) => console.warn("[ds-bot] browser result", error));
+    await post("browser-result", await job).catch((error) => console.warn("[nova] browser result", error));
   };
   const loop = async () => {
     let failures = 0;
@@ -20501,7 +20677,7 @@ function noticeApprovals({ work, roster, shownSession, openSession, since = Date
       const room2 = entry.roomId ? roomsById[entry.roomId] : void 0;
       const note = new Notification(t("{name} is waiting for your approval", { name: byId[entry.botId]?.name ?? t("A Bot") }), {
         body: [room2?.name, entry.tool].filter(Boolean).join(" · "),
-        tag: `ds-bot-approval-${entry.id}`
+        tag: `nova-bots-approval-${entry.id}`
       });
       note.onclick = () => {
         window.focus();
@@ -20549,7 +20725,7 @@ function listedOpener({ list, open, refresh, current }) {
 // src/client/index.js
 var inject = ["sessions", "uiWorkspace", "uiConversation", "slots", "theme", "layout"];
 function apply(ctx) {
-  ctx.effect(() => installLocale(ctx.get("locale")), "ds-bot: interface copy");
+  ctx.effect(() => installLocale(ctx.get("locale")), "Nova Bots: interface copy");
   const roster = createSource(EMPTY_ROSTER);
   migrateStorage();
   const unreadStore = sharedMap(STORAGE.unread);
@@ -20586,7 +20762,7 @@ function apply(ctx) {
     const onPageHide = () => leaveVisits(Object.keys(ui2.getSnapshot().visits ?? {}));
     window.addEventListener("pagehide", onPageHide);
     return () => window.removeEventListener("pagehide", onPageHide);
-  }, "ds-bot: remember visits on page hide");
+  }, "Nova Bots: remember visits on page hide");
   ctx.effect(() => {
     const onStorage = (event) => {
       if (event.storageArea !== localStorage) return;
@@ -20596,7 +20772,7 @@ function apply(ctx) {
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, "ds-bot: follow other windows");
+  }, "Nova Bots: follow other windows");
   const activity = createSource({});
   const work = createSource({ bots: {}, approvals: [] });
   let workKey = "";
@@ -20696,7 +20872,7 @@ function apply(ctx) {
         ui2.set((state) => state.bootFailed ? { ...state, bootFailed: false } : state);
       } catch (error) {
         if (!stopped) {
-          console.warn("[ds-bot] state", error);
+          console.warn("[nova] state", error);
           if (error?.code === "HTTP_404") {
             misses += 1;
             if (misses >= 10 && !roster.getSnapshot().ready) ui2.set((state) => state.bootFailed ? state : { ...state, bootFailed: true });
@@ -20717,7 +20893,7 @@ function apply(ctx) {
       clearTimeout(timer);
       document.removeEventListener("visibilitychange", wake);
     };
-  }, "ds-bot: roster poll");
+  }, "Nova Bots: roster poll");
   const update = createSource({ available: false, phase: "idle" });
   let wakeUpdate = () => {
   };
@@ -20740,7 +20916,7 @@ function apply(ctx) {
       wakeUpdate = () => {
       };
     };
-  }, "ds-bot: update check");
+  }, "Nova Bots: update check");
   const appUpdates = window.dshDesktop?.protocolVersion === 1 ? window.dshDesktop.updates ?? null : null;
   if (appUpdates?.status && appUpdates.subscribe) {
     ctx.effect(() => {
@@ -20755,7 +20931,7 @@ function apply(ctx) {
         stopped = true;
         unsubscribe?.();
       };
-    }, "ds-bot: app update status");
+    }, "Nova Bots: app update status");
   }
   const ownAppUpdates = globalThis.dsBotApp?.updates ?? null;
   if (ownAppUpdates?.state && ownAppUpdates.subscribe) {
@@ -20771,7 +20947,7 @@ function apply(ctx) {
         stopped = true;
         unsubscribe?.();
       };
-    }, "ds-bot: own app update state");
+    }, "Nova Bots: own app update state");
   }
   const bridge = (window.dshDesktop?.protocolVersion === 1 ? window.dshDesktop.browser : globalThis.dsBotApp?.browser) ?? null;
   const browsers = bridge ? createBotBrowsers({ bridge, createSource }) : null;
@@ -20797,11 +20973,11 @@ function apply(ctx) {
         stopReads?.();
         browsers.dispose();
       };
-    }, "ds-bot: Bot browsers");
+    }, "Nova Bots: Bot browsers");
   }
   ctx.effect(() => () => {
     markupCache.clear();
-  }, "ds-bot: character markup");
+  }, "Nova Bots: character markup");
   const installMentions = () => {
     const style = installStyles("", "mentions");
     let last = "";
@@ -20834,7 +21010,7 @@ function apply(ctx) {
       const snapshot = roster.getSnapshot();
       const prefs = snapshot.ready ? snapshot.prefs ?? {} : savedPrefs;
       const themes = allThemes();
-      const id = themes[prefs.theme] ? prefs.theme : "deepseek";
+      const id = themes[prefs.theme] ? prefs.theme : "nova";
       const accent = isHex(prefs.accent) ? prefs.accent : void 0;
       const motion = prefs.motion === "quiet" || prefs.motion === "lively" ? prefs.motion : "normal";
       const layout = layoutOf(prefs);
@@ -20849,7 +21025,7 @@ function apply(ctx) {
       key = next;
       style.textContent = themeCss(themes[id], accent);
       const release = releaseTokens;
-      releaseTokens = ctx.theme.overrideTokens("ds-bot", shellTokens(themes[id]));
+      releaseTokens = ctx.theme.overrideTokens("nova", shellTokens(themes[id]));
       if (typeof release === "function") release();
       if (snapshot.ready) {
         try {
@@ -20883,7 +21059,7 @@ function apply(ctx) {
       try {
         task(hub);
       } catch (error) {
-        console.warn("[ds-bot] registration", error);
+        console.warn("[nova] registration", error);
         noteClientError("registration", error);
       }
     } };
@@ -20892,9 +21068,9 @@ function apply(ctx) {
       if (window.dshBot === hub) delete window.dshBot;
       delete window.dshBotQueue;
     };
-  }, "ds-bot: registry");
+  }, "Nova Bots: registry");
   ctx.inject(["shortcuts"], (scope) => {
-    scope.effect(() => holdShellShortcuts(scope.shortcuts), "ds-bot: settings shortcut");
+    scope.effect(() => holdShellShortcuts(scope.shortcuts), "Nova Bots: settings shortcut");
   });
   const after = (promise) => promise.then(async (value) => {
     await pull().catch(() => {
@@ -21206,20 +21382,20 @@ function apply(ctx) {
     roster,
     shownSession: () => Object.values(ctx.sessions.list.getSnapshot().byId ?? {}).find((session) => (session?.retainedBy?.mainView ?? 0) > 0)?.id,
     openSession: (id) => actions.openSession(id)
-  }), "ds-bot: approval notifications");
+  }), "Nova Bots: approval notifications");
   const assistantFace = (sessionId) => {
     const binding = ctx.sessions.binding(sessionId);
-    if (binding === void 0) throw new Error(`ds-bot: unknown session "${sessionId}"`);
+    if (binding === void 0) throw new Error(`Nova Bots: unknown session "${sessionId}"`);
     const chat = ctx.uiConversation.binding(binding).target("chat");
     return { ...face(), keyedHooks: {
       turnSteps: (turn) => {
         const snapshot = chat.getSnapshot();
-        if (snapshot === void 0) throw new Error("ds-bot: Chat target is unavailable");
+        if (snapshot === void 0) throw new Error("Nova Bots: Chat target is unavailable");
         return snapshot.nodes.turnDataSource(Number(turn), "assistant-step");
       },
       turnContext: (turn) => {
         const snapshot = chat.getSnapshot();
-        if (snapshot === void 0) throw new Error("ds-bot: Chat target is unavailable");
+        if (snapshot === void 0) throw new Error("Nova Bots: Chat target is unavailable");
         return snapshot.nodes.turnDataSource(Number(turn), "context");
       }
     } };
@@ -21307,7 +21483,7 @@ function apply(ctx) {
       offMounted();
       offUi();
     };
-  }, "ds-bot: one right panel");
+  }, "Nova Bots: one right panel");
   const BOT_PRIORITY = -100;
   const shadow = (name, options, component) => ctx.slots.inject(name, () => ctx.slots.register({
     name,
@@ -21334,7 +21510,7 @@ function apply(ctx) {
           atMenu = null;
           for (const off of offs) off();
         };
-      }, "ds-bot: @ menu");
+      }, "Nova Bots: @ menu");
     });
     return () => fiber.dispose();
   };
@@ -21388,7 +21564,7 @@ function apply(ctx) {
     () => shadow("sidebar.brand.name", { priority: BOT_PRIORITY }, BrandName),
     () => shadow("sidebar.footer.action", { id: "bot-account", order: -200, inject: face }, FooterAccount),
     () => shadow("settings.trigger", { priority: BOT_PRIORITY }, YouAvatar),
-    // The whale wins the seat over a shell account plugin's own launcher (the
+    // The Nova spark wins the seat over a shell account plugin's own launcher (the
     // Desktop's "··· More"), which comes back in Agent mode.
     () => shadow("settings.launcher", { priority: BOT_PRIORITY, inject: face }, AccountLauncher),
     () => shadow("shell.overlay", { id: "bot", order: 50, inject: face }, Overlays),
@@ -21404,7 +21580,7 @@ function apply(ctx) {
     () => shadow("conversation.chat.node", { key: "turn-trigger", priority: BOT_PRIORITY, locale: "chat", inject: face }, TriggerCell),
     () => shadow("conversation.chat.node", { key: "tool-call", priority: BOT_PRIORITY, locale: "chat", inject: face }, ToolCell),
     () => shadow("conversation.chat.node", { key: "turn-process", priority: BOT_PRIORITY, locale: "chat", inject: face }, TurnProcessCell),
-    // DSH's own turn tail stays, so what other plugins add there shows, such as the
+    // Nova's own turn tail stays, so what other plugins add there shows, such as the
     // cards of the files a turn delivered; its copy and branch row is hidden.
     () => shadow("conversation.chat.turnTail", { id: "bot-turn-separators", order: 1e3, inject: face }, TurnTailCell),
     // A side question is not a transcript row. After its snapshot turn closes it
@@ -21415,7 +21591,7 @@ function apply(ctx) {
     // every message.
     () => shadow("conversation.chat.node", { key: "question-reply", priority: BOT_PRIORITY, locale: "chat" }, AnsweredReply),
     () => shadow("conversation.chat.node", { key: "compaction", priority: BOT_PRIORITY, locale: "chat" }, CellEmpty),
-    // A Bot chat leaves DSH's context lines (tool updates, injected context) out; a Bot
+    // A Bot chat leaves Nova's context lines (tool updates, injected context) out; a Bot
     // message spliced in mid-turn gets an event line from the step that reads it instead.
     () => shadow("conversation.chat.node", { key: "context", priority: BOT_PRIORITY, locale: "chat" }, CellEmpty),
     ...canDrawUserMessages() ? ["user", "steering"].map((key) => () => shadow("conversation.chat.node", { key, priority: BOT_PRIORITY, locale: "chat", inject: face }, UserMessageCell)) : [],
@@ -21441,7 +21617,7 @@ function apply(ctx) {
     () => shadow("conversation.input.dock", { id: "bot-handoff", order: -85, inject: face }, HandoffDock),
     () => shadow("conversation.input.dock", { id: "bot-learning", order: 850, priority: BOT_PRIORITY, inject: face }, LearningDock)
   ];
-  ctx.effect(() => installCompiledStyles(RETURN_CSS, "return"), "ds-bot: return styles");
+  ctx.effect(() => installCompiledStyles(RETURN_CSS, "return"), "Nova Bots: return styles");
   shadow("sidebar.footer.action", { id: "bot-return", order: -300, inject: face }, BotReturn);
   ctx.effect(() => {
     let previous;
@@ -21471,7 +21647,7 @@ function apply(ctx) {
       setPlain(true);
       void call("agent-adopt", { agentId, sessionId: main }).then(() => pull()).catch((error) => {
         pendingAdopt.delete(main);
-        console.warn("[ds-bot] agent-adopt", error);
+        console.warn("[nova] agent-adopt", error);
         sync();
         actions.reportError(error, "agent-adopt");
       });
@@ -21488,7 +21664,7 @@ function apply(ctx) {
       offList();
       offRoster();
     };
-  }, "ds-bot: agent surface");
+  }, "Nova Bots: agent surface");
   ctx.effect(() => {
     const groups = surfaceGroups({ shell: installShell, conversation: installConversation }, {
       onError: (_group, error) => actions.reportError(new Error(t("Bot mode could not be set up here: {error}", { error: error?.message ?? String(error) })), "surface")
@@ -21515,7 +21691,7 @@ function apply(ctx) {
       }
       if (verifyAttempts >= 3) return;
       verifyAttempts += 1;
-      console.warn("[ds-bot] sidebar entry missing after shell mount; remounting");
+      console.warn("[nova] sidebar entry missing after shell mount; remounting");
       groups.remount("shell");
       verifyTimer = setTimeout(verifySidebar, 250);
     };
@@ -21533,7 +21709,7 @@ function apply(ctx) {
       clearTimeout(verifyTimer);
       groups.dispose();
     };
-  }, "ds-bot: surface");
+  }, "Nova Bots: surface");
 }
 return Object.defineProperty({ ...module.exports }, Symbol.toStringTag, { value: 'Module' })
   },

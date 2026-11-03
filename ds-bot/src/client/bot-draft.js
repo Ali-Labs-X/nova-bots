@@ -8,7 +8,7 @@ export function freshBotName(roster, base = 'New Bot') {
   return `${base} ${index}`
 }
 
-// The form starts on the DSH default model when it is served, else the first one.
+// The form starts on the Nova default model when it is served, else the first one.
 export function startModel(roster) {
   const models = roster.models ?? []
   return (models.find(model => model.ref === roster.defaultModel) ?? models[0])?.ref ?? ''

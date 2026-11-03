@@ -1,4 +1,4 @@
-// Bot browsers (DSH Desktop and the desktop app). Every Bot owns a browser panel there: an
+// Bot browsers (Nova Desktop and the desktop app). Every Bot owns a browser panel there: an
 // Electron webview in its own storage partition, which the user steers. The page lives in
 // the app window, not here, so `read_browser` reaches it through the window: the client
 // holds a long poll open (`browser-wait`) that reports which Bots have a page open and
@@ -146,7 +146,7 @@ export function createBrowserChannel({ now = Date.now, waitMs = WAIT_MS, staleMs
 
   function dispose() {
     for (const client of clients.values()) client.end?.()
-    for (const id of [...pending.keys()]) settle(id, { error: 'DS Bot stopped before the page was read.' })
+    for (const id of [...pending.keys()]) settle(id, { error: 'Nova Bots stopped before the page was read.' })
     clients.clear()
     holds.clear()
   }
@@ -232,13 +232,13 @@ export function pageText(page, { from = 0, size = TEXT_PAGE, itemsMax = ITEMS_MA
   return lines.join('\n')
 }
 
-export const NO_BROWSER = 'Your browser panel is not open. It exists only in the desktop apps (DSH Desktop and DS Bot): ask the user to click your name at the top of your chat, open the browser from there, and load the page.'
+export const NO_BROWSER = 'Your browser panel is not open. It exists only in the desktop apps (Nova Desktop and Nova Bots): ask the user to click your name at the top of your chat, open the browser from there, and load the page.'
 export const NO_PAGE = 'Your browser panel has no page open yet. Ask the user to load the page there first.'
 
 const OPEN_MAX = 64
 
 /**
- * Bot browsers are on where the window can show them: DSH Desktop's profile and the desktop
+ * Bot browsers are on where the window can show them: Nova Desktop's profile and the desktop
  * app (`DS_BOT_APP=1`); `config.browser` forces them on or off. The choice is fixed for the
  * life of the process, so the tool list, and with it the cached prompt prefix, never changes
  * under a running Session.
@@ -252,7 +252,7 @@ export function install(rt) {
     return
   }
   const channel = createBrowserChannel()
-  ctx.effect(() => () => channel.dispose(), 'ds-bot: browser channel')
+  ctx.effect(() => () => channel.dispose(), 'Nova Bots: browser channel')
 
   rt.teamTools.push(defineTool({
     name: 'read_browser',

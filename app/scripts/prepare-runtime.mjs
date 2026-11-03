@@ -3,7 +3,7 @@
 // assets, all downloaded against the lock in primary-runtime.lock.json without
 // installing into the build host. electron-builder's beforePack calls it for the
 // platform being packed; `npm run runtime` builds the same tree for development.
-// Follows DeepSeek Harness scripts/primary-runtime/prepare.ts and
+// Follows the runtime's scripts/primary-runtime/prepare.ts and
 // prune-python-tests.ts (MIT); see NOTICE. Unlike DSH's, this payload ships no pnpm.
 import { execFileSync } from 'node:child_process'
 import { createHash, randomUUID } from 'node:crypto'

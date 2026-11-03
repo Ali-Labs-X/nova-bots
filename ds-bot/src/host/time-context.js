@@ -1,6 +1,6 @@
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 
-const SOURCE = 'ds-bot-time-context'
+const SOURCE = 'nova-bots-time-context'
 const isClock = source => source?.kind === SOURCE || source?.kind === 'time-context'
 
 export function install(rt) {
@@ -20,7 +20,7 @@ export function install(rt) {
     if (decision.kind === 'reject' || signal.aborted) return decision
     await rt.load()
     if (!rt.isBotSession(agent.id) || signal.aborted) return decision
-    // A loaded DSH clock covers every step itself. Its listener may run before or
+    // A loaded Nova clock covers every step itself. Its listener may run before or
     // after this one (a reload reorders them), so its presence is read from its
     // projection, not from the messages added so far.
     if (ctx.get?.('sessionProjections')?.stateOf(agent.session, 'timeContext') !== undefined) return decision

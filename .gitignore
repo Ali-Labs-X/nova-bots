@@ -29,6 +29,7 @@ node_modules/
 
 # Local Docker deployment data.
 /docker/data/
+/docker/cache/
 /docker/workspace/
 /docker/.env
 /.env
@@ -36,3 +37,7 @@ node_modules/
 
 # Bytecode from the record-browser-gif encoder's local media tests.
 __pycache__/
+/docker/compose.mounts.yml
+
+# Nova Bots portal secrets (never commit).
+/portal/portal.env

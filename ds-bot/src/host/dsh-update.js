@@ -1,8 +1,8 @@
-// DSH updates: a released DS Bot may name the DSH release it was verified
+// Nova updates: a released Nova Bots may name the Nova release it was verified
 // against (`dsBot.verifiedDsh` in package.json); a release that names none
 // offers nothing. The newest released bot wins: offering that version and
-// nothing newer keeps the update path away from DSH releases we have not
-// checked. A DSH installed from npm swaps with `npm i -g`; a packaged app's
+// nothing newer keeps the update path away from Nova releases we have not
+// checked. A Nova installed from npm swaps with `npm i -g`; a packaged app's
 // runtime lives inside its bundle and only its own updater moves it, to the
 // newest release it finds, so the client offers it only when that release is
 // the verified one.
@@ -42,7 +42,7 @@ export function install(rt) {
       && status.verified !== null && status.verified !== status.current && !blocked(),
   })
 
-  // The version of the DSH that is running us: the app-boot export, or — where
+  // The version of the Nova that is running us: the app-boot export, or — where
   // that import cannot see it — the nearest @deepseek-ai package.json above the
   // entry script.
   async function currentDsh() {
@@ -74,7 +74,7 @@ export function install(rt) {
   const installKind = () =>
     typeof ctx.get?.('profileContext')?.packageManager?.command === 'string' ? 'app' : 'npm'
 
-  // The newest released DS Bot's `dsBot` block, through the same channel the bot
+  // The newest released Nova Bots' `dsBot` block, through the same channel the bot
   // itself updates from: its registry, or the public repo's latest release.
   async function releasedDeclaration(source) {
     if (source.kind === 'registry') {
@@ -86,7 +86,7 @@ export function install(rt) {
       }
       return null
     }
-    const repo = repoSlug()
+    const repo = repoSlug() ?? (source.kind === 'git' ? `${source.owner}/${source.repo}` : null)
     if (!repo) return null
     try {
       const release = await fetchJson(`https://api.github.com/repos/${repo}/releases/latest`, { 'user-agent': `${PKG.name}/${PKG.version}` })
@@ -101,7 +101,7 @@ export function install(rt) {
     try {
       status.current = await currentDsh()
       status.kind = installKind()
-      // The desktop app pins its DSH and updates it as a whole, so it has nothing to offer.
+      // The desktop app pins its Nova and updates it as a whole, so it has nothing to offer.
       const inApp = process.env.DS_BOT_APP === '1'
       // The release the running package itself verified stays the floor: a bot
       // older than its own declaration has nothing newer to offer.
@@ -112,7 +112,7 @@ export function install(rt) {
         .filter(entry => cleanVersion(entry.verifiedDsh))
         .sort((a, b) => (newer(cleanVersion(a.verifiedDsh), cleanVersion(b.verifiedDsh)) ? -1 : 1))[0]
       status.verified = cleanVersion(newestDeclared?.verifiedDsh)
-      // A release may gate the DSH update on a newer bot: offer nothing until
+      // A release may gate the Nova update on a newer bot: offer nothing until
       // the bot itself is at least `minBot`.
       status.blockedBy = cleanVersion(newestDeclared?.minBot)
       target = status.current !== null && status.verified !== null && status.verified !== status.current
@@ -120,7 +120,7 @@ export function install(rt) {
         : null
       status.error = null
     } catch (error) {
-      rt.warn('ds-bot: dsh update check failed: %s', error?.message ?? error)
+      rt.warn('Nova Bots: Nova update check failed: %s', error?.message ?? error)
       status.verified = null
       status.blockedBy = null
       target = null
@@ -128,7 +128,7 @@ export function install(rt) {
     status.checkedAt = Date.now()
   }
 
-  /** Read current and verified DSH versions; a fresh check ignores the last answer. */
+  /** Read current and verified Nova versions; a fresh check ignores the last answer. */
   async function check({ fresh = false } = {}) {
     if (!enabled) return view()
     if (checking) return checking
@@ -138,11 +138,11 @@ export function install(rt) {
     return view()
   }
 
-  /** Swap an npm-installed DSH for the verified version; the answer comes back through `check`. */
+  /** Swap an npm-installed Nova for the verified version; the answer comes back through `check`. */
   function start() {
     if (status.phase === 'installing') return view()
-    if (target === null || blocked()) throw new Error('No DSH update is available')
-    if (status.kind !== 'npm') throw new Error('This DSH updates with its app')
+    if (target === null || blocked()) throw new Error('No Nova update is available')
+    if (status.kind !== 'npm') throw new Error('This Nova updates with its app')
     const chosen = target
     Object.assign(status, { phase: 'installing', error: null })
     const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
@@ -159,14 +159,14 @@ export function install(rt) {
     void done
       .then(() => Object.assign(status, { phase: 'installed', installed: chosen.version }))
       .catch((error) => {
-        rt.warn('ds-bot: dsh update to %s failed: %s', chosen.version, error?.message ?? error)
+        rt.warn('Nova Bots: Nova update to %s failed: %s', chosen.version, error?.message ?? error)
         Object.assign(status, { phase: 'failed', error: `${error?.message ?? error}${output ? ` — ${output.trim().slice(-400)}` : ''}`.slice(0, 600) })
       })
     return view()
   }
 
   // Whatever npm is still running when the plugin unloads dies with it.
-  ctx.effect(() => () => running?.kill?.(), 'ds-bot: dsh update install')
+  ctx.effect(() => () => running?.kill?.(), 'Nova Bots: engine update install')
 
   Object.assign(rt, { dshUpdateCheck: check, dshUpdateStart: start, dshUpdateView: view })
 }

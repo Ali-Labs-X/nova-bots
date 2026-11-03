@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The README logo: the whale in the middle and the other first characters on a ring
+// The README logo: the Nova spark in the middle and the other first characters on a ring
 // around it, drawn from the plugin's own character table. Writes a light and a dark
 // version (the dark one uses the dark inks, as the app does in dark mode).
 //
@@ -11,7 +11,7 @@ import { GRADIENTS, INKS } from '../src/client/inks.js'
 
 const BOX = 600
 const CENTER = BOX / 2
-const WHALE = { shape: 'whale', color: 'deepseek', size: 300 }
+const SPARK = { shape: 'nova', color: 'nova', size: 300 }
 // Clockwise from the top.
 const RING = [
   { shape: 'star', color: 'aurora' },
@@ -40,8 +40,8 @@ function logo(mode) {
     return { ...look, size: RING_SIZE, x: CENTER + RING_RADIUS * Math.cos(angle), y: CENTER + RING_RADIUS * Math.sin(angle) }
   })
   const orbit = `<circle cx="${CENTER}" cy="${CENTER}" r="${RING_RADIUS}" fill="none" stroke="${ORBIT[mode]}" stroke-opacity=".22" stroke-width="2" stroke-dasharray="2 10" stroke-linecap="round"/>`
-  const marks = [...seats, { ...WHALE, x: CENTER, y: CENTER }].map((seat, index) => character(seat, mode, `m${index}`))
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${BOX} ${BOX}" width="${BOX}" height="${BOX}" role="img" aria-label="DS Bot">${orbit}${marks.join('')}</svg>\n`
+  const marks = [...seats, { ...SPARK, x: CENTER, y: CENTER }].map((seat, index) => character(seat, mode, `m${index}`))
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${BOX} ${BOX}" width="${BOX}" height="${BOX}" role="img" aria-label="Nova Bots">${orbit}${marks.join('')}</svg>\n`
 }
 
 // One character in a `size` box centered on (x, y). The eyes are cut out of the body,

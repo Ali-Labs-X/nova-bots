@@ -1,4 +1,4 @@
-// Check a packaged app: process an image with its sharp, then start it on throwaway folders with the ds-bot mock model, choose a model,
+// Check a packaged app: process an image with its sharp, then start it on throwaway folders with the plugin's mock model, choose a model,
 // send a message, wait for the reply, then close the window the way a user does: the window hides
 // and the app goes on. The window comes back when the app is started again, and the app ends the
 // way the tray's Quit ends it. Fails on a page error or a non-zero exit.
@@ -19,11 +19,11 @@ const executable = given || packedExecutable()
 
 function packedExecutable() {
   const out = join(root, 'dist-pack')
-  if (process.platform === 'win32') return join(out, 'win-unpacked', 'DS Bot.exe')
+  if (process.platform === 'win32') return join(out, 'win-unpacked', 'Nova Bots.exe')
   // executableName in electron-builder.yml.
-  if (process.platform === 'linux') return join(out, 'linux-unpacked', 'dsbot')
+  if (process.platform === 'linux') return join(out, 'linux-unpacked', 'novabots')
   const dir = ['mac-arm64', 'mac'].find(name => existsSync(join(out, name))) ?? 'mac'
-  return join(out, dir, 'DS Bot.app', 'Contents', 'MacOS', 'DS Bot')
+  return join(out, dir, 'Nova Bots.app', 'Contents', 'MacOS', 'Nova Bots')
 }
 
 if (!existsSync(executable)) {
@@ -43,7 +43,7 @@ if (!existsSync(executable)) {
     join('primary-runtime', 'dependencies', 'node', 'bin', windows ? 'node.exe' : 'node'),
     join('office-skills', 'office', 'SKILL.md'),
     join(unpacked, 'node_modules', '@deepseek-ai', 'libreoffice-kit', 'lib', 'cli.js'),
-    join(unpacked, 'node_modules', 'ds-bot', 'office.js'),
+    join(unpacked, 'node_modules', 'nova-bots', 'office.js'),
   ]
   const missing = required.filter((entry) => !existsSync(join(resources, entry)))
   if (missing.length > 0) {

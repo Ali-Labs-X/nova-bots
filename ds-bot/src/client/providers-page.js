@@ -1,5 +1,5 @@
-// The Models page of a window that has no DSH settings of its own: the model providers
-// DSH serves, with their API keys and models, and the providers it can add. DSH keeps
+// The Models page of a window that has no Nova settings of its own: the model providers
+// Nova serves, with their API keys and models, and the providers it can add. Nova keeps
 // all of it; a key only ever travels from these inputs to the host.
 import { createElement as h, useEffect, useState } from 'react'
 import { CheckIcon, TrashIcon } from './icons.js'
@@ -23,7 +23,7 @@ export function ProvidersPage({ actions, run, Section }) {
   const apply = promise => run(translated(promise).then((next) => { if (next?.providers) setView(next) }))
   useEffect(() => { void apply(actions.providers()) }, [])
   if (view === null) return null
-  if (!view.available) return h('p', { className: 'bt-set-hint' }, t('This DSH cannot set up model providers.'))
+  if (!view.available) return h('p', { className: 'bt-set-hint' }, t('This Nova cannot set up model providers.'))
   return [
     h(Section, { key: 'list', title: t('Model providers · {count}', { count: view.providers.length }) },
       view.providers.map(provider => h(ProviderRow, {
@@ -38,7 +38,7 @@ export function ProvidersPage({ actions, run, Section }) {
 function keyState(key) {
   if (key === null) return null
   if (!key.configured) return ['missing', t('Needs an API key')]
-  return key.writable ? ['set', t('Key set')] : ['outside', t('Key set outside DS Bot')]
+  return key.writable ? ['set', t('Key set')] : ['outside', t('Key set outside Nova Bots')]
 }
 
 function ProviderRow({ provider, apply, actions, open, onToggle }) {
@@ -55,7 +55,7 @@ function ProviderRow({ provider, apply, actions, open, onToggle }) {
       state ? h('span', { className: 'bt-set-control' }, h('span', { className: 'bt-provider-state', 'data-state': state[0] }, state[1])) : null),
     open ? h('div', { className: 'bt-secret-edit' },
       provider.key?.writable ? h(KeyEditor, { provider, apply, actions }) : null,
-      provider.key && !provider.key.writable ? h('div', { className: 'bt-set-hint' }, t('This key comes from outside DS Bot, such as an environment variable, and cannot be changed here.')) : null,
+      provider.key && !provider.key.writable ? h('div', { className: 'bt-set-hint' }, t('This key comes from outside Nova Bots, such as an environment variable, and cannot be changed here.')) : null,
       provider.models.length > 0 ? h('div', { className: 'bt-secret-edit-block' },
         h('div', { className: 'bt-secret-edit-label' }, t('Models')),
         h('div', { className: 'bt-provider-models' },

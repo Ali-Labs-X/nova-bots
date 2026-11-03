@@ -261,7 +261,7 @@ test('read_group_chat reads textless events among messages and keeps seq reads c
     [{ kind: 'notice', reason: 'paused', names: ['Writer'], limit: 6 }, '[Paused: Bots have called each other 6 times since the user last wrote here. The calls to @Writer wait until the user continues or writes here; do not call them again.]'],
     [{ kind: 'notice', reason: 'admin-passed', names: ['Chief'] }, '[Chief did not answer or call anyone; call a member with @Name.]'],
     [{ kind: 'lookup' }, '[Writer looked up its own chat]'],
-    [{ kind: 'resumed' }, "[Writer's work here was cut off when DeepSeek Harness restarted; it is picking it back up and posts when done]"],
+    [{ kind: 'resumed' }, "[Writer's work here was cut off when Nova Bots restarted; it is picking it back up and posts when done]"],
     [{ kind: 'cut' }, "[Writer's work here was cut off by a restart again, so it stopped; ask it to go on if it still matters]"],
     [{ kind: 'stopped' }, "[The user stopped Writer's work here]"],
     [{ kind: 'done' }, '[Writer finished the work it was asked for]'],

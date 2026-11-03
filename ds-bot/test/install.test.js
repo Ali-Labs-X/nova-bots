@@ -35,8 +35,8 @@ test('apply registers listeners and effects in a fixed order', (t) => {
   const { ctx, stop } = start()
   t.after(stop)
   assert.deepEqual(ctx.calls, [
-    'effect ds-bot: diagnostics log',
-    'effect ds-bot: state lock',
+    'effect Nova Bots: diagnostics log',
+    'effect Nova Bots: state lock',
     'on llm/adapters-updated',
     'on credentials/reference-updated',
     'on settings/document-updated',
@@ -48,58 +48,58 @@ test('apply registers listeners and effects in a fixed order', (t) => {
     'on tools/result',
     'on session/event',
     'on tools/execute',
-    'effect ds-bot: identity section',
+    'effect Nova Bots: identity section',
     'prompt bot-identity 640',
     'on agent/pre-step (prepend)',
     'on tools/execute',
-    'effect ds-bot: scoped team tools',
+    'effect Nova Bots: scoped team tools',
     'tools guard',
     'on agent/created',
     'on session/event',
-    'effect ds-bot: chat index',
-    'effect ds-bot: group step lines',
+    'effect Nova Bots: chat index',
+    'effect Nova Bots: group step lines',
     'on llm/stream',
     'on approval/request (prepend)',
     'on agent/inbox/discarded',
     'on session/event',
-    'effect ds-bot: resume interrupted turns',
-    'effect ds-bot: memory recovery',
-    'effect ds-bot: memory section',
+    'effect Nova Bots: resume interrupted turns',
+    'effect Nova Bots: memory recovery',
+    'effect Nova Bots: memory section',
     'prompt bot-memory 645',
     'on agent/status',
-    'effect ds-bot: memory review',
-    'effect ds-bot: Bot compaction',
+    'effect Nova Bots: memory review',
+    'effect Nova Bots: Bot compaction',
     'on agent/created',
     'on agent/pre-step (prepend)',
     'on system-prompt/assemble (prepend)',
     'on agent/request-error (prepend)',
     'on agent/request-error (prepend)',
-    'effect ds-bot: hand on input kept in earlier parts',
+    'effect Nova Bots: hand on input kept in earlier parts',
     'on agent/status',
     'on llm/stream',
     'on llm/stream',
     'on agent/status',
     'on tools/execute',
     'on llm/stream',
-    'effect ds-bot: load secrets',
-    'effect ds-bot: connectors',
+    'effect Nova Bots: load secrets',
+    'effect Nova Bots: connectors',
     'on agent/created',
-    'effect ds-bot: capabilities',
+    'effect Nova Bots: capabilities',
     'on agent/status',
-    'effect ds-bot: learning',
-    'effect ds-bot: usage ledger',
+    'effect Nova Bots: learning',
+    'effect Nova Bots: usage ledger',
     'on llm/stream',
-    'effect ds-bot: update check',
-    'effect ds-bot: dsh update install',
+    'effect Nova Bots: update check',
+    'effect Nova Bots: engine update install',
     'on agent/status',
     'on session/event',
     'on agent/assistant-stream',
-    'effect ds-bot: live feed route',
+    'effect Nova Bots: live feed route',
     'route GET /api/bot/feed',
-    'effect ds-bot: live feed',
-    'effect ds-bot: api route',
+    'effect Nova Bots: live feed',
+    'effect Nova Bots: api route',
     'route POST /api/bot',
-    'effect ds-bot: load state',
+    'effect Nova Bots: load state',
   ])
 })
 
@@ -118,12 +118,12 @@ test('the client channel answers from the saved state', async (t) => {
     questions: {},
   })
   t.after(stop)
-  // A team saved before the whale was stored gets it on its first Main Bot when loaded.
+  // A team saved before the Main Bot look was stored gets the Nova spark on its first Main Bot when loaded.
   // A team saved with labs keeps the model each Bot last ran on and loses the lab.
   const loaded = (await call('state')).value
   const [chief, writer] = ['m1', 'b2'].map(id => loaded.bots.find(bot => bot.id === id))
   assert.deepEqual(loaded.mainBotIds, ['m1'])
-  assert.deepEqual([chief.model, chief.color, chief.avatar?.shape], ['ollama/deepseek-v4.1-flash', 'deepseek', 'whale'])
+  assert.deepEqual([chief.model, chief.color, chief.avatar?.shape], ['ollama/deepseek-v4.1-flash', 'nova', 'nova'])
   assert.deepEqual([writer.role, writer.model, writer.color, writer.avatar, writer.instructions], ['写作', undefined, undefined, undefined, 'Kimi-style long reads'])
   const saved = (await call('state')).value.bots
   assert.equal(saved.some(bot => 'lab' in bot), false)
@@ -181,7 +181,7 @@ test('in the Desktop profile read_browser is the last tool and reads through the
   const { ctx, call, stop } = start(TEAM, { services: { profileContext: { name: 'desktop' } } })
   t.after(stop)
   assert.equal(rt.teamTools.at(-1).name, 'read_browser')
-  assert.ok(ctx.calls.indexOf('effect ds-bot: browser channel') < ctx.calls.indexOf('effect ds-bot: api route'))
+  assert.ok(ctx.calls.indexOf('effect Nova Bots: browser channel') < ctx.calls.indexOf('effect Nova Bots: api route'))
   const read = args => rt.teamTools.find(d => d.name === 'read_browser').execute(args, { agent: { id: 'b2' } })
 
   assert.match(await read({}), /browser panel is not open/)

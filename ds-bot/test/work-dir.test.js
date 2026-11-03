@@ -34,7 +34,7 @@ const TEAM = {
 // DSH_HOME, the team's data inside it, and a project folder beside it. Every Session
 // starts in the team workspace unless it is made with a cwd. `services` are what
 // ctx.get finds, such as the sandbox policy and approvals.
-// `locked`: another dsh holds the team, so this one only shows it.
+// `locked`: another Nova instance holds the team, so this one only shows it.
 async function start({ services = {}, workspaces = [], llm, team: saved = TEAM, locked = false, root: rootDir } = {}) {
   // The native realpath, as fs/promises uses: on Windows the JS one keeps 8.3 short names.
   const root = rootDir ?? realpathSync.native(mkdtempSync(join(tmpdir(), 'ds-bot-work-dir-')))
@@ -73,7 +73,7 @@ async function start({ services = {}, workspaces = [], llm, team: saved = TEAM, 
     }
     return agents.get(sessionId)
   }
-  const registry = new Map([['w1', { id: 'w1', path: team, title: 'DS Bot' }], ...workspaces.map(workspace => [workspace.id, workspace])])
+  const registry = new Map([['w1', { id: 'w1', path: team, title: 'Nova Bots' }], ...workspaces.map(workspace => [workspace.id, workspace])])
   Object.assign(ctx, {
     llm: llm ?? { listProviders: () => [], listModels: async () => [], resolveModelInfo: async () => ({}) },
     workspaceRegistry: {
@@ -81,7 +81,7 @@ async function start({ services = {}, workspaces = [], llm, team: saved = TEAM, 
       list: () => [...registry.values()],
       resolveByPath: async path => [...registry.values()].find(workspace => workspace.path === path),
       create: async (path) => {
-        const workspace = { id: 'w-new', path, title: 'DS Bot' }
+        const workspace = { id: 'w-new', path, title: 'Nova Bots' }
         registry.set(workspace.id, workspace)
         return workspace
       },
@@ -175,7 +175,7 @@ test('DSH_HOME is read as DSH reads it', () => {
   assert.equal(dshHomeOf('dsh-x'), resolve('dsh-x'))
 })
 
-test('a working folder is a full path to a folder outside the DeepSeek Harness data', async (t) => {
+test('a working folder is a full path to a folder outside the Nova Bots data', async (t) => {
   const { call, state, workingIn, dsh, home, team, root, project, stop } = await start()
   t.after(stop)
   const error = async workDir => (await call('update-bot', { id: 'b', workDir })).error?.message
@@ -184,7 +184,7 @@ test('a working folder is a full path to a folder outside the DeepSeek Harness d
   writeFileSync(join(project, 'notes.txt'), 'x')
   assert.equal(await error(join(project, 'notes.txt')), `${join(project, 'notes.txt')} is a file, not a folder`)
   // DSH_HOME, the team's data, and any folder that holds them are refused.
-  for (const guarded of [dsh, home, root]) assert.equal(await error(guarded), `${guarded} holds DeepSeek Harness data, so Bots cannot work there`)
+  for (const guarded of [dsh, home, root]) assert.equal(await error(guarded), `${guarded} holds Nova Bots data, so Bots cannot work there`)
   // The team workspace and a folder inside it are fine; the workspace itself is no setting.
   assert.equal(state().bots.b.workDir, undefined)
   mkdirSync(join(team, 'site'))
@@ -415,7 +415,7 @@ test('the folder menu lists DSH projects and the folders Bots use, but not the t
     picker: null,
     folders: [{ path: project, title: 'project' }, { path: other, title: 'other' }],
   })
-  assert.equal((await call('folder-pick', {})).error.message, 'This DeepSeek Harness has no folder chooser')
+  assert.equal((await call('folder-pick', {})).error.message, 'This Nova Bots has no folder chooser')
 })
 
 test('the folder menu browses through the DSH folder picker', async (t) => {
@@ -801,17 +801,17 @@ test('a switch that starts mid-turn still rejects its step, the only way DSH end
   await until(() => state().bots.b.sessionId === 's1')
 })
 
-test('the team workspace holds no DeepSeek Harness data, apart from the plugin\'s own default', async (t) => {
+test('the team workspace holds no Nova Bots data, apart from the plugin\'s own default', async (t) => {
   const { root, dsh, home, team, state, call, stop } = await start()
   t.after(stop)
   const error = async path => (await call('team-workspace', { path })).error?.message
-  assert.match(await error(join(dsh, 'inside')), /holds DeepSeek Harness data/)
-  assert.match(await error(root), /holds DeepSeek Harness data/)
+  assert.match(await error(join(dsh, 'inside')), /holds Nova Bots data/)
+  assert.match(await error(root), /holds Nova Bots data/)
   assert.match(await error('relative'), /full path/)
   assert.equal(existsSync(join(dsh, 'inside')), false)
   // A folder to be made under a link into the data is refused before anything is made.
   symlinkSync(dsh, join(root, 'dsh-link'), process.platform === 'win32' ? 'junction' : 'dir')
-  assert.match(await error(join(root, 'dsh-link', 'new')), /holds DeepSeek Harness data/)
+  assert.match(await error(join(root, 'dsh-link', 'new')), /holds Nova Bots data/)
   assert.equal(existsSync(join(dsh, 'new')), false)
   assert.equal(state().workspaceId, 'w1')
   await call('team-workspace', { path: join(root, 'moved') })
@@ -821,11 +821,11 @@ test('the team workspace holds no DeepSeek Harness data, apart from the plugin\'
   await call('team-workspace', { path: join(root, 'moved') })
   rmSync(team, { recursive: true, force: true })
   symlinkSync(home, team, process.platform === 'win32' ? 'junction' : 'dir')
-  assert.match(await error(team), /holds DeepSeek Harness data/)
+  assert.match(await error(team), /holds Nova Bots data/)
   rmSync(team, { recursive: true, force: true })
   mkdirSync(join(dsh, 'profiles'))
   symlinkSync(join(dsh, 'profiles'), team, process.platform === 'win32' ? 'junction' : 'dir')
-  assert.match(await error(team), /holds DeepSeek Harness data/)
+  assert.match(await error(team), /holds Nova Bots data/)
   assert.equal(state().workspaceId, 'w-new')
 })
 
@@ -843,7 +843,7 @@ test('a team workspace that holds the data still keeps Bots out of it', async (t
   const error = async workDir => (await call('update-bot', { id: 'b', workDir })).error?.message
   for (const guarded of [dsh, join(dsh, 'profiles'), home, join(home, 'memory')]) {
     mkdirSync(guarded, { recursive: true })
-    assert.equal(await error(guarded), `${guarded} holds DeepSeek Harness data, so Bots cannot work there`)
+    assert.equal(await error(guarded), `${guarded} holds Nova Bots data, so Bots cannot work there`)
   }
   // An ordinary folder in the same workspace is still fine.
   assert.equal((await call('update-bot', { id: 'b', workDir: project })).value.workDir, project)
@@ -851,7 +851,7 @@ test('a team workspace that holds the data still keeps Bots out of it', async (t
   // Nor can a photo be read out of the data root into the team.
   writeFileSync(join(dsh, 'profiles', 'pic.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
   const pic = join(dsh, 'profiles', 'pic.png')
-  assert.equal(await tool('update_bot', { avatar: pic }, 'b'), `Could not update the Bot: ${pic} is in DeepSeek Harness data, so it cannot be a Bot's photo. Pass an image from another folder.`)
+  assert.equal(await tool('update_bot', { avatar: pic }, 'b'), `Could not update the Bot: ${pic} is in Nova Bots data, so it cannot be a Bot's photo. Pass an image from another folder.`)
 })
 
 // #508: the exception covers a workspace lying inside a data root, not one equal to
@@ -870,11 +870,11 @@ test('a team workspace that is a data root still keeps Bots out of it', async (t
     const error = async workDir => (await env.call('update-bot', { id: 'b', workDir })).error?.message
     for (const guarded of [join(env.dsh, 'profiles'), join(env.home, 'memory')]) {
       mkdirSync(guarded, { recursive: true })
-      assert.equal(await error(guarded), `${guarded} holds DeepSeek Harness data, so Bots cannot work there`)
+      assert.equal(await error(guarded), `${guarded} holds Nova Bots data, so Bots cannot work there`)
     }
     writeFileSync(join(env.dsh, 'profiles', 'pic.png'), PNG)
     const pic = join(env.dsh, 'profiles', 'pic.png')
-    assert.equal(await env.tool('update_bot', { avatar: pic }, 'b'), `Could not update the Bot: ${pic} is in DeepSeek Harness data, so it cannot be a Bot's photo. Pass an image from another folder.`)
+    assert.equal(await env.tool('update_bot', { avatar: pic }, 'b'), `Could not update the Bot: ${pic} is in Nova Bots data, so it cannot be a Bot's photo. Pass an image from another folder.`)
   }
 })
 
@@ -910,9 +910,9 @@ test('in the desktop app the user\'s own DSH data is no team workspace and no Bo
   mkdirSync(join(user, 'profiles'), { recursive: true })
   process.env.DS_BOT_USER_DSH_HOME = user
   t.after(() => { delete process.env.DS_BOT_USER_DSH_HOME })
-  assert.match((await call('team-workspace', { path: join(user, 'new') })).error?.message, /holds DeepSeek Harness data/)
+  assert.match((await call('team-workspace', { path: join(user, 'new') })).error?.message, /holds Nova Bots data/)
   assert.equal(existsSync(join(user, 'new')), false)
-  assert.equal((await call('update-bot', { id: 'b', workDir: join(user, 'profiles') })).error?.message, `${join(user, 'profiles')} holds DeepSeek Harness data, so Bots cannot work there`)
+  assert.equal((await call('update-bot', { id: 'b', workDir: join(user, 'profiles') })).error?.message, `${join(user, 'profiles')} holds Nova Bots data, so Bots cannot work there`)
   assert.equal(state().workspaceId, 'w1')
 })
 
@@ -1015,7 +1015,7 @@ test('a change out of the working folder that is not allowed changes nothing', a
   t.after(stop)
   assert.deepEqual(await changeDirectory(ctx, service, agentOf('b'), project), { error: notAllowed(project), ran: false })
   const guarded = await changeDirectory(ctx, service, agentOf('b'), dsh)
-  assert.match(guarded.error, /holds DeepSeek Harness data, so Bots cannot work there/)
+  assert.match(guarded.error, /holds Nova Bots data, so Bots cannot work there/)
   assert.equal(guarded.ran, false)
   assert.equal(state().bots.b.workDir, undefined)
 })
@@ -1051,7 +1051,7 @@ test('Sessions that are not a Bot\'s keep DSH\'s own working_directory', async (
   assert.deepEqual(Object.values(state().bots).map(bot => bot.workDir), [undefined, undefined])
 })
 
-test('while another dsh has the team open, a Bot cannot leave its working folder', async (t) => {
+test('while another Nova instance has the team open, a Bot cannot leave its working folder', async (t) => {
   const { service } = folderService()
   const { services } = approvalServices('allowed-once')
   const { ctx, agentOf, team, project, state, stop } = await start({ services: { ...services, workingDirectory: service }, locked: true })
@@ -1059,7 +1059,7 @@ test('while another dsh has the team open, a Bot cannot leave its working folder
   mkdirSync(join(team, 'site'))
   assert.equal((await changeDirectory(ctx, service, agentOf('b'), 'site')).ran, true)
   const out = await changeDirectory(ctx, service, agentOf('b'), project)
-  assert.match(out.error, /^Your working folder cannot change now: The Bot team in .* is open in another dsh/)
+  assert.match(out.error, /^Your working folder cannot change now: The Bot team in .* is open in another Nova instance/)
   assert.equal(out.ran, false)
   assert.equal(state().bots.b.workDir, undefined)
 })

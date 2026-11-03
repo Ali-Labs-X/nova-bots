@@ -1,21 +1,21 @@
-// Model providers and their API keys, for a window that has no DSH Models page of its
-// own. DSH keeps all of it: a provider route in the settings of the adapter that serves
-// it, the route's key in DSH's credential store under the reference the route names.
-// The providers to add are the ones DSH's directory of configurable providers offers.
+// Model providers and their API keys, for a window that has no Nova Models page of its
+// own. Nova keeps all of it: a provider route in the settings of the adapter that serves
+// it, the route's key in Nova's credential store under the reference the route names.
+// The providers to add are the ones Nova's directory of configurable providers offers.
 
 const PI_AI = 'llm-pi-ai'
 const ROUTE_ID = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
-// The wire protocols DSH's pi-ai adapter serves on a route it ships nothing about.
+// The wire protocols Nova's pi-ai adapter serves on a route it ships nothing about.
 export const PROTOCOLS = ['openai-completions', 'openai-responses', 'anthropic-messages']
 const MAX_MODELS = 500
 
-// The reference DSH's own Models page derives for a route's key, so a provider added
+// The reference Nova's own Models page derives for a route's key, so a provider added
 // here and one added there read the same key.
 export const keyRefFor = provider => `${provider.toUpperCase().replace(/[^A-Z0-9]+/g, '_')}_API_KEY`
 
 const invalid = message => Object.assign(new Error(message), { code: 'bot/invalid' })
 
-// What an HTTP header can carry, like DSH's own key check: a pasted `NAME=value` line
+// What an HTTP header can carry, like Nova's own key check: a pasted `NAME=value` line
 // or a quoted value would be stored as the key and refused by the provider.
 export function checkKey(value) {
   const key = typeof value === 'string' ? value.trim() : ''
@@ -58,7 +58,7 @@ export function install(rt) {
   }
   const usable = () => {
     const found = seams()
-    if (found === undefined) throw invalid('This DSH cannot set up model providers')
+    if (found === undefined) throw invalid('This Nova cannot set up model providers')
     return found
   }
   const sections = settings => new Map(settings.describe({ redactSecrets: true }).map(section => [section.ns, section]))
@@ -66,7 +66,7 @@ export function install(rt) {
   const refOf = profile => (typeof profile?.apiKeyEnv === 'string' && profile.apiKeyEnv !== '' ? profile.apiKeyEnv : undefined)
   const entryOf = provider => ctx.llm.listConfigurableProviders().find(entry => entry.provider === provider)
 
-  // Per provider route, the credential its DSH settings name as its API key. A
+  // Per provider route, the credential its Nova settings name as its API key. A
   // provider with none authenticates some other way.
   function keyRefs() {
     const found = seams()
@@ -91,8 +91,8 @@ export function install(rt) {
     return missing
   }
 
-  // The providers set up in DSH, with their models and key state, and the ones DSH
-  // can add. A provider with no key and no models (DeepSeek's account route before a
+  // The providers set up in Nova, with their models and key state, and the ones Nova
+  // can add. A provider with no key and no models (Nova's account route before a
   // sign-in) is left out.
   async function providersView() {
     const found = seams()
@@ -121,7 +121,7 @@ export function install(rt) {
         ...(entry.error ? { error: entry.error } : {}),
       })
     }
-    // The ones that come with the setup first, then the added ones as DSH lists them.
+    // The ones that come with the setup first, then the added ones as Nova lists them.
     providers.sort((a, b) => Number(a.removable) - Number(b.removable))
     return { available: true, providers, addable, protocols: PROTOCOLS }
   }
@@ -129,7 +129,7 @@ export function install(rt) {
   async function writableRef(provider) {
     const ref = keyRefs().get(provider)
     if (ref === undefined) throw invalid(`${provider} takes no API key here`)
-    if ((await usable().credentials.describe(ref)).writable === false) throw invalid(`The API key for ${provider} is set outside DS Bot and cannot be changed here`)
+    if ((await usable().credentials.describe(ref)).writable === false) throw invalid(`The API key for ${provider} is set outside Nova Bots and cannot be changed here`)
     return ref
   }
 
@@ -145,8 +145,8 @@ export function install(rt) {
     rt.dropCatalog()
   }
 
-  // `provider` from DSH's directory, or a route the user declares (`custom`) for an
-  // endpoint DSH ships nothing about. The route goes in first, then its key, as DSH's
+  // `provider` from Nova's directory, or a route the user declares (`custom`) for an
+  // endpoint Nova ships nothing about. The route goes in first, then its key, as Nova's
   // own Models page does it: a failed key write leaves a provider that asks for one.
   async function addProvider(body) {
     const { settings, credentials } = usable()
@@ -155,13 +155,13 @@ export function install(rt) {
     const entry = entryOf(provider)
     if (entry !== undefined && (entry.settingsNs !== PI_AI || profileOf(entry, map) !== undefined)) throw invalid(`${provider} is already set up`)
     const custom = body.custom === true
-    if (!custom && (entry === undefined || entry.declared === true)) throw invalid(`DSH offers no provider ${provider}`)
+    if (!custom && (entry === undefined || entry.declared === true)) throw invalid(`Nova offers no provider ${provider}`)
     if (custom && !ROUTE_ID.test(provider)) throw invalid('A provider id is lowercase letters, digits and dashes, starting with a letter')
-    if (custom && entry !== undefined) throw invalid(`DSH already offers ${provider}; add it from its list`)
+    if (custom && entry !== undefined) throw invalid(`Nova already offers ${provider}; add it from its list`)
     const key = typeof body.key === 'string' && body.key.trim() !== '' ? checkKey(body.key) : undefined
     const ref = keyRefFor(provider)
     const info = await credentials.describe(ref)
-    if (key !== undefined && info.writable === false) throw invalid(`The API key for ${provider} is set outside DS Bot and cannot be changed here`)
+    if (key !== undefined && info.writable === false) throw invalid(`The API key for ${provider} is set outside Nova Bots and cannot be changed here`)
     // A blank key keeps a key that is already there, else the provider's own sign-in.
     const keyed = key !== undefined || info.configured === true
     const profile = custom ? customProfile(body) : {}
@@ -181,7 +181,7 @@ export function install(rt) {
     return { ...(name ? { displayName: name } : {}), api: body.api, baseURL: checkEndpoint(body.baseURL), models }
   }
 
-  // The models an endpoint (or a provider DSH ships) says it serves. The key typed for
+  // The models an endpoint (or a provider Nova ships) says it serves. The key typed for
   // the question goes with it and is not stored.
   async function discoverModels(body) {
     usable()

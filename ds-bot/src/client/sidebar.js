@@ -140,7 +140,7 @@ function RoomRow({ room, roster, actions, useSessions, useSessionStatus, useSess
       : !wide && !active && (approval || unread) ? h('span', { className: `bt-dot${approval ? ' bt-dot-wait' : ''}`, 'aria-hidden': true }) : null)
 }
 
-// One expanded DSH Agent Session row: title, relative stamp, rename field, and a
+// One expanded Nova Agent Session row: title, relative stamp, rename field, and a
 // context menu for rename/archive.
 function AgentSessionRow({ session, agent, actions, renaming, index }) {
   const input = useRef(null)
@@ -187,8 +187,8 @@ function AgentSessionRow({ session, agent, actions, renaming, index }) {
   h('span', { className: 'bt-agent-sub-time' }, session.at > 0 ? relativeShort(session.at) : ''))
 }
 
-// The DSH Agent row: a plain dsh Session list lives in the Bot workspace, so it
-// sits among the Bots with the harness's own whale mark.
+// The Nova Agent row: a plain dsh Session list lives in the Bot workspace, so it
+// sits among the Bots with the runtime's own mark.
 function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, marked }) {
   const info = useSessions(list => JSON.stringify(agent.sessions.map((id) => {
     const row = list.byId[id]
@@ -217,17 +217,17 @@ function AgentRow({ agent, actions, useSessions, useSessionStatus, useUi, wide, 
   const unread = sessions.some(session => session.unread) || (marked && !active)
   useMarkedUnread(agent.id, active, marked, actions)
   const preview = sessions[0]?.title ?? t('New session')
-  const label = ['DSH Agent', running ? t('Working') : '', unread ? t('Unread activity') : ''].filter(Boolean).join(', ')
+  const label = ['Nova Agent', running ? t('Working') : '', unread ? t('Unread activity') : ''].filter(Boolean).join(', ')
   const open = active && wide
   return h('div', { className: 'bt-agent' },
     h('button', {
       type: 'button', className: 'bt-row', 'aria-label': label, 'aria-current': active ? 'page' : undefined,
-      'data-agent-id': agent.id, title: wide ? undefined : 'DSH Agent', onClick: () => actions.openAgent(agent.id),
+      'data-agent-id': agent.id, title: wide ? undefined : 'Nova Agent', onClick: () => actions.openAgent(agent.id),
       onContextMenu: (event) => { event.preventDefault(); actions.openMenu({ kind: 'agent', id: agent.id, x: event.clientX, y: event.clientY }) },
     },
     h('span', { className: `bt-agent-ava${running ? ' bt-run' : ''}` }, h(FishLogo, { size: wide ? 22 : 24 })),
     wide ? h('span', { className: 'bt-row-body' },
-      h('span', { className: 'bt-row-name' }, 'DSH Agent'),
+      h('span', { className: 'bt-row-name' }, 'Nova Agent'),
       preview ? h('span', { className: 'bt-row-preview' }, preview) : null) : null,
     wide && unread && !active ? h('span', { className: 'bt-unread', 'aria-hidden': true })
       : !wide && unread && !active ? h('span', { className: 'bt-dot', 'aria-hidden': true }) : null),
@@ -587,9 +587,9 @@ export function TeamSidebar(props) {
     mode === 'hidden' ? null : h(LeftColumn, { mode, width: ourWidth, onGrip: startDrag }, content))
 }
 
-// The update button at the sidebar's top right: a cloud while a newer DS Bot —
-// or a newer verified DSH — is available, then the install's progress and
-// result. Its card has one row each for the bot and DSH, with their versions,
+// The update button at the sidebar's top right: a cloud while a newer Nova Bots —
+// or a newer verified Nova — is available, then the install's progress and
+// result. Its card has one row each for the bot and Nova, with their versions,
 // the release notes link, and each row's own button.
 function UpdateButton({ useUpdate, actions }) {
   const update = useUpdate(value => value)
@@ -632,31 +632,31 @@ function UpdateButton({ useUpdate, actions }) {
     setDshError('')
     void actions.installDshUpdate().catch(failure => setDshError(hostText(failure?.message ?? String(failure))))
   }
-  const label = phase === 'installing' ? t('Updating DS Bot…')
-    : dshPhase === 'installing' ? t('Updating DSH…')
-      : phase === 'installed' ? t('DS Bot {version} is installed. Restart DSH to use it.', { version: update.installed ?? update.latest })
-        : phase === 'updated' ? t('DS Bot {version} is installed.', { version: update.installed ?? update.latest })
-        : dshPhase === 'installed' ? t('Restart DSH to start using DSH {version}.', { version: dsh.installed ?? dsh.verified })
-          : update?.available ? t('DS Bot {version} is available', { version: update.latest })
-            : t('DSH {version} is available', { version: dsh?.verified })
+  const label = phase === 'installing' ? t('Updating Nova Bots…')
+    : dshPhase === 'installing' ? t('Updating Nova…')
+      : phase === 'installed' ? t('Nova Bots {version} is installed. Restart Nova to use it.', { version: update.installed ?? update.latest })
+        : phase === 'updated' ? t('Nova Bots {version} is installed.', { version: update.installed ?? update.latest })
+        : dshPhase === 'installed' ? t('Restart Nova to start using Nova {version}.', { version: dsh.installed ?? dsh.verified })
+          : update?.available ? t('Nova Bots {version} is available', { version: update.latest })
+            : t('Nova {version} is available', { version: dsh?.verified })
   const message = error || (phase === 'failed' ? update.error : '')
   const dshMessage = dshError || (dshPhase === 'failed' ? dsh?.error : '')
   const dshText = dshPhase === 'installed'
-    ? t('Restart DSH to start using DSH {version}.', { version: dsh.installed ?? dsh.verified })
+    ? t('Restart Nova to start using Nova {version}.', { version: dsh.installed ?? dsh.verified })
     : dsh?.available === false && dsh?.blockedBy
-      ? t('Update DS Bot {version} first.', { version: dsh.blockedBy })
+      ? t('Update Nova Bots {version} first.', { version: dsh.blockedBy })
       : t('You have {version}.', { version: dsh?.current })
   return h(Fragment, null,
     h('button', {
       ref: button, type: 'button', className: 'bt-round bt-update', 'data-phase': cloudPhase, 'aria-label': label, title: label,
       'aria-haspopup': 'dialog', 'aria-expanded': open, onClick: toggle,
     }, h(CloudDownloadIcon, { done: phase === 'installed' || phase === 'updated' }), phase === 'failed' || dshPhase === 'failed' ? h('span', { className: 'bt-update-dot', 'aria-hidden': true }) : null),
-    open && box ? createPortal(h('div', { className: 'bt-update-pop', role: 'dialog', 'aria-label': update?.available || phase !== 'idle' ? t('DS Bot update') : t('DSH update'), style: box },
+    open && box ? createPortal(h('div', { className: 'bt-update-pop', role: 'dialog', 'aria-label': update?.available || phase !== 'idle' ? t('Nova Bots update') : t('Nova update'), style: box },
       update?.available || phase !== 'idle' ? h(Fragment, null,
-        h('div', { className: 'bt-update-title' }, phase === 'installed' || phase === 'updated' ? t('Update installed') : t('DS Bot {version}', { version: update.latest })),
+        h('div', { className: 'bt-update-title' }, phase === 'installed' || phase === 'updated' ? t('Update installed') : t('Nova Bots {version}', { version: update.latest })),
         h('div', { className: 'bt-update-text' }, phase === 'installed'
-          ? t('Restart DSH to start using DS Bot {version}.', { version: update.installed ?? update.latest })
-          : phase === 'updated' ? t('DS Bot {version} is installed.', { version: update.installed ?? update.latest })
+          ? t('Restart Nova to start using Nova Bots {version}.', { version: update.installed ?? update.latest })
+          : phase === 'updated' ? t('Nova Bots {version} is installed.', { version: update.installed ?? update.latest })
             : t('You have {version}.', { version: update.current })),
         message ? h('div', { className: 'bt-update-error', role: 'alert' }, t('The update did not finish: {reason}', { reason: message })) : null,
         h('div', { className: 'bt-update-actions' },
@@ -665,7 +665,7 @@ function UpdateButton({ useUpdate, actions }) {
             type: 'button', className: 'bt-update-go', disabled: phase === 'installing', onClick: start,
           }, phase === 'installing' ? t('Updating…') : phase === 'failed' ? t('Try again') : t('Update')))) : null,
       dshRow ? h('div', { className: 'bt-update-dsh' },
-        h('div', { className: 'bt-update-title' }, t('DSH {version}', { version: dsh.verified })),
+        h('div', { className: 'bt-update-title' }, t('Nova {version}', { version: dsh.verified })),
         h('div', { className: 'bt-update-text' }, dshText),
         dshMessage ? h('div', { className: 'bt-update-error', role: 'alert' }, t('The update did not finish: {reason}', { reason: dshMessage })) : null,
         h('div', { className: 'bt-update-actions' },
@@ -695,7 +695,7 @@ export function holdShellShortcuts(shortcuts) {
   return () => { if (shellShortcuts === shortcuts) shellShortcuts = null }
 }
 
-// DeepSeek Harness hands its settings opener only to the settings.launcher seat. When
+// Nova Bots hands its settings opener only to the settings.launcher seat. When
 // the Desktop's account menu holds that seat, its first item (Settings) is the way in;
 // the Desktop on Windows and macOS takes shortcuts natively, so a synthetic key press
 // reaches the shell only where the page delivers them (the Web, Linux).
@@ -709,7 +709,7 @@ export function openHarnessSettings() {
   })
 }
 
-// Opens one of the shell's own onboarding editors, such as the DeepSeek API key form.
+// Opens one of the shell's own onboarding editors, such as the Nova API key form.
 export function openHarnessOnboarding(id) {
   requestAnimationFrame(() => {
     if (openShellOnboarding) openShellOnboarding(id)
@@ -755,7 +755,7 @@ const NO_SNAPSHOT = () => null
 
 // The footer avatar opens an account menu above itself, with Bot settings as one
 // entry. Shell panels hidden from the Bot sidebar (plugins, automation) live here too.
-// `seat` is the shell's settings.launcher seat: at priority -10 the whale wins it
+// `seat` is the shell's settings.launcher seat: at priority -10 the Nova spark wins it
 // over a shell account plugin's own launcher (the Desktop's "··· More"), which comes
 // back in Agent mode; FooterAccount stands in while no seat exists at all.
 export function AccountLauncher({ seat = true, settingsOpen, openSettings, openOnboarding, actions }) {
@@ -895,7 +895,7 @@ function useLandOnMainBot(roster, useSessions, actions) {
       if ((room.sessionId ?? room.id) !== id) actions.openSession(room.id)
       return undefined
     }
-    // A DSH Agent Session, blank or not, is a real destination: it stays.
+    // A Nova Agent Session, blank or not, is a real destination: it stays.
     if (id !== '' && ((actions.isAgentSession?.(id) ?? roster.agentOf[id] !== undefined) || blank !== '1')) {
       lastBot.current = null
       return undefined
@@ -917,9 +917,9 @@ export function FooterAccount(props) {
 export function BotReturn({ wide, useSurface, actions }) {
   const mode = useSurface(value => value.mode)
   if (mode !== 'agent') return null
-  return h('button', { type: 'button', className: 'bt-return', 'aria-label': t('DS Bot'), title: t('DS Bot'), onClick: () => actions.setSurface('bot') },
+  return h('button', { type: 'button', className: 'bt-return', 'aria-label': t('Nova Bots'), title: t('Nova Bots'), onClick: () => actions.setSurface('bot') },
     h(BotMark, { look: MAIN_LOOK, size: 20 }),
-    wide ? h('span', { className: 'bt-return-name' }, t('DS Bot')) : null)
+    wide ? h('span', { className: 'bt-return-name' }, t('Nova Bots')) : null)
 }
 
 // Agent mode has none of the shell-group styles, so the return button carries its own.
@@ -934,14 +934,26 @@ export const RETURN_CSS = `
 .bt-return-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 `
 
+// The Nova spark: four concave points in the brand gradient, one small satellite.
 export function BrandMark({ size = 24 }) {
-  return h('span', { className: 'bt-brand-whale' }, h(BotMark, { look: MAIN_LOOK, size }))
+  return h('span', { className: 'bt-brand-mark' },
+    h('svg', { width: size, height: size, viewBox: '0 0 48 48', fill: 'none', 'aria-hidden': true },
+      h('defs', null,
+        h('linearGradient', { id: 'bt-nova-grad', x1: 6, y1: 4, x2: 42, y2: 44, gradientUnits: 'userSpaceOnUse' },
+          h('stop', { offset: 0, stopColor: 'var(--bt-nova-1)' }),
+          h('stop', { offset: 0.52, stopColor: 'var(--bt-nova-2)' }),
+          h('stop', { offset: 1, stopColor: 'var(--bt-nova-3)' }))),
+      h('path', {
+        d: 'M24 2.5C26 15 33 22 45.5 24 33 26 26 33 24 45.5 22 33 15 26 2.5 24 15 22 22 15 24 2.5Z',
+        fill: 'url(#bt-nova-grad)',
+      }),
+      h('circle', { cx: 37.6, cy: 10.4, r: 2.7, fill: 'var(--bt-nova-4)', opacity: 0.9 })))
 }
 export function BrandName() {
-  return h('span', { style: { fontWeight: 600, fontSize: 14 } }, 'DS Bot')
+  return h('span', { className: 'bt-brand-name', style: { fontWeight: 650, fontSize: 14, letterSpacing: '-.02em' } }, 'Nova Bots')
 }
 
-// With the whale holding the settings seat, the Bot row is just the account menu;
+// With the Nova spark holding the settings seat, the Bot row is just the account menu;
 // FooterAccount only shows when the seat went to no one. The shell's footer classes
 // are CSS-module names, so they match on their stems.
 export const SIDEBAR_CSS = `
@@ -965,7 +977,7 @@ export const SIDEBAR_CSS = `
 [class*="_footArea"]:has(.bt-foot-account)>[class*="_settingsArea"]{grid-column:3}
 [class*="_footArea"]:has(.bt-foot-account)>[class*="_settingsArea"] button[class*="_trigger"] [class*="_label"]{display:none!important}
 
-/* The update cloud springs in when a newer DS Bot shows up; its arrow drops in a
+/* The update cloud springs in when a newer Nova Bots shows up; its arrow drops in a
    loop while the install runs. */
 .bt-round.bt-update{position:relative;color:var(--bt-accent,#4D6BFE);animation:bt-update-in ${SPRING_SHAPE.duration}ms ${SPRING_SHAPE.easing}}
 .bt-round.bt-update svg{width:17px;height:17px}
@@ -989,8 +1001,8 @@ export const SIDEBAR_CSS = `
 .bt-update-dsh:not(:first-child){margin-top:12px;padding-top:12px;border-top:.5px solid var(--bt-line-2)}
 @media (prefers-reduced-motion:reduce){.bt-round.bt-update,.bt-update-pop,.bt-update .bt-cloud-arrow{animation:none}}
 
-/* The DSH Agent row and its expanding Session list. The black whale is the
-   harness's own mark, so the row reads as "plain dsh" next to the Bot marks. */
+/* The Nova Agent row and its expanding Session list. The black mark is the
+   runtime's own mark, so the row reads as "plain dsh" next to the Bot marks. */
 .bt-agent-ava{flex:none;width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:var(--bt-hover);color:var(--bt-ink)}
 .bt-agent-ava.bt-run{animation:bt-agent-pulse 1.4s ease-in-out infinite}
 @keyframes bt-agent-pulse{0%,100%{opacity:1}50%{opacity:.55}}

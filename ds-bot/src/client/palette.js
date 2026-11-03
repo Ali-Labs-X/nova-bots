@@ -61,12 +61,12 @@ export function CommandPalette({ start, token, roster, actions, useSessions }) {
     })),
   ]
   if (people.length) sections.push([t('Bots'), people])
-  const agents = (roster.agents ?? []).filter(() => matchesName('DSH Agent')).map(agent => ({
-    key: agent.id, avatar: h('span', { className: 'bt-palette-agent' }, h(FishLogo, { size: 18 })), title: 'DSH Agent',
-    subtitle: t('Plain dsh session'),
+  const agents = (roster.agents ?? []).filter(() => matchesName('Nova Agent')).map(agent => ({
+    key: agent.id, avatar: h('span', { className: 'bt-palette-agent' }, h(FishLogo, { size: 18 })), title: 'Nova Agent',
+    subtitle: t('Nova Agent session'),
     run: () => actions.openAgent(agent.id),
   }))
-  if (agents.length) sections.push(['DSH Agent', agents])
+  if (agents.length) sections.push(['Nova Agent', agents])
   const messages = JSON.parse(found).map(([id, turn, snippet]) => {
     const bot = roster.byId[id]
     const room = roster.roomsById[id]

@@ -10,7 +10,7 @@ import { absoluteLinks } from './links.js'
 import { textOf } from './text.js'
 import { reminderText } from './schedules.js'
 
-// A failed turn's `LlmFailure`, kept to what can be shown and logged. Like DSH's own
+// A failed turn's `LlmFailure`, kept to what can be shown and logged. Like Nova's own
 // error row, an AUTH failure loses its message: providers may echo part of the key.
 export function turnFailure(error) {
   const code = typeof error?.code === 'string' && error.code !== '' ? error.code : 'UNKNOWN'
@@ -44,7 +44,7 @@ export function answerSender(rt, id, source, text, long) {
     exchangeId,
     ...(work ? { work } : {}),
   }).catch((error) => {
-    rt.warn('ds-bot: reply delivery failed: %s', error)
+    rt.warn('reply delivery failed: %s', error)
     // The reply never reached the asker: its note goes — the notice below carries
     // what it answered — the result kept with the work is marked, and the failure
     // reaches the asker the way the reply would have, so the work goes on and its
@@ -61,11 +61,11 @@ export function answerSender(rt, id, source, text, long) {
       role: 'reply',
       replyTo: source.exchangeId,
       ...(work ? { work } : {}),
-    }).catch(again => rt.warn('ds-bot: reply failure notice not delivered: %s', again))
+    }).catch(again => rt.warn('reply failure notice not delivered: %s', again))
   })
 }
 
-// A group's own Session never reaches a model, so the snapshot DSH prepared there
+// A group's own Session never reaches a model, so the snapshot Nova prepared there
 // rides with the user's queued message to the members who answer it.
 export function attachReference(queued, source, text) {
   const post = queued?.findLast(item => item.botId === undefined && item.kickoff !== true)
@@ -84,10 +84,10 @@ export const stripWrittenCalls = text => text
   .replace(/<function=[\w.-]+>[\s\S]*?(?:<\/function>|$)/g, '')
   .trim()
 
-// Under DSH's PTC presentation the model calls only this tool; the program's sub-calls
+// Under Nova's PTC presentation the model calls only this tool; the program's sub-calls
 // are the tools it really runs.
 const PROGRAM_TOOL = 'run_code'
-// DSH's delegation tools, named by the tool instance: a spawn child and a fork.
+// Nova's delegation tools, named by the tool instance: a spawn child and a fork.
 const SUBAGENT_TOOLS = new Set(['subagent', 'subagent_fork'])
 // A settled child's closing text, or why it ended without one. A child that did
 // not finish says so: output it left behind can be partial, so the reason it
@@ -144,7 +144,7 @@ export function install(rt) {
   const queueRoomMessage = (roomId, item) => roomInbox.set(roomId, [...(roomInbox.get(roomId) ?? []), item])
   // Member turns of a group round the user stopped: what they end with stays out of the group.
   const stoppedRoomTurns = new Set()
-  // Running DSH subagents spawned by each Bot Session: parentSessionId → Map<childId, {childId, label?, since}>.
+  // Running Nova subagents spawned by each Bot Session: parentSessionId → Map<childId, {childId, label?, since}>.
   /** @type {Map<string, Map<string, {childId:string, label?:string, since:number}>>} */
   const subagentsByParent = new Map()
   /** @type {Map<string, string>} childId → parentSessionId */
@@ -324,7 +324,7 @@ export function install(rt) {
     if (entry.suppressedSubagent || !speaksInGroup(id, info) || (info?.role === 'room' && stoppedRoomTurns.has(info.exchangeId))) return
     for (; entry.shown < upTo; entry.shown += 1) {
       const text = stripWrittenCalls(entry.texts[entry.shown])
-      if (text !== '') void rt.roomStepText?.(id, info, text, entry.shown === 0)?.catch(error => rt.warn('ds-bot: step text from %s not posted: %s', id, error))
+      if (text !== '') void rt.roomStepText?.(id, info, text, entry.shown === 0)?.catch(error => rt.warn('step text from %s not posted: %s', id, error))
     }
   }
 
@@ -724,7 +724,7 @@ export function install(rt) {
             const info = { kind: SOURCE_KIND, role: 'reply', work: run.parent, replyTo: run.id, exchangeId: run.id, senderSessionId: source.senderSessionId }
             if (entry.turn === undefined) entry.pending = info
             else if (entry.info === undefined && !opened) {
-              // DSH opens the turn before it records the message that filled its
+              // Nova opens the turn before it records the message that filled its
               // inbox: a notice that opened the turn claims it, like the first
               // relay of a turn.
               entry.opened = true
@@ -836,7 +836,7 @@ export function install(rt) {
             work: result.info.work,
             ...(result.info.roomId ? { roomId: result.info.roomId } : {}),
             deferred: true,
-          }).catch(error => rt.warn('ds-bot: handing back a result failed: %s', error))
+          }).catch(error => rt.warn('handing back a result failed: %s', error))
         }
         const reason = event.data?.reason
         const failure = reason?.kind === 'error' && !switched ? turnFailure(reason.error) : undefined
@@ -846,7 +846,7 @@ export function install(rt) {
         if (failure?.code === 'HOSTED_ENGINE_ROUTE') {
           const config = session.requestHeader?.()?.config
           const ref = config?.provider && config?.model ? `${config.provider}/${config.model}` : undefined
-          if (ref !== undefined) void rt.routeRefused(ref, rt.botOf(rt.selfOf(id))).catch(error => rt.warn('ds-bot: %s still failing: %s', ref, error))
+          if (ref !== undefined) void rt.routeRefused(ref, rt.botOf(rt.selfOf(id))).catch(error => rt.warn('%s still failing: %s', ref, error))
         }
         const held = rt.groupOwners.has(id) ? rt.takeRoomSteps?.(id) ?? '' : ''
         if (switched) break
@@ -864,9 +864,9 @@ export function install(rt) {
             const opening = stripWrittenCalls(lastText ?? '')
             if (opening !== '') void rt.roomStepText?.(id, info, opening, !shown)?.catch(() => {})
             roomWaiters.get(info.exchangeId)?.touch()
-            void retryPromisedWork(id, info).catch(error => rt.warn('ds-bot: asking %s to run its promised work failed: %s', id, error))
+            void retryPromisedWork(id, info).catch(error => rt.warn('asking %s to run its promised work failed: %s', id, error))
           } else {
-            void retryWrittenCall(id, info).catch(error => rt.warn('ds-bot: asking %s to run its written tool call failed: %s', id, error))
+            void retryWrittenCall(id, info).catch(error => rt.warn('asking %s to run its written tool call failed: %s', id, error))
           }
         }
         const replyText = () => {
@@ -902,7 +902,7 @@ export function install(rt) {
           if (text.length <= MESSAGE_INLINE_MAX) return tellSender(id, asker, text)
           void rt.attachLong(text, `Answer from ${name}.txt`)
             .then(long => tellSender(id, asker, text, long))
-            .catch(error => rt.warn('ds-bot: answer from %s not sent: %s', name, error))
+            .catch(error => rt.warn('answer from %s not sent: %s', name, error))
         }
         // A retried turn answers the same waiter or sender, so this one passes nothing on.
         if (!retry && info?.role === 'room') {
@@ -918,7 +918,7 @@ export function install(rt) {
             else void rt.lateRoomReply?.(id, info, groupReply(), { shown })
           }
         } else if (!retry && speaksInGroup(id, info)) {
-          // A turn that failed before it took any input (DSH can turn it down before its
+          // A turn that failed before it took any input (Nova can turn it down before its
           // first step) never names its call, so the call waiting on this Session fails.
           const inRound = failure !== undefined && info === undefined && rt.failRoomTurn?.(id, failure) === true
           if (failure !== undefined) { if (!inRound) void rt.lateRoomFailure?.(id, info ?? {}, failure) }
@@ -946,7 +946,7 @@ export function install(rt) {
             ...(request.info.role === 'room' ? { roomId: request.info.roomId, askedBy: request.info.askedBy, note: 'you read this call during your last task; answer it now' } : {}),
             ...(request.info.senderRoomId ? { fromRoomId: request.info.senderRoomId } : {}),
             deferred: true,
-          }).catch(error => rt.warn('ds-bot: deferred request delivery failed: %s', error))
+          }).catch(error => rt.warn('deferred request delivery failed: %s', error))
         }
         break
       }
@@ -985,7 +985,7 @@ export function install(rt) {
     if (entry?.turn !== undefined) entry.cut = { texts: entry.texts.length }
   }
 
-  // DSH's prompt admission wraps any unexpected failure as 'session/agent-busy' and
+  // Nova's prompt admission wraps any unexpected failure as 'session/agent-busy' and
   // keeps the real cause in details.reason, which the window never shows and the log
   // never saw (#424). For a Session this team owns, the reason is written to the
   // diagnostics and put into the error the user reads.
@@ -1023,7 +1023,7 @@ export function install(rt) {
     ctx.effect(() => {
       controller.prompt = admitted
       return () => { if (controller.prompt === admitted) controller.prompt = prompt }
-    }, 'ds-bot: prompt rejection reasons')
+    }, 'Nova Bots: prompt rejection reasons')
   }
 
   Object.assign(rt, { live, liveOf, roomWaiters, roomProgress, roomInbox, activityView, workView, roomWorkView, turnsView, steeredView, callDetail, doingOf, stopRoomTurn, releaseBot, markSteerCut, hasSubagents, stopSubagents })

@@ -12,7 +12,7 @@ const memoryStorage = (entries = {}) => {
   }
 }
 
-test('values saved under the dsh-bot keys move to the ds-bot keys', () => {
+test('values saved under the old keys move to the nova-bots keys', () => {
   const storage = memoryStorage({
     'dsh-bot:unread': '{"a":true}',
     'dsh-bot:reactions': '{"t1":"👍"}',
@@ -24,14 +24,30 @@ test('values saved under the dsh-bot keys move to the ds-bot keys', () => {
   })
   migrateStorage(storage)
   assert.deepEqual(Object.fromEntries(storage.map), {
-    'ds-bot:unread': '{"a":true}',
-    'ds-bot:reactions': '{"t1":"👍"}',
-    'ds-bot:seen': '{"a":1}',
-    'ds-bot:prefs': '{"theme":"paper"}',
-    'ds-bot:browser-width': '600',
-    'ds-bot.browser.v2': '{"a":{"tabs":[{"id":"v1-a","url":"https://example.com/","title":""}],"active":"v1-a"}}',
+    'nova-bots:unread': '{"a":true}',
+    'nova-bots:reactions': '{"t1":"👍"}',
+    'nova-bots:seen': '{"a":1}',
+    'nova-bots:prefs': '{"theme":"paper"}',
+    'nova-bots:browser-width': '600',
+    'nova-bots.browser.v2': '{"a":{"tabs":[{"id":"v1-a","url":"https://example.com/","title":""}],"active":"v1-a"}}',
     'other:key': 'kept',
   })
+})
+
+test('the keys of the previous rename move across as they are', () => {
+  // The browser store of the previous release keeps its tabs; the v2 shape
+  // moves across untouched.
+  const storage = memoryStorage({
+    'ds-bot:unread': '{"a":true}',
+    'ds-bot:sidebar': 'rail',
+    'ds-bot.browser.v2': '{"a":{"tabs":[{"id":"t1","url":"https://example.com/","title":"T"}],"active":"t1"}}',
+  })
+  migrateStorage(storage)
+  assert.equal(storage.getItem(STORAGE.unread), '{"a":true}')
+  assert.equal(storage.getItem(STORAGE.sidebar), 'rail')
+  assert.equal(storage.getItem(STORAGE.browsers), '{"a":{"tabs":[{"id":"t1","url":"https://example.com/","title":"T"}],"active":"t1"}}')
+  assert.equal(storage.getItem('ds-bot:unread'), null)
+  assert.equal(storage.getItem('ds-bot.browser.v2'), null)
 })
 
 test('the dsh-bot-team keys move too, and the newer name wins', () => {

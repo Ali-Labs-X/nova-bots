@@ -1,5 +1,5 @@
 // The frameless Windows window: the system caption buttons overlay a band at the top of the
-// page, as in DeepSeek Harness apps/desktop (windows-layout.ts and main.ts; see NOTICE).
+// page, as in the runtime's apps/desktop (windows-layout.ts and main.ts; see NOTICE).
 
 /** Height of the caption band in device-independent pixels. */
 export const CAPTION_HEIGHT = 40

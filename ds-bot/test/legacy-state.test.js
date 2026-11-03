@@ -51,7 +51,8 @@ test('a team saved with the legacy grok theme opens with the mono theme', async 
   const { call, stop, home } = open(savedTeam({ theme: 'grok', accent: '#123456' }))
   t.after(stop)
   const team = (await call('state', {})).value
-  assert.deepEqual(team.prefs, { theme: 'mono', accent: '#123456' })
+  // The old accent belonged to the old palette; the new theme leads.
+  assert.deepEqual(team.prefs, { theme: 'mono', accent: null })
   assert.equal(JSON.parse(readFileSync(join(home, 'state.json'), 'utf8')).prefs.theme, 'mono')
 })
 

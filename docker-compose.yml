@@ -3,32 +3,59 @@
 # Configure this file directly; no .env file is needed.
 # Do not commit this file after filling in real API keys.
 services:
-  ds-bot:
-    image: ds-bot:local
+  nova-bots:
+    image: nova-bots:local
+    container_name: nova-bots
     pull_policy: never
     build:
       context: .
       dockerfile: docker/Dockerfile
       args:
         NPM_REGISTRY: https://registry.npmjs.org/
+        DSH_VERSION: ${NOVA_ENGINE_VERSION:-0.2.0-rc.2}
     ports:
-      - "0.0.0.0:13080:3080"
+      # The engine is reachable only from this machine: the web front end and
+      # the portal are the way in.
+      - "127.0.0.1:${NOVA_ENGINE_PORT:-13083}:3080"
     environment:
-      DEEPSEEK_API_KEY: ""
-      # Uncomment for another Anthropic-Messages-compatible endpoint.
-      # DEEPSEEK_BASE_URL: "https://your-endpoint.example"
-      # Add custom provider keys here when referenced by your DSH config.
-      # RELAY_API_KEY: ""
-      PUID: "1000"
-      PGID: "1000"
-      # Add your NAS/LAN IP and host names, without ports.
-      DSH_TRUSTED_HOST: "localhost,127.0.0.1"
-      DSH_HOST: "0.0.0.0"
-      DSH_LISTEN_PORT: "3080"
-      # DSH_TELEMETRY_DISABLED: "1"
+      # BOT_ROOT=1 lets the Bots install packages with sudo inside the container.
+      BOT_ROOT: "${BOT_ROOT:-0}"
+      BOT_MOUNTS: "${BOT_MOUNTS:-}"
+      # Operator-facing settings use Nova names; the engine names stay internal.
+      NOVA_HOST: "${NOVA_HOST:-0.0.0.0}"
+      NOVA_LISTEN_PORT: "${NOVA_LISTEN_PORT:-3080}"
+      NOVA_TRUSTED_HOST: "${NOVA_TRUSTED_HOST:-localhost,127.0.0.1,bots.alilabsx.com,bot.alilabsx.com,10.162.159.121}"
+      DEEPSEEK_API_KEY: "${NOVA_API_KEY:-}"
+      DEEPSEEK_BASE_URL: "${NOVA_BASE_URL:-https://api.deepseek.com/anthropic}"
+      DSH_TELEMETRY_DISABLED: "${NOVA_TELEMETRY_DISABLED:-1}"
     volumes:
       - ./docker/data:/data
       - ./docker/workspace:/workspace
+      # The host folder from HOST_SHARE, mounted at /host for the Bots to work in.
+      - ${HOST_SHARE:-./docker/host-share}:/host
+      # The browser cache, so a browser the Bots installed survives a
+      # container recreate and a reboot.
+      - ./cache:/home/node/.cache/ms-playwright
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    stop_grace_period: 15s
+
+  # The web front end: the landing page, the sign-in page and the app. It is
+  # the only published port; the engine behind it stays on the loopback.
+  nova-bots-web:
+    image: nginx:1.29-alpine@sha256:5616878291a2eed594aee8db4dade5878cf7edcb475e59193904b198d9b830de
+    container_name: nova-bots-web
+    depends_on:
+      - nova-bots
+    ports:
+      - "${NOVA_PORT:-13080}:80"
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./nginx-config/nova-bots.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./portal/public:/srv:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped

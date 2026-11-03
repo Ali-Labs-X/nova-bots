@@ -2,7 +2,7 @@
 // It boots the app's own `ds-bot` profile
 // on a loopback port and reports the launch URL over IPC. With DS_BOT_CHECK, the path of a JSON list
 // of Session ids, it boots the first-run check's profile instead and reports which of them it cannot read.
-// Follows DeepSeek Harness apps/desktop-host/src/index.ts (MIT); see NOTICE.
+// Follows the runtime's apps/desktop-host/src/index.ts (MIT); see NOTICE.
 import { readFileSync } from 'node:fs'
 import { inspect } from 'node:util'
 import { loadLayeredEnv, reportSkippedBundles } from '@deepseek-ai/dsh-app-boot'

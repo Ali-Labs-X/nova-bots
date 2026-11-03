@@ -7,13 +7,13 @@ import { spawnSync } from 'node:child_process'
 import { test } from 'node:test'
 import { parse } from 'yaml'
 import { UUID } from 'builder-util-runtime'
-import { APP_ID, configureIdentity, LEGACY_ARTIFACT_PREFIX, LEGACY_PRODUCT_NAME } from '../src/legacy.mjs'
+import { APP_ID, configureIdentity, LEGACY_ARTIFACT_PREFIXES, LEGACY_PRODUCT_NAME, LEGACY_PRODUCT_NAMES, PRODUCT_NAME } from '../src/legacy.mjs'
 
-function fixture({ saved = [], packaged = true } = {}) {
+function fixture({ saved = [], packaged = true, legacyName = LEGACY_PRODUCT_NAME } = {}) {
   const app = new EventEmitter()
   const appData = join(tmpdir(), 'dsbot-identity-fixture')
-  const current = join(appData, 'DS Bot')
-  const legacy = join(appData, LEGACY_PRODUCT_NAME)
+  const current = join(appData, PRODUCT_NAME)
+  const legacy = join(appData, legacyName)
   const paths = { appData, userData: current }
   const names = []
   Object.assign(app, {
@@ -41,10 +41,20 @@ for (const platform of ['win32', 'darwin', 'linux']) {
     } else {
       assert.deepEqual(f.names, [LEGACY_PRODUCT_NAME])
       f.app.emit('ready')
-      assert.deepEqual(f.names, [LEGACY_PRODUCT_NAME, 'DS Bot'])
+      assert.deepEqual(f.names, [LEGACY_PRODUCT_NAME, PRODUCT_NAME])
     }
   })
 }
+
+test('an installation of the release before that one keeps its shell data too', () => {
+  const name = LEGACY_PRODUCT_NAMES.at(-1)
+  const f = fixture({ legacyName: name })
+  const options = { env: {}, platform: 'linux', mkdir: () => {}, exists: path => path === f.legacy }
+  assert.deepEqual(configureIdentity(f.app, options), { userData: f.legacy, legacy: true })
+  assert.deepEqual(f.names, [name])
+  f.app.emit('ready')
+  assert.deepEqual(f.names, [name, PRODUCT_NAME])
+})
 
 test('a fresh installation uses the new shell directory', () => {
   const f = fixture()
@@ -76,16 +86,18 @@ test('a source installation also keeps its existing shell data', () => {
 })
 
 for (const suffix of ['mac-arm64.zip', 'mac-x64.zip', 'linux-amd64.deb']) {
-  test(`old update clients receive the identical DS Bot payload: ${suffix}`, () => {
+  test(`old update clients receive the identical Nova Bots payload: ${suffix}`, () => {
     const root = mkdtempSync(join(tmpdir(), 'dsbot-release-alias-'))
     try {
-      const source = join(root, `DS-Bot-1.2.3-${suffix}`)
-      const payload = Buffer.from('new DS Bot package')
+      const source = join(root, `Nova-Bots-1.2.3-${suffix}`)
+      const payload = Buffer.from('new Nova Bots package')
       writeFileSync(source, payload)
       const result = spawnSync(process.execPath, ['scripts/legacy-release-assets.mjs', source], { cwd: new URL('../', import.meta.url), encoding: 'utf8' })
       assert.equal(result.status, 0, result.stderr)
-      const alias = join(root, `${LEGACY_ARTIFACT_PREFIX}-1.2.3-${suffix}`)
-      assert.deepEqual(readFileSync(alias), payload)
+      for (const prefix of LEGACY_ARTIFACT_PREFIXES) {
+        const alias = join(root, `${prefix}-1.2.3-${suffix}`)
+        assert.deepEqual(readFileSync(alias), payload)
+      }
       assert.equal(existsSync(source), true)
     } finally { rmSync(root, { recursive: true, force: true }) }
   })

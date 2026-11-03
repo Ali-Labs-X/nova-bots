@@ -1,6 +1,7 @@
 #!/bin/sh
-# Runs dsh web as the node user. The container is the sandbox boundary, so the
-# image offers only the danger-full-access preset (see docker.patch.yml).
+# Runs the Nova Bots web server as the node user. The container is the sandbox
+# boundary, so the image offers only the danger-full-access preset (see
+# docker.patch.yml).
 set -eu
 
 PUID=${PUID:-1000}
@@ -9,7 +10,7 @@ groupmod -o -g "$PGID" node
 usermod -o -u "$PUID" node
 
 # First start: seed the data volume with the template home built into the image
-# (a web profile that already has ds-bot installed).
+# (a web profile that already has the Nova Bots plugin installed).
 if [ ! -d /data/profiles/web ]; then
   mkdir -p /data
   cp -a /opt/dsh-template/. /data/
@@ -25,18 +26,69 @@ if [ -z "$(ls -A /workspace)" ]; then
   chown node:node /workspace
 fi
 
-# This dsh release accepts only 127.0.0.1 for --host, so an overlay binds all
+# Existing deployments from the old name keep their data; swap only the plugin
+# package, before the server starts. Fresh volumes already carry Nova Bots.
+NOVA_PLUGIN=/opt/nova-bots/nova-bots.tgz
+PROFILE_PACKAGE=/data/profiles/web/package.json
+if [ -f "$NOVA_PLUGIN" ] && [ -f "$PROFILE_PACKAGE" ] \
+  && grep -q '"ds-bot"' "$PROFILE_PACKAGE" \
+  && ! grep -q '"nova-bots"' "$PROFILE_PACKAGE"; then
+  echo "entrypoint: moving the Bot team to the Nova Bots plugin"
+  mkdir -p /home/node/.cache
+  chown -R node:node /home/node/.cache
+  if gosu node node /opt/nova-bots/migrate-plugin.mjs prepare /data/profiles/web; then
+    if gosu node env HOME=/home/node DSH_HOME=/data dsh plugin --profile web add "$NOVA_PLUGIN"; then
+      gosu node node /opt/nova-bots/migrate-plugin.mjs finish /data/profiles/web
+    else
+      gosu node node /opt/nova-bots/migrate-plugin.mjs rollback /data/profiles/web || true
+      echo "entrypoint: the Nova Bots plugin could not be installed; keeping the old one" >&2
+    fi
+  else
+    echo "entrypoint: the old plugin entry could not be prepared; leaving it in place" >&2
+  fi
+fi
+
+# The browser cache is a volume, so it keeps the browsers the Bots install
+# across a recreate. A fresh volume is root's, so hand it to the node user.
+mkdir -p /home/node/.cache/ms-playwright
+chown -R node:node /home/node/.cache
+
+# The host folder from HOST_SHARE is mounted at /host. Its files keep the
+# owners they have on the host, so the Bots write as PUID/PGID there.
+mkdir -p /host
+echo "entrypoint: host folder mounted at /host (Bots read and write it as uid ${PUID})"
+if [ -n "${BOT_MOUNTS:-}" ]; then
+  echo "entrypoint: extra host folders: ${BOT_MOUNTS}"
+fi
+
+# BOT_ROOT=1 lets the Bots install packages (the Chromium shared libraries a
+# browser automation stack needs). The container is already the only sandbox,
+# so this is root inside the container, not on the host. The Bots still write
+# as PUID/PGID unless they ask for sudo themselves.
+case "${BOT_ROOT:-0}" in
+  1|true|yes)
+    printf 'node ALL=(ALL) NOPASSWD: ALL\n' > /etc/sudoers.d/nova-bots-node
+    chmod 0440 /etc/sudoers.d/nova-bots-node
+    echo "entrypoint: Bots may use sudo (BOT_ROOT=${BOT_ROOT})"
+    ;;
+  *)
+    rm -f /etc/sudoers.d/nova-bots-node
+    echo "entrypoint: Bots may not use sudo (BOT_ROOT=${BOT_ROOT:-0}); set BOT_ROOT=1 in docker/.env to allow it"
+    ;;
+esac
+
+# This engine release accepts only 127.0.0.1 for --host, so an overlay binds all
 # interfaces instead; the container's publish rule is the network boundary.
 # DSH_LISTEN_PORT only matters with network_mode: host — published ports
 # always map to 3080 inside.
-HOST=${DSH_HOST:-0.0.0.0}
-LISTEN_PORT=${DSH_LISTEN_PORT:-3080}
+HOST=${NOVA_HOST:-${DSH_HOST:-0.0.0.0}}
+LISTEN_PORT=${NOVA_LISTEN_PORT:-${DSH_LISTEN_PORT:-3080}}
 case "$HOST" in
   0.0.0.0|127.0.0.1) ;;
-  *) echo "entrypoint: DSH_HOST must be 0.0.0.0 or 127.0.0.1 (got '$HOST')" >&2; exit 1 ;;
+  *) echo "entrypoint: NOVA_HOST must be 0.0.0.0 or 127.0.0.1 (got '$HOST')" >&2; exit 1 ;;
 esac
 case "$LISTEN_PORT" in
-  ''|*[!0-9]*) echo "entrypoint: DSH_LISTEN_PORT must be a port number (got '$LISTEN_PORT')" >&2; exit 1 ;;
+  ''|*[!0-9]*) echo "entrypoint: NOVA_LISTEN_PORT must be a port number (got '$LISTEN_PORT')" >&2; exit 1 ;;
 esac
 
 # The webserver row's whole config is replaced by a patch, so its bundle values
@@ -51,15 +103,15 @@ cat > /tmp/listen.patch.yml <<EOF
     compressionThresholdBytes: 1024
 EOF
 
-# --patch is a dsh option and must precede the app's own flags.
-set -- dsh --profile web \
-  --patch /opt/ds-bot/docker.patch.yml --patch /tmp/listen.patch.yml \
+# --patch is an engine option and must precede the app's own flags.
+set -- nova --profile web \
+  --patch /opt/nova-bots/docker.patch.yml --patch /tmp/listen.patch.yml \
   --no-open "$@"
 
-if [ -n "${DSH_TRUSTED_HOST:-}" ]; then
+if [ -n "${NOVA_TRUSTED_HOST:-${DSH_TRUSTED_HOST:-}}" ]; then
   old_ifs=$IFS
   IFS=','
-  for trusted in $DSH_TRUSTED_HOST; do
+  for trusted in ${NOVA_TRUSTED_HOST:-$DSH_TRUSTED_HOST}; do
     [ -n "$trusted" ] && set -- "$@" --trusted-host "$trusted"
   done
   IFS=$old_ifs

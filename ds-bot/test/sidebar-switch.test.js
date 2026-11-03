@@ -429,7 +429,7 @@ test('the Bot footer lays out the account, another plugin\'s entry and the setti
   assert.equal(columnOf(document.querySelector('.x_settingsArea')), '3')
 })
 
-// #452: the Connect plugins button left the footer; what DS Bot puts there is
+// #452: the Connect plugins button left the footer; what Nova Bots puts there is
 // the account menu and the way back from Agent mode.
 test('the Bot footer holds the account and the return button only', () => {
   const source = readFileSync(new URL('../src/client/index.js', import.meta.url), 'utf8')

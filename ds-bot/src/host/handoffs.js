@@ -51,7 +51,7 @@ export function install(rt) {
       renameSync(temp, path)
       return name
     } catch (error) {
-      rt.warn('ds-bot: result of work %s not kept whole: %s', id, error)
+      rt.warn('result of work %s not kept whole: %s', id, error)
       try {
         rmSync(temp, { force: true })
       } catch {}
@@ -233,7 +233,7 @@ export function install(rt) {
     const body = results.length === 0 ? said || `${botName} finished without a reply.`
       : [said || `${botName} finished and wrote nothing more.`, `[Handed back to ${botName} for this work]`, ...results].join('\n\n')
     // The request reached its target only after a restart; the answer says so.
-    return work?.late === true ? `[This request reached ${botName} only after DeepSeek Harness restarted.]\n\n${body}` : body
+    return work?.late === true ? `[This request reached ${botName} only after Nova Bots restarted.]\n\n${body}` : body
   }
 
   // The Bots waiting for the result of these works: whoever asked for each, and on up.

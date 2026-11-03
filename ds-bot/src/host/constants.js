@@ -2,13 +2,15 @@
 // the limits on messages, group chats, and chat reads.
 
 // Classic avatar inks, offered as Bot colors.
-export const COLORS = ['deepseek', 'blue', 'violet', 'orange', 'green', 'magenta', 'cyan', 'red', 'yellow', 'brown', 'gray', 'black', 'aurora']
+export const COLORS = ['nova', 'blue', 'violet', 'orange', 'green', 'magenta', 'cyan', 'red', 'yellow', 'brown', 'gray', 'black', 'aurora']
 // Deeper inks, also offered as accent swatches; each is a valid Bot color too.
 export const EXTRA_COLORS = ['charcoal', 'graphite', 'rose', 'sky', 'tangerine', 'cobalt']
 // Renamed color ids, so a Bot saved with an old one keeps its color (LEGACY: old id → new id).
-export const LEGACY_COLORS = { kimi: 'charcoal', zai: 'graphite', minimax: 'rose', stepfun: 'sky', mimo: 'tangerine', qwen: 'cobalt' }
+export const LEGACY_COLORS = { deepseek: 'nova', whale: 'nova', kimi: 'charcoal', zai: 'graphite', minimax: 'rose', stepfun: 'sky', mimo: 'tangerine', qwen: 'cobalt' }
 // Renamed theme ids, so a saved choice keeps its look (LEGACY: old id → new id).
-export const LEGACY_THEMES = { grok: 'mono' }
+export const LEGACY_THEMES = { deepseek: 'nova', moonlight: 'nova', grok: 'mono' }
+// Renamed shape ids, so a Bot saved with an old one keeps its look (LEGACY: old id → new id).
+export const LEGACY_SHAPES = { whale: 'nova' }
 
 export const OCR_PROMPT = [
   'Transcribe all text in this image exactly, in its original language, keeping line breaks and reading order; use Markdown tables for tables.',
@@ -29,11 +31,11 @@ export const TEXT_KEPT = 2000
 export const GROUP_LINE_READ = 20_000
 // The Bot exchange dialog shows at most this much of one message.
 export const TEXT_SHOW_MAX = 200_000
-// A message a Bot sends past this goes as a DSH file, which the recipient reads with its
+// A message a Bot sends past this goes as a Nova file, which the recipient reads with its
 // file tools; the message keeps its first LONG_HEAD characters.
 export const MESSAGE_INLINE_MAX = GROUP_LINE_READ
 export const LONG_HEAD = 1000
-// DSH's read tool shows this much of one line (dsh-tool-fs `readMaxLineLength`, default).
+// Nova's read tool shows this much of one line (dsh-tool-fs `readMaxLineLength`, default).
 export const READ_LINE_MAX = 2000
 export const ROOM_REPLY_TIMEOUT_MS = 240_000
 // Lines a member writes less than this apart while it works reach its group together.
@@ -41,9 +43,9 @@ export const ROOM_STEP_GAP_MS = 30_000
 export const SOURCE_KIND = 'bot'
 // The fixed reply that opens a fresh conversation part; it is never shown or sent on.
 export const HANDOFF_ACK = 'Noted. I have my handoff note and carry on from here.'
-// An answer from a question card, in the shape DSH's own late question replies use.
+// An answer from a question card, in the shape Nova's own late question replies use.
 export const REPLY_KIND = 'user-question-reply'
-// DSH's snapshot of a referenced conversation, logged right after the user's message
+// Nova's snapshot of a referenced conversation, logged right after the user's message
 // that cites it.
 export const REFERENCE_KIND = 'session-reference'
 // `everyone`: every member answers a plain message in turn, admin first. `admin`: a
@@ -55,9 +57,9 @@ export const ROOM_NAME_MAX = 60
 export const ROOM_NOTICE_MAX = 2000
 export const ROOM_MAX_MEMBERS = 12
 
-// A team's one DSH Agent: a plain dsh entry in the sidebar, not a Bot. Its Sessions
+// A team's one Nova Agent: a plain dsh entry in the sidebar, not a Bot. Its Sessions
 // are ordinary root Sessions, so the team tools must not be offered to them.
-export const AGENT_NAME = 'DSH Agent'
+export const AGENT_NAME = 'Nova Agent'
 export const AGENT_SESSION_TITLE_MAX = 80
 // Every tool this plugin defines for Bot Sessions; tools.js registers them in
 // each Bot session's own scope. `read_browser` only exists in the Desktop

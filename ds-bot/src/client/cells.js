@@ -55,8 +55,8 @@ export function Bubbles({ texts, roster, selfId, actions, streaming, sessionId, 
     }))
 }
 
-// A folded message's last code block shows only its start; DS Bot draws its own
-// copy control for it, bound to the whole block. DSH's and the app's copy
+// A folded message's last code block shows only its start; Nova Bots draws its own
+// copy control for it, bound to the whole block. Nova's and the app's copy
 // buttons live in the block's banner and their markup differs, so none of
 // theirs is intercepted or cloned.
 function FoldCodeCopy({ code, actions }) {
@@ -72,7 +72,7 @@ function FoldCodeCopy({ code, actions }) {
 
 // A folded message's last code block shows only its start. The start is not
 // given to the host's Markdown — its block would carry a copy bound to the
-// part shown — so DS Bot draws the part itself, with a copy bound to the
+// part shown — so Nova Bots draws the part itself, with a copy bound to the
 // whole block. `body` renders the markdown before the block.
 const foldArea = (body, code, codeHead, actions) => (code === undefined ? body
   : h('div', { className: 'bt-fold-code' },
@@ -233,7 +233,7 @@ export function ThinkingRow({ text, live, at, ms, viewKey }) {
 }
 
 // The files a finished turn changed or delivered, linked from inline code in its
-// reply as in DSH's own chat. DSH resolves them for the step that closes the turn.
+// reply as in Nova's own chat. Nova resolves them for the step that closes the turn.
 function useFileMentions({ node, openFile, fileMentions, useTurnData }) {
   const tail = useTurnData?.('turn-tail')
   const location = node.location
@@ -265,7 +265,7 @@ export function AssistantCell({ node, groupPart, sessionId, openFile, fileMentio
   useLiveNote(actions, sessionId, `text:${node.key ?? data.seq}`, !hidden && running && texts.length > 0 ? { text: true } : null)
   if (hidden) return h(CellEmpty)
   // A relay spliced mid-turn is a 'context' node, hidden from the chat flow on
-  // DSH 0.2; the step that answers it shows the event line where it was read,
+  // Nova 0.2; the step that answers it shows the event line where it was read,
   // once, in the step's first cell.
   const relays = relayPart(data, groupPart) ? relaysBefore(contexts, steps, data) : []
   if (texts.length === 0 && !reasoning && relays.length === 0) return h(CellEmpty)
@@ -735,12 +735,12 @@ export function openingTurn(turns, firstTurns, hiddenTurns) {
 // Began after the user last left the conversation and before this visit opened it.
 export const unseenSince = (visit, time) => typeof visit?.seen === 'number' && time > visit.seen && time <= visit.entered
 
-// An entry in DSH's own turn tail, after what other plugins put there (the cards of
+// An entry in Nova's own turn tail, after what other plugins put there (the cards of
 // the files a turn delivered). The tail sits right before the next turn's first row,
 // so the separator for a pause between turns renders here.
 export function TurnTailCell({ turn: location, sessionId, useTurnClock, useUi, actions }) {
   const turn = location.turn
-  // DSH builds the tail from the turn's end, so it is there.
+  // Nova builds the tail from the turn's end, so it is there.
   const time = location.end.time
   useEffect(() => { actions.noteTurnTime(sessionId, turn, 'end', time) }, [sessionId, turn, time])
   const label = useTurnClock((state) => {

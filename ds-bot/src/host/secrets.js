@@ -1,5 +1,5 @@
 // Secrets: keys the user types into a card for a Bot. A value lives only in
-// secrets.json (mode 600) and in this process; Bots use it as $DSH_SECRET_<NAME> in
+// secrets.json (mode 600) and in this process; Bots use it as $NOVA_SECRET_<NAME> in
 // their shell, tool results lose it before they are saved, and every model request
 // has it replaced by [secret:<NAME>] before it leaves.
 import { randomUUID } from 'node:crypto'
@@ -11,7 +11,7 @@ import { replaceFile } from './files.js'
 import { output } from './tools.js'
 
 export const SECRET_NAME = /^[A-Z][A-Z0-9_]{0,63}$/
-export const ENV_PREFIX = 'DSH_SECRET_'
+export const ENV_PREFIX = 'NOVA_SECRET_'
 // A short value (a PIN, a short password) would also hit ordinary words if it were
 // replaced wherever it appears, so below WHOLE_VALUE it is replaced only where it
 // stands alone: no letter or digit right before or after it.
@@ -26,7 +26,7 @@ export const canUse = (secret, botId) => secret !== undefined && botId !== undef
   && (secret.scope === 'all' || (Array.isArray(secret.scope) && secret.scope.includes(botId)))
 
 export function normalizeName(raw) {
-  return String(raw ?? '').trim().replace(/^\$(env:)?/i, '').replace(/^DSH_SECRET_/i, '').replace(/[\s-]+/g, '_').toUpperCase()
+  return String(raw ?? '').trim().replace(/^\$(env:)?/i, '').replace(/^(?:DSH_SECRET_|NOVA_SECRET_)/i, '').replace(/[\s-]+/g, '_').toUpperCase()
 }
 
 // encodeURIComponent leaves ' as is, but new URL() turns it into %27 in a query, so the
@@ -132,7 +132,7 @@ export function install(rt) {
         secrets.clear()
       } else {
         blocked = reason(error)
-        rt.warn('ds-bot: unreadable secrets file %s (%s)', path, blocked)
+        rt.warn('unreadable secrets file %s (%s)', path, blocked)
       }
       changed()
       return
@@ -151,10 +151,10 @@ export function install(rt) {
         copyFileSync(path, backup)
         blocked = undefined
         secrets.clear()
-        rt.warn('ds-bot: unreadable secrets file %s; backed up as %s', path, backup)
+        rt.warn('unreadable secrets file %s; backed up as %s', path, backup)
       } catch (error) {
         blocked = reason(error)
-        rt.warn('ds-bot: unreadable secrets file %s; backup failed: %s', path, error)
+        rt.warn('unreadable secrets file %s; backup failed: %s', path, error)
       }
       changed()
       return
@@ -180,7 +180,7 @@ export function install(rt) {
 
   // Resolves once secrets.json holds the current map; rejects when the write failed.
   const persist = () => {
-    if (blocked !== undefined) return Promise.reject(new Error(`The secrets file ${path} could not be read (${blocked}). DS Bot does not change it; fix or move the file and reload.`))
+    if (blocked !== undefined) return Promise.reject(new Error(`The secrets file ${path} could not be read (${blocked}). Nova Bots does not change it; fix or move the file and reload.`))
     const readOnly = rt.readOnly()
     if (readOnly !== undefined) return Promise.reject(new Error(readOnly))
     const snapshot = JSON.stringify({ version: 1, secrets: [...secrets.values()] }, null, 2)
@@ -196,7 +196,7 @@ export function install(rt) {
         throw error
       }
     })
-    writing = job.catch(error => rt.warn('ds-bot: secrets write failed (%s)', reason(error)))
+    writing = job.catch(error => rt.warn('secrets write failed (%s)', reason(error)))
     return job
   }
 
@@ -243,7 +243,7 @@ export function install(rt) {
   async function tell(botId, text) {
     if (rt.botOf(botId) === undefined) return
     await rt.deliver({ toId: botId, role: 'secret', text })
-      .catch(error => rt.warn('ds-bot: secret note to %s failed: %s', botId, error))
+      .catch(error => rt.warn('secret note to %s failed: %s', botId, error))
   }
   const savedNote = (name, lead) => [
     `${lead} Use it as ${usage(name)}.`,
@@ -546,13 +546,13 @@ export function install(rt) {
       if (list.length === 0) return
       try {
         unregister = sub.shellEnv.register({
-          name: 'ds-bot-secrets',
-          variables: Object.fromEntries(list.map(secret => [envName(secret.name), { description: `DS Bot secret ${secret.name}${secret.purpose ? `: ${secret.purpose}` : ''}` }])),
+          name: 'nova-bots-secrets',
+          variables: Object.fromEntries(list.map(secret => [envName(secret.name), { description: `Nova Bots secret ${secret.name}${secret.purpose ? `: ${secret.purpose}` : ''}` }])),
           resolve: resolveEnv,
         })
       } catch (error) {
         declared = ''
-        rt.warn('ds-bot: secrets not offered to the shell: %s', error?.message ?? error)
+        rt.warn('secrets not offered to the shell: %s', error?.message ?? error)
       }
     }
     refreshEnv()
@@ -561,7 +561,7 @@ export function install(rt) {
       unregister = null
       declared = ''
       refreshEnv = () => {}
-    }, 'ds-bot: secrets shell env')
+    }, 'Nova Bots: secrets shell env')
   }
   if (typeof ctx.inject === 'function') {
     ctx.inject(['shellEnv'], sub => attachShellEnv(sub))
@@ -572,7 +572,7 @@ export function install(rt) {
   ctx.effect(() => {
     void loadSecrets()
     return () => { if (usedTimer !== null) clearTimeout(usedTimer) }
-  }, 'ds-bot: load secrets')
+  }, 'Nova Bots: load secrets')
 
   Object.assign(rt, {
     secretsView,

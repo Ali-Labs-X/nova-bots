@@ -44,7 +44,7 @@ class FakeObserver {
   observe() {}
   disconnect() { this.off = true }
 }
-// The markdown the host's renderer is given, and what DS Bot's copy controls write.
+// The markdown the host's renderer is given, and what Nova Bots's copy controls write.
 const markdownTexts = []
 const copiedTexts = []
 const module = { exports: {} }
@@ -595,7 +595,7 @@ const docks = (store, roster, options) => {
 }
 
 test('a secret request refused on a read-only window says so in one line', () => {
-  const refused = 'No card can be shown now. The Bot team in /somewhere is open in another dsh (Web or Desktop, pid 4 on host-a). This window shows the team but cannot change it; close the other one and reload.'
+  const refused = 'No card can be shown now. The Bot team in /somewhere is open in another Nova instance (Web or Desktop, pid 4 on host-a). This window shows the team but cannot change it; close the other one and reload.'
   const root = program([call('request_secret', 'program:ro', { args: { name: 'DEMO_TOKEN' }, content: refused })])
   assert.match(shown(root), /Chief could not ask for a key: this window can only view the team/)
   // Other refusals stay silent: they are written for the model.
@@ -968,8 +968,8 @@ test('a view works its formulas out, draws a chart, and keeps html in a sandboxe
   assert.equal(frame.props.title, 'A greeting')
 })
 
-// #718: a folded message's cut code block is drawn by DS Bot, so no copy control
-// exists that holds only the part shown; DS Bot's own is bound to the whole
+// #718: a folded message's cut code block is drawn by Nova Bots, so no copy control
+// exists that holds only the part shown; Nova Bots's own is bound to the whole
 // block, and a short block keeps the host's normal rendering and copy.
 test('a folded code block leaves no copy of only its shown part', async () => {
   const inner = Array.from({ length: 40 }, (_, index) => `line ${index + 1}`).join('\n')
@@ -984,7 +984,7 @@ test('a folded code block leaves no copy of only its shown part', async () => {
   const out = bubble([`Here:\n\`\`\`js\n${inner}\n\`\`\``])
   // The markdown the host renders holds no fence, so it can draw no copy of the part.
   assert.ok(markdownTexts.length > 0 && markdownTexts.every(given => !given.includes('```')))
-  // DS Bot draws the part the preview keeps, and its copy holds the whole block.
+  // Nova Bots draws the part the preview keeps, and its copy holds the whole block.
   assert.equal(text(find(out, item => item.type === 'pre')), 'line 1\nline 2\nline 3\nline 4\nline 5\nline 6\nline 7\nline 8')
   const [copy] = copyOf(out)
   assert.equal(copyOf(out).length, 1)

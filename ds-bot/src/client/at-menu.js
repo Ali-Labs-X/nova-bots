@@ -6,8 +6,8 @@
 import { t } from './i18n.js'
 import { currentPart, relativeShort } from './text.js'
 
-export const BOTS_SOURCE = 'ds-bot'
-export const CHATS_SOURCE = 'ds-bot-chats'
+export const BOTS_SOURCE = 'nova'
+export const CHATS_SOURCE = 'nova-bots-chats'
 // The words the group host reads as "everyone" (groups.js ROOM_ALL).
 const ROOM_ALL = ['all', 'everyone', '所有人', '全体']
 const OTHER_CHATS_MAX = 8
@@ -60,7 +60,7 @@ export function chatRows(roster, list, sessionId) {
   return [...bots, ...others]
 }
 
-// DSH's canonical session mention: `@[label](dsh-session:<base64url of the JSON id>)`.
+// Nova's canonical session mention: `@[label](dsh-session:<base64url of the JSON id>)`.
 // The host turns it into "@label" plus a read-only snapshot of that Session.
 export function sessionMention(sessionId, label) {
   let binary = ''

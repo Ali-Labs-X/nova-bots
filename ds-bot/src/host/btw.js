@@ -10,7 +10,7 @@ import { dirname, join } from 'node:path'
 import { BlockAssembler } from '@deepseek-ai/dsh-llm'
 import { replaceFile } from './files.js'
 
-export const RESTART_ERROR = 'DS Bot restarted before this answer finished.'
+export const RESTART_ERROR = 'Nova Bots restarted before this answer finished.'
 export const TOOL_ERROR = 'The model called a tool again after being told not to, so this aside was not answered.'
 export const EMPTY_ERROR = 'The model wrote nothing.'
 // Events that still belong to a turn. A model selection or a title does not.
@@ -25,7 +25,7 @@ const turnOf = (value) => (typeof value === 'number' && Number.isInteger(value) 
 // Checkpoint check for the projection registry. The live read does not use it.
 const anchorStateSchema = {
   parse(value) {
-    if (value === null || typeof value !== 'object' || Array.isArray(value)) throw new Error('ds-bot anchor projection state is not an object')
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) throw new Error('Nova anchor projection state is not an object')
     const starts = []
     if (Array.isArray(value.starts)) {
       for (const start of value.starts) {
@@ -86,7 +86,7 @@ const callIds = (message) => {
   return ids
 }
 
-// DSH commits the assistant message before tool results exist. A tail that still
+// Nova commits the assistant message before tool results exist. A tail that still
 // owes a result is dropped whole: an adapter rejects a tool call with no result,
 // and an aside does not wait for one or invent one.
 export function trimToolBoundary(messages) {
@@ -257,7 +257,7 @@ export function install(rt) {
             .map(card => ({ ...card, botId, partId }))
         }
       } catch (error) {
-        if (error?.code !== 'ENOENT') rt.warn('ds-bot: unreadable btw cards %s: %s', partFile(botId, partId), error?.code ?? error)
+        if (error?.code !== 'ENOENT') rt.warn('unreadable btw cards %s: %s', partFile(botId, partId), error?.code ?? error)
       }
       if (writes()) {
         const now = Date.now()
@@ -268,7 +268,7 @@ export function install(rt) {
           return { ...card, status: 'failed', error: card.error ?? RESTART_ERROR, finishedAt: card.finishedAt ?? now }
         })
         byBot.set(partId, list)
-        if (touched) await writePart(botId, partId).catch(error => rt.warn('ds-bot: btw cards of %s not saved: %s', botId, error))
+        if (touched) await writePart(botId, partId).catch(error => rt.warn('btw cards of %s not saved: %s', botId, error))
       } else {
         byBot.set(partId, list)
       }
@@ -355,7 +355,7 @@ export function install(rt) {
     dropped.add(botId)
     cards.delete(botId)
     for (const key of reading.keys()) if (key.startsWith(`${botId}/`)) reading.delete(key)
-    if (cardsDir !== undefined && writes()) await rm(join(cardsDir, botId), { recursive: true, force: true }).catch(error => rt.warn('ds-bot: btw cards of %s not removed: %s', botId, error))
+    if (cardsDir !== undefined && writes()) await rm(join(cardsDir, botId), { recursive: true, force: true }).catch(error => rt.warn('btw cards of %s not removed: %s', botId, error))
   }
 
   // Channel can be installed without the roster (the thinking route test). The

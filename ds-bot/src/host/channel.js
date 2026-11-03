@@ -11,7 +11,7 @@ const LANGUAGES = { zh: 'Chinese (简体中文)', en: 'English' }
 const RUN_STATS = ['sessionStats', 'tokenUsage', 'contextPressure']
 
 const invalid = message => Object.assign(new Error(message), { code: 'bot/invalid' })
-// Programming and file system errors are DS Bot's own faults, logged with their stack;
+// Programming and file system errors are Nova Bots' own faults, logged with their stack;
 // any other error is a refusal whose message is meant for the user.
 const isInternal = error => error instanceof TypeError || error instanceof ReferenceError || error instanceof RangeError
   || error instanceof SyntaxError || (typeof error?.code === 'string' && /^E[A-Z_]+$/.test(error.code))
@@ -25,13 +25,13 @@ export function install(rt) {
   installSide(rt)
   const { ctx, state } = rt
 
-  // The DSH interface language of the last browser that asked for the team.
+  // The Nova interface language of the last browser that asked for the team.
   let uiLocale
   rt.uiLanguage = () => (uiLocale === undefined ? undefined : LANGUAGES[uiLocale.split('-')[0].toLowerCase()] ?? uiLocale)
 
   const ok = value => ({ ok: true, value })
   const fail = (message, code = 'bot/error') => ({ ok: false, error: { code, message, details: {} } })
-  // Models come from DSH, not state.json, so a provider added in Harness settings
+  // Models come from Nova, not state.json, so a provider added in Nova settings
   // changes the view without a new revision.
   const modelsKey = () => `${rt.cachedCatalog().map(entry => `${entry.ref}${entry.needsKey ? '!' : ''}${entry.reasoning ? `:${JSON.stringify(entry.reasoning)}` : ''}`).join(',')}|${rt.cachedDefault() ?? ''}`
   const view = () => ({
@@ -64,7 +64,7 @@ export function install(rt) {
     // Each Bot's side chats, in creation order. The answers never join the
     // model-visible history; the side panel reads them here.
     sideChats: rt.sideView?.() ?? {},
-    // The team's DSH Agent (at most one): plain dsh Sessions, not Bots.
+    // The team's Nova Agent (at most one): plain dsh Sessions, not Bots.
     agents: Object.values(state.agents),
     // Key names and who may use them; values never leave the host.
     secrets: rt.secretsView(),
@@ -189,7 +189,7 @@ export function install(rt) {
           const ms = await rt.thinkingOf(sessionId, turn)
           return ok(ms === undefined ? {} : { ms })
         }
-        // Model providers and their keys, for a window without DSH's own Models page.
+        // Model providers and their keys, for a window without Nova's own Models page.
         case 'providers':
           return ok(await rt.providersView())
         case 'provider-key':
@@ -232,7 +232,7 @@ export function install(rt) {
         case 'chat':
           await rt.load()
           return ok(await rt.chatPage(String(body.botId ?? ''), body.cursor ?? undefined))
-        // DSH's own whole-log figures for the current part of a Bot's chat, the ones its
+        // Nova's own whole-log figures for the current part of a Bot's chat, the ones its
         // status bar shows; a window without that bar shows them in the Bot's details.
         case 'run-stats': {
           await rt.load()
@@ -287,7 +287,7 @@ export function install(rt) {
         case 'create-room': {
           await rt.load()
           const room = await rt.createRoom({ members: Array.isArray(body.members) ? body.members : [], name: body.name, ...(typeof body.admin === 'string' ? { admin: body.admin } : {}) })
-          if (body.greet === true) await rt.greetRoom(room.id).catch(error => rt.warn('ds-bot: greeting in %s failed: %s', room.name, error))
+          if (body.greet === true) await rt.greetRoom(room.id).catch(error => rt.warn('greeting in %s failed: %s', room.name, error))
           return ok(room)
         }
         case 'update-room': {
@@ -598,7 +598,7 @@ export function install(rt) {
       const result = await handle(String(body?.endpoint ?? ''), body?.payload, request.signal)
       return new Response(JSON.stringify(result), { status: 200, headers: { 'content-type': 'application/json' } })
     },
-  }), 'ds-bot: api route')
+  }), 'Nova Bots: api route')
 
   ctx.effect(() => {
     void rt.load()
@@ -606,5 +606,5 @@ export function install(rt) {
     // In-flight side questions abort here; their entries stay answering for the
     // next owner.
     return () => Promise.all([rt.btwDispose?.(), rt.sideDispose?.()])
-  }, 'ds-bot: load state')
+  }, 'Nova Bots: load state')
 }

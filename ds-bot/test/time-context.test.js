@@ -8,7 +8,7 @@ import { historyEntry } from '../src/host/parts.js'
 import { fakeContext } from './fake-ctx.js'
 
 const NOW = Date.UTC(2026, 9, 12, 4, 30)
-const reading = (time, kind = 'ds-bot-time-context') => ({ type: 'user/message', time, data: { source: { kind } } })
+const reading = (time, kind = 'nova-bots-time-context') => ({ type: 'user/message', time, data: { source: { kind } } })
 
 function setup(t, { events = [], config = {}, owned = true } = {}) {
   t.mock.method(Date, 'now', () => NOW)
@@ -40,8 +40,8 @@ test('a first Bot step appends a dated, zoned snapshot without changing the user
   const clock = result.messages[1]
   assert.match(clock.content[0].text, /2026-10-12.*12:30:00.*GMT\+08:00.*Asia\/Shanghai/)
   assert.deepEqual(clock.source, {
-    kind: 'ds-bot-time-context', form: 'snapshot',
-    sections: [{ name: 'ds-bot-time-context', text: clock.content[0].text }],
+    kind: 'nova-bots-time-context', form: 'snapshot',
+    sections: [{ name: 'nova-bots-time-context', text: clock.content[0].text }],
   })
   assert.equal(historyEntry({ type: 'user/message', data: clock }, false), undefined)
 })

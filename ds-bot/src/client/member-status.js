@@ -171,7 +171,7 @@ export function StopMemberWork({ entry, bot, room, actions }) {
   return h('button', { type: 'button', className: 'bt-member-stop', disabled: stopping, 'aria-label': `${t('Stop')} · ${bot.name}`, onClick: stop }, t('Stop'))
 }
 
-// The group's work stops all at once from its details: DSH's own stop reaches only the
+// The group's work stops all at once from its details: Nova's own stop reaches only the
 // round, and a member the round moved on from keeps working.
 export function StopRoomWork({ room, entries, actions }) {
   const [stopping, setStopping] = useState(false)

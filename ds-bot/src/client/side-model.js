@@ -4,13 +4,13 @@
 // refuses): undefined is only for a session that is positively not a Bot.
 import { t } from './i18n.js'
 
-export const SIDE_SOURCE = 'ds-bot-side'
+export const SIDE_SOURCE = 'nova-bots-side'
 export const SIDE_TOKEN = '/side '
 
 const GROUP_REFUSAL = "Side chat is only available in a Bot's private chat."
 const ATTACHMENT_REFUSAL = '/side does not take attachments.'
 const EMPTY_REFUSAL = 'Write a question after /side.'
-const LOADING_REFUSAL = 'DS Bot is still loading this chat.'
+const LOADING_REFUSAL = 'Nova Bots is still loading this chat.'
 
 export function sideSurface(roster, sessionId) {
   if (!roster?.ready) return 'unknown'

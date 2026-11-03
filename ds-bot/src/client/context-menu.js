@@ -58,7 +58,7 @@ export function ContextMenu({ menu, roster, actions, leaving = false }) {
       }, h(Icon), label)))))
 }
 
-// Menus for the DSH Agent row and its Sessions; none of the Bot entries apply.
+// Menus for the Nova Agent row and its Sessions; none of the Bot entries apply.
 function AgentMenu({ menu, roster, actions, leaving }) {
   const ref = useRef(null)
   const [place, setPlace] = useState({ left: menu.x, top: menu.y })
@@ -76,7 +76,7 @@ function AgentMenu({ menu, roster, actions, leaving }) {
           [agent.pinned ? t('Unpin') : t('Pin'), PinIcon, () => actions.setFlags(agent.id, { pinned: !agent.pinned })],
         ],
         [
-          [t('Remove DSH Agent'), TrashIcon, () => actions.removeAgent(agent.id), true],
+          [t('Remove Nova Agent'), TrashIcon, () => actions.removeAgent(agent.id), true],
         ],
       ]
     : [
@@ -87,11 +87,11 @@ function AgentMenu({ menu, roster, actions, leaving }) {
           [t('Archive'), TrashIcon, () => actions.archiveAgentSession(agent.id, menu.id), true],
         ],
       ]
-  return h('div', { ref, className: 'bt-menu', role: 'menu', 'aria-label': menu.kind === 'agent' ? 'DSH Agent' : t('Session actions'), style: place, 'data-leaving': leaving || undefined },
+  return h('div', { ref, className: 'bt-menu', role: 'menu', 'aria-label': menu.kind === 'agent' ? 'Nova Agent' : t('Session actions'), style: place, 'data-leaving': leaving || undefined },
     groups.map((group, index) => h(Fragment, { key: index },
       index > 0 ? h('div', { className: 'bt-menu-sep', role: 'separator' }) : null,
       group.map(([label, Icon, run, danger]) => h('button', {
         key: label, type: 'button', role: 'menuitem', className: danger ? 'bt-danger' : undefined,
-        onClick: () => { actions.closeMenu(); void Promise.resolve(run()).catch(error => console.warn('[ds-bot]', error)) },
+        onClick: () => { actions.closeMenu(); void Promise.resolve(run()).catch(error => console.warn('[nova]', error)) },
       }, h(Icon), label)))))
 }

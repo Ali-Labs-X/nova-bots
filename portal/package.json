@@ -1,0 +1,16 @@
+{
+  "name": "nova-bots-portal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Nova Bots portal: the landing page, the sign-in API and the bridge to the engine",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "setup-db": "node setup-db.mjs"
+  },
+  "dependencies": {
+    "bcryptjs": "3.0.2",
+    "pg": "8.16.3"
+  }
+}

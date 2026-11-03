@@ -82,7 +82,7 @@ const noticeText = (line) => {
 // `text` is what to show of a message line, by default what the log keeps of it.
 export const lineText = (line, text = line.text) => {
   if (line.kind === 'lookup') return `[${speakerOf(line)} looked up its own chat${line.text ? ` for "${line.text}"` : ''}]`
-  if (line.kind === 'resumed') return `[${speakerOf(line)}'s work here was cut off when DeepSeek Harness restarted; it is picking it back up and posts when done]`
+  if (line.kind === 'resumed') return `[${speakerOf(line)}'s work here was cut off when Nova Bots restarted; it is picking it back up and posts when done]`
   if (line.kind === 'cut') return `[${speakerOf(line)}'s work here was cut off by a restart again, so it stopped; ask it to go on if it still matters]`
   if (line.kind === 'stopped') return `[The user stopped ${speakerOf(line)}'s work here]`
   if (line.kind === 'done') return `[${speakerOf(line)} finished the work it was asked for]`
@@ -158,7 +158,7 @@ const roomKickoff = language => `The user just created this group and has not wr
 
 const ROOM_READ_MAX = 30
 
-// DSH cannot open the Session at all: it is gone, or its stored log is corrupt. DSH
+// Nova cannot open the Session at all: it is gone, or its stored log is corrupt. Nova
 // reports a corrupt log only in the message of a generic failure.
 const lostSession = error => error?.code === 'session/not-found' || /\bis corrupt\b|\bcorrupt session log\b/i.test(String(error?.message ?? ''))
 const fileLine = file => `[File "${file.name}" (${file.bytes} bytes) attached]`
@@ -186,7 +186,7 @@ export function install(rt) {
         mkdirSync(join(linesDir, roomId), { recursive: true })
         writeFileSync(lineFile(roomId, line.seq), read, 'utf8')
       } catch (error) {
-        rt.warn('ds-bot: group line %s/%s not kept whole: %s', roomId, line.seq, error)
+        rt.warn('group line %s/%s not kept whole: %s', roomId, line.seq, error)
       }
     }
     return { ...line, text: kept, length: text.length }
@@ -233,7 +233,7 @@ export function install(rt) {
     if (room === undefined || folder === undefined || room.workDir !== folder || room.folderNotice === folder) return
     ensureRoomLog(room)
     room.folderNotice = folder
-    appendRoom(room, { who: 'DS Bot', kind: 'notice', reason: 'folder', path: folder })
+    appendRoom(room, { who: 'Nova Bots', kind: 'notice', reason: 'folder', path: folder })
     const text = noticeText({ reason: 'folder', path: folder })
     for (const round of rt.roomProgress.values()) {
       if (round.roomId === room.id) round.replies.push({ kind: 'folder', text, time: Date.now() })
@@ -259,7 +259,7 @@ export function install(rt) {
     const gone = rt.roomOf(room.id) !== room || !room.members.includes(member.id) || rt.botOf(member.id) === undefined
     if (gone || room.sessions?.[member.id] !== undefined) {
       void ctx.workspaceRegistry.archiveSession(id, { stopActivity: true })
-        .catch(error => rt.warn('ds-bot: unused group Session of %s in %s not archived: %s', member.name, room.name, error))
+        .catch(error => rt.warn('unused group Session of %s in %s not archived: %s', member.name, room.name, error))
       return gone ? undefined : groupSessionFor(room, member)
     }
     room.sessions[member.id] = id
@@ -269,14 +269,14 @@ export function install(rt) {
     if (ref !== undefined) {
       const effort = await rt.desiredEffort(member, ref)
       await rt.selectSessionModel(id, { ...splitRef(ref), ...(effort === undefined ? {} : { reasoningEffort: effort }) })
-        .catch(error => rt.warn('ds-bot: model for %s in %s not applied: %s', member.name, room.name, error))
+        .catch(error => rt.warn('model for %s in %s not applied: %s', member.name, room.name, error))
     }
     await rt.applyPermission(member, id, room)
-      .catch(error => rt.warn('ds-bot: permission for %s in %s not applied: %s', member.name, room.name, error))
+      .catch(error => rt.warn('permission for %s in %s not applied: %s', member.name, room.name, error))
     await rt.save()
     // The Session was resolved before the group owned it, so its scoped tools land now.
     await rt.resolveAgent(id)
-      .catch(error => rt.warn('ds-bot: scoped tools for %s in %s not applied: %s', member.name, room.name, error))
+      .catch(error => rt.warn('scoped tools for %s in %s not applied: %s', member.name, room.name, error))
     await rt.ensureCapabilities(id)
     return { id, brief: await rt.ownChatBrief(member) }
   }
@@ -336,7 +336,7 @@ export function install(rt) {
     return lines
   }
 
-  // Members whose turn or DSH subagent in this group is running, and since when.
+  // Members whose turn or Nova subagent in this group is running, and since when.
   const workingIn = room => room.members.flatMap((id) => {
     const sessionId = room.sessions?.[id]
     const entry = rt.live.get(sessionId)
@@ -488,7 +488,7 @@ export function install(rt) {
       // Still at earlier work: the call steers it at its next step; the round goes on.
       else if (busy) rt.roomWaiters.get(exchangeId)?.resolve({ working: true })
     } catch (error) {
-      rt.warn('ds-bot: group delivery to %s failed: %s', member.name, error)
+      rt.warn('group delivery to %s failed: %s', member.name, error)
       // A delivery that failed is not a pass: the round shows it. Nothing here can
       // repair a lost Session, so the member's next turn in the group starts a new one.
       const lost = lostSession(error)
@@ -528,7 +528,7 @@ export function install(rt) {
     for (const waiter of waitersOf(sessionId)) waiter.work()
   }
   // The group Session's inbox changed: a running round looks for the user's messages
-  // once DSH has finished the change.
+  // once Nova has finished the change.
   rt.nudgeRoom = (roomId) => {
     for (const round of rt.roomProgress.values()) {
       if (round.roomId === roomId) setImmediate(() => round.nudge?.())
@@ -668,7 +668,7 @@ export function install(rt) {
         }
         room.paused = parked
         const names = callees.map(peer => peer.name)
-        appendRoom(room, { who: 'DS Bot', kind: 'notice', reason: 'paused', limit: ROOM_IDLE_RELAY_LIMIT, names })
+        appendRoom(room, { who: 'Nova Bots', kind: 'notice', reason: 'paused', limit: ROOM_IDLE_RELAY_LIMIT, names })
         round.replies.push({ kind: 'paused', count: ROOM_IDLE_RELAY_LIMIT, limit: ROOM_IDLE_RELAY_LIMIT, names, time: Date.now() })
         void rt.save().catch(() => {})
         return
@@ -698,7 +698,7 @@ export function install(rt) {
       for (const slot of round.slots) {
         if (!startable(round, slot)) continue
         const turn = memberTurn(room, round, slot, signal)
-          .catch(error => rt.warn('ds-bot: group turn of %s in %s failed: %s', slot.name, room.name, error))
+          .catch(error => rt.warn('group turn of %s in %s failed: %s', slot.name, room.name, error))
           .finally(() => { turns.delete(turn); round.nudge() })
         turns.add(turn)
       }
@@ -713,7 +713,7 @@ export function install(rt) {
     // An answer that came, or is still coming, means the round is not left silent.
     const answered = round.slots.some(slot => ['posted', 'working', 'waiting-approval'].includes(slot.status))
     if (alone && !answered) {
-      appendRoom(room, { who: 'DS Bot', kind: 'notice', reason: 'admin-passed', names: [round.soleAdmin.name] })
+      appendRoom(room, { who: 'Nova Bots', kind: 'notice', reason: 'admin-passed', names: [round.soleAdmin.name] })
       // The round the user watched shows the same notice as one line of its replies.
       round.replies.push({ kind: 'admin-passed', botId: round.soleAdmin.id, name: round.soleAdmin.name, color: round.soleAdmin.color, time: Date.now() })
       await rt.save()
@@ -735,7 +735,7 @@ export function install(rt) {
     try {
       session = await groupSessionFor(room, member)
     } catch (error) {
-      rt.warn('ds-bot: group Session for %s in %s failed: %s', member.name, room.name, error)
+      rt.warn('group Session for %s in %s failed: %s', member.name, room.name, error)
       slot.status = 'failed'
       dropMemberFromBatch(room, member.id)
       round.failed.push(member.name)
@@ -804,7 +804,7 @@ export function install(rt) {
         // The round moved on without this member: the log shows the call and then
         // silence, which reads as a lost message. The group is told the baton was
         // dropped, and what brings the member back.
-        appendRoom(room, { who: 'DS Bot', kind: 'notice', reason: 'missed', names: [member.name], minutes: Math.round(ROOM_REPLY_TIMEOUT_MS / 60000) })
+        appendRoom(room, { who: 'Nova Bots', kind: 'notice', reason: 'missed', names: [member.name], minutes: Math.round(ROOM_REPLY_TIMEOUT_MS / 60000) })
       }
     }
     // Settle the member's place in its call batch when its work did not continue in the background.
@@ -926,7 +926,7 @@ export function install(rt) {
       try {
         await runRound(room, round, exec.signal, exec.agent)
       } catch (error) {
-        rt.warn('ds-bot: group round in %s stopped: %s', room.name, error)
+        rt.warn('group round in %s stopped: %s', room.name, error)
       } finally {
         rt.roomProgress.delete(exec.callId)
       }
@@ -1140,13 +1140,13 @@ export function install(rt) {
     const member = rt.botOf(owner?.botId)
     if (room === undefined || member === undefined || !room.members.includes(member.id)) return
     const text = stripOwnName(member.name, reply)
-    // While a DSH subagent of this member is still running, the member's work is not
+    // While a Nova subagent of this member is still running, the member's work is not
     // finished yet: post any non-empty text as a progress line and keep its batch open.
     if (rt.hasSubagents?.(sessionId) === true) {
       if (!isPass(text)) {
         const calls = callsIn(room, member, text)
         await postToRoom(room, member, text, { progress: true, ...(!calls ? { quiet: true } : {}) })
-          .catch(error => rt.warn('ds-bot: subagent progress from %s failed: %s', member.name, error))
+          .catch(error => rt.warn('subagent progress from %s failed: %s', member.name, error))
       }
       return
     }
@@ -1166,14 +1166,14 @@ export function install(rt) {
     if (waitingPeers && named.length === 0) {
       if (!isPass(text)) {
         await postToRoom(room, member, text, { late: true, quiet: true })
-          .catch(error => rt.warn('ds-bot: late group reply from %s failed: %s', member.name, error))
+          .catch(error => rt.warn('late group reply from %s failed: %s', member.name, error))
       }
       return
     }
     const done = isPass(text) && (shown || batchDoneBefore) && askedBy !== undefined
     if (isPass(text) && !done) return
     await postToRoom(room, member, done ? '' : text, { late: true, ...(done ? { done: true } : {}), ...(askedBy ? { askedBy } : {}) })
-      .catch(error => rt.warn('ds-bot: late group reply from %s failed: %s', member.name, error))
+      .catch(error => rt.warn('late group reply from %s failed: %s', member.name, error))
   }
   rt.lateRoomReply = lateRoomReply
 
@@ -1215,7 +1215,7 @@ export function install(rt) {
   // for and a line that calls a member go at once; lines still held when the turn ends
   // open its result. Per group Session.
   const held = new Map()
-  ctx.effect(() => () => { for (const entry of held.values()) clearTimeout(entry.timer) }, 'ds-bot: group step lines')
+  ctx.effect(() => () => { for (const entry of held.values()) clearTimeout(entry.timer) }, 'Nova Bots: group step lines')
   const flushSteps = (sessionId) => {
     const entry = held.get(sessionId)
     clearTimeout(entry.timer)
@@ -1234,7 +1234,7 @@ export function install(rt) {
     entry.info = info
     entry.lines.push(text)
     if ((first && info?.role === 'room') || callsIn(room, member, text) || Date.now() - entry.last >= ROOM_STEP_GAP_MS) return flushSteps(sessionId)
-    entry.timer ??= setTimeout(() => void flushSteps(sessionId)?.catch(error => rt.warn('ds-bot: step lines from %s not posted: %s', member.name, error)), entry.last + ROOM_STEP_GAP_MS - Date.now())
+    entry.timer ??= setTimeout(() => void flushSteps(sessionId)?.catch(error => rt.warn('step lines from %s not posted: %s', member.name, error)), entry.last + ROOM_STEP_GAP_MS - Date.now())
   }
   rt.takeRoomSteps = (sessionId) => {
     const entry = held.get(sessionId)
@@ -1247,7 +1247,7 @@ export function install(rt) {
   rt.withRoomSteps = (lines, reply) => (lines === '' ? reply : isPass(reply) ? lines : `${lines}\n\n${reply}`)
 
   // The user stops a member's work in this group from the group's details, including
-  // any running DSH subagents it spawned (#701). Messages still waiting for that
+  // any running Nova subagents it spawned (#701). Messages still waiting for that
   // member here go with it.
   async function stopMemberWork(roomId, botId) {
     await rt.load()
@@ -1299,7 +1299,7 @@ export function install(rt) {
       late: true,
       ...(wakeCaller ? { askedBy: wakeCaller } : { quiet: true }),
       failed: { code, ...(status ? { status } : {}), message },
-    }).catch(error => rt.warn('ds-bot: late group failure from %s failed: %s', member.name, error))
+    }).catch(error => rt.warn('late group failure from %s failed: %s', member.name, error))
   }
   rt.lateRoomFailure = lateRoomFailure
 
@@ -1333,12 +1333,12 @@ export function install(rt) {
     // Session in that group when the post came from one, else the own chat.
     const back = rt.roomOf(post.fromRoomId)?.sessions?.[post.botId]
     await rt.deliver({ toId: post.botId, ...(back ? { sessionId: back } : {}), role: 'report', roomId: room.id, text, ...(work ? { work, replyTo: post.sub } : {}) })
-      .catch(error => rt.warn('ds-bot: group report to %s failed: %s', post.name, error))
+      .catch(error => rt.warn('group report to %s failed: %s', post.name, error))
   }
 
   // A group chat's own Session never consults the model: models drift from "only call
   // group_relay" (they message one member directly when the user names it), so the
-  // relay step is synthesized here. Auxiliary calls such as titles, and DS Bot's own
+  // relay step is synthesized here. Auxiliary calls such as titles, and Nova Bots' own
   // calls for the room such as image readings, still reach the model.
   ctx.on('llm/stream', (options, next) => {
     if (options.sessionId === undefined || options.purpose !== undefined || rt.ownRequest(options)) return next()

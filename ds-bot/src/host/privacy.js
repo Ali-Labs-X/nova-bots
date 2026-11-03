@@ -1,6 +1,6 @@
 // Private Bots. A private Bot reads the team like any Bot, but no other Bot reads it, and
-// what it sends out waits for the user. DSH does not fence reads, so this closes the
-// tools DS Bot owns and checks the paths that the file tools and the shell are given;
+// what it sends out waits for the user. Nova does not fence reads, so this closes the
+// tools Nova Bots owns and checks the paths that the file tools and the shell are given;
 // a shell can still reach any file the account can (see docs/plans).
 import { join, resolve } from 'node:path'
 import { within } from './folders.js'
@@ -55,7 +55,7 @@ export function install(rt) {
   }
 
   // Where a private Bot keeps what must stay closed: its folder and its memory. Its
-  // Sessions and its id are in file names under DSH's and the team's data.
+  // Sessions and its id are in file names under Nova's and the team's data.
   const regionsOf = async bot => (await Promise.all([
     bot.workDir,
     join(rt.home, 'memory', 'bots', bot.id),
@@ -286,7 +286,7 @@ export function install(rt) {
         const bot = await ownerOfSession(id, self)
         if (bot) refuse(bot)
       }
-      // DSH scopes Session search to the caller's cwd. A subagent can have another cwd,
+      // Nova scopes Session search to the caller's cwd. A subagent can have another cwd,
       // so an unfiltered search is closed too; explicit safe ids still narrow it.
       if (name === 'session_search' && args.session_ids === undefined && args.parent_session_ids === undefined) {
         const closedBot = protectedBots().find(found => found.id !== self)
@@ -317,7 +317,7 @@ export function install(rt) {
 
   // Checks a change of `private` or of the folder of a Bot before it is written. A
   // private Bot's folder is no other Bot's, no group's and not the team workspace —
-  // a member's own pick in a group counts as that member's folder — because DSH
+  // a member's own pick in a group counts as that member's folder — because Nova
   // cannot be told which files of a shared folder to hide.
   async function checkChange(bot, { flag, moving, workDir }) {
     const makes = flag === undefined ? bot.private === true : flag

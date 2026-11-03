@@ -1,14 +1,14 @@
 name: Release
 
-# Publishes ds-bot to npm when a GitHub release is published, then attaches the desktop app's
+# Publishes the plugin to npm when a GitHub release is published, then attaches the desktop app's
 # Windows installer, macOS zips and Linux packages to the release. Windows and the Linux
 # AppImage update from latest.yml / latest-linux.yml; macOS and the Linux deb open the release
 # page for a manual download.
 #
 # npm Trusted Publishing: npm trusts this workflow through GitHub's OIDC token, so the
 # repository keeps no npm token, and every version gets a provenance statement. It is set
-# up once on npmjs.com: package ds-bot → Settings → Trusted Publisher → GitHub Actions,
-# user Fei2411, repository DS-Bot, workflow release.yml, no environment.
+# up once on npmjs.com: package nova-bots → Settings → Trusted Publisher → GitHub Actions,
+# user alilabsx, repository Nova-Bots, workflow release.yml, no environment.
 #
 # The release tag must be v<version in ds-bot/package.json> and must point at a commit on
 # main. A version with a pre-release part (0.2.0-rc.1) goes to the npm tag "next", so that
@@ -102,7 +102,7 @@ jobs:
           TAG: ${{ github.event.release.tag_name }}
         run: |
           npm pack
-          gh release upload "$TAG" "ds-bot-$(node -p "require('./package.json').version").tgz" --clobber
+          gh release upload "$TAG" "nova-bots-$(node -p "require('./package.json').version").tgz" --clobber
 
   app-windows:
     name: Desktop app installer (Windows)
@@ -126,8 +126,8 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: DS-Bot-win-x64
-          path: app/dist-pack/DS-Bot-*-win-x64.exe
+          name: Nova-Bots-win-x64
+          path: app/dist-pack/Nova-Bots-*-win-x64.exe
           retention-days: 7
           if-no-files-found: error
           compression-level: 0
@@ -138,7 +138,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name }}
         run: |
-          installer="dist-pack/DS-Bot-$(node -p "require('./package.json').version")-win-x64.exe"
+          installer="dist-pack/Nova-Bots-$(node -p "require('./package.json').version")-win-x64.exe"
           gh release upload "$TAG" "$installer" "$installer.blockmap" dist-pack/latest.yml --clobber
 
   app-macos:
@@ -169,8 +169,8 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: DS-Bot-mac-${{ matrix.arch }}
-          path: app/dist-pack/DS-Bot-*-mac-${{ matrix.arch }}.zip
+          name: Nova-Bots-mac-${{ matrix.arch }}
+          path: app/dist-pack/Nova-Bots-*-mac-${{ matrix.arch }}.zip
           retention-days: 7
           if-no-files-found: error
           compression-level: 0
@@ -180,9 +180,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.release.tag_name }}
         run: |
-          zip="dist-pack/DS-Bot-$(node -p "require('./package.json').version")-mac-${{ matrix.arch }}.zip"
-          legacy="$(node scripts/legacy-release-assets.mjs "$zip")"
-          gh release upload "$TAG" "$zip" "$legacy" --clobber
+          zip="dist-pack/Nova-Bots-$(node -p "require('./package.json').version")-mac-${{ matrix.arch }}.zip"
+          mapfile -t legacy < <(node scripts/legacy-release-assets.mjs "$zip")
+          gh release upload "$TAG" "$zip" "${legacy[@]}" --clobber
 
   app-linux:
     name: Desktop app packages (Linux x64)
@@ -210,15 +210,15 @@ jobs:
         # The dry run never uploads, so it checks here that every file the release attaches exists.
         run: |
           version="$(node -p "require('./package.json').version")"
-          ls -l "dist-pack/DS-Bot-$version-linux-x86_64.AppImage" "dist-pack/DS-Bot-$version-linux-amd64.deb" dist-pack/latest-linux.yml
+          ls -l "dist-pack/Nova-Bots-$version-linux-x86_64.AppImage" "dist-pack/Nova-Bots-$version-linux-amd64.deb" dist-pack/latest-linux.yml
       - name: Keep the packages for real-device checks
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: DS-Bot-linux-x64
+          name: Nova-Bots-linux-x64
           path: |
-            app/dist-pack/DS-Bot-*-linux-x86_64.AppImage
-            app/dist-pack/DS-Bot-*-linux-amd64.deb
+            app/dist-pack/Nova-Bots-*-linux-x86_64.AppImage
+            app/dist-pack/Nova-Bots-*-linux-amd64.deb
           retention-days: 7
           if-no-files-found: error
           compression-level: 0
@@ -230,5 +230,5 @@ jobs:
         # The AppImage carries its block map inside the file, so there is no .blockmap to attach.
         run: |
           version="$(node -p "require('./package.json').version")"
-          legacy="$(node scripts/legacy-release-assets.mjs "dist-pack/DS-Bot-$version-linux-amd64.deb")"
-          gh release upload "$TAG" "dist-pack/DS-Bot-$version-linux-x86_64.AppImage" "dist-pack/DS-Bot-$version-linux-amd64.deb" "$legacy" dist-pack/latest-linux.yml --clobber
+          mapfile -t legacy < <(node scripts/legacy-release-assets.mjs "dist-pack/Nova-Bots-$version-linux-amd64.deb")
+          gh release upload "$TAG" "dist-pack/Nova-Bots-$version-linux-x86_64.AppImage" "dist-pack/Nova-Bots-$version-linux-amd64.deb" "${legacy[@]}" dist-pack/latest-linux.yml --clobber

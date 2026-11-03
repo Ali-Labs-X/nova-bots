@@ -40,7 +40,7 @@ const SKIP_FOR = {
 }
 const STATUS_OUTCOMES = { 404: 'absent', 405: 'absent', 501: 'absent', 400: 'rejected', 415: 'rejected', 422: 'rejected', 401: 'denied', 402: 'denied', 403: 'denied' }
 
-// Routes whose profile leaves protocol, endpoint, or key name to the adapter: dsh's DeepSeek
+// Routes whose profile leaves protocol, endpoint, or key name to the adapter: dsh's Nova
 // adapters, and the pi-ai 0.87.1 catalog routes that sign in with an API key
 // (models.generated.js, env-api-keys.js). The protocol is undefined where it differs per model.
 const CATALOG = {
@@ -261,11 +261,11 @@ export function readDeclared(body) {
 
 const bearer = key => ({ authorization: `Bearer ${key}` })
 export const AUTH_STYLES = { bearer, 'x-api-key': key => ({ 'x-api-key': key }), 'api-key': key => ({ 'api-key': key }) }
-// One trailing /v1 belongs to the root, as in dsh's DeepSeek adapter and pi-ai's model listing.
+// One trailing /v1 belongs to the root, as in dsh's Nova adapter and pi-ai's model listing.
 const messagesRoot = base => (new URL(base).pathname.replace(/\/+$/, '').endsWith('/v1') ? trimSlash(base) : `${trimSlash(base)}/v1`)
 
 // Bounds what an endpoint that ignores the search tool can cost, while leaving a thinking model
-// room to reach the search: dsh's own DeepSeek search uses the same cap.
+// room to reach the search: dsh's own Nova search uses the same cap.
 const OUTPUT_CAP = 4096
 
 /** The standard search tool of each wire protocol. */
@@ -532,7 +532,7 @@ const errorDetail = (text) => {
  * Build the `auto` search provider over injected effects, so tests run it without a host.
  * @param deps.route - the asking Session's route: `{ provider, model, api, baseURL, apiKeyEnv, account, headers }`.
  * @param deps.resolveKey - credential reference → key, or undefined.
- * @param deps.resolveAccountToken - endpoint → DeepSeek account token, or undefined.
+ * @param deps.resolveAccountToken - endpoint → Nova account token, or undefined.
  * @param deps.fetch - the HTTP client for native searches.
  * @param deps.webFetch - `ctx.web.fetch`.
  */
@@ -545,10 +545,10 @@ export function createAutoSearchProvider(deps, config = {}) {
   async function credentialFor(route, endpoint) {
     if (route.account) {
       let token
-      try { token = str(await deps.resolveAccountToken?.(endpoint)) } catch (error) { return { reason: `the DeepSeek account token could not be read: ${reasonOf(error)}` } }
+      try { token = str(await deps.resolveAccountToken?.(endpoint)) } catch (error) { return { reason: `the Nova account token could not be read: ${reasonOf(error)}` } }
       return token === undefined
-        ? { reason: 'it is not signed in to a DeepSeek account' }
-        : { headers: () => ({ 'x-dsh-auth-token': token }), via: 'the DeepSeek account sign-in' }
+        ? { reason: 'it is not signed in to a Nova account' }
+        : { headers: () => ({ 'x-dsh-auth-token': token }), via: 'the Nova account sign-in' }
     }
     if (route.apiKeyEnv === undefined) return { reason: 'it names no API key' }
     let key
@@ -720,7 +720,7 @@ export function createAutoSearchProvider(deps, config = {}) {
 
 const stringRecord = value => (isRecord(value) ? Object.fromEntries(Object.entries(value).filter(([, item]) => typeof item === 'string')) : {})
 
-// OpenCode's gateways turn away a request that does not name its conversation. DSH's
+// OpenCode's gateways turn away a request that does not name its conversation. Nova's
 // adapter names it by the Session id, so a search for that Session does the same,
 // unless the provider settings name one.
 const OPENCODE_SESSION = 'x-opencode-session'

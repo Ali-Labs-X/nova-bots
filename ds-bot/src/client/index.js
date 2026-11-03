@@ -50,7 +50,7 @@ import { listedOpener } from './open-listed.js'
 export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
 
 export function apply(ctx) {
-  ctx.effect(() => installLocale(ctx.get('locale')), 'ds-bot: interface copy')
+  ctx.effect(() => installLocale(ctx.get('locale')), 'Nova Bots: interface copy')
   const roster = createSource(EMPTY_ROSTER)
   migrateStorage()
   const unreadStore = sharedMap(STORAGE.unread)
@@ -71,7 +71,7 @@ export function apply(ctx) {
   // style so the shell's own interface returns. `plain` stays false until a Bot-mode
   // view hosts a plain session, which drops only the conversation replacements.
   const surface = createSource({ mode: readMode(), plain: false })
-  // DSH Agent Session ids from the last pull, so a reload already knows the main
+  // Nova Agent Session ids from the last pull, so a reload already knows the main
   // view is a plain Session before the team answers.
   let agentSessionCache = new Set()
   try { agentSessionCache = new Set(JSON.parse(localStorage.getItem(STORAGE.agentSessions) ?? '[]')) } catch { agentSessionCache = new Set() }
@@ -88,7 +88,7 @@ export function apply(ctx) {
   // A navigation this plugin started: the surface effect trusts the id it lands on.
   let expected = null
   const setPlain = (plain) => surface.set(state => (state.plain === plain ? state : { ...state, plain }))
-  // A DSH Agent Session shows the plain conversation: the Bot details and browser
+  // A Nova Agent Session shows the plain conversation: the Bot details and browser
   // panels would follow it and report it is not on the team, so they close.
   const dropPanels = () => ui.set(state => (state.details || state.renaming ? { ...state, details: null, view: 'details', renaming: false, tab: null } : state))
   // A Bot's chat spans several parts, so when it was last left is kept per Bot.
@@ -100,7 +100,7 @@ export function apply(ctx) {
     const onPageHide = () => leaveVisits(Object.keys(ui.getSnapshot().visits ?? {}))
     window.addEventListener('pagehide', onPageHide)
     return () => window.removeEventListener('pagehide', onPageHide)
-  }, 'ds-bot: remember visits on page hide')
+  }, 'Nova Bots: remember visits on page hide')
   // Unread marks, reactions and visits are shared by every window; one saved elsewhere
   // shows here at once. A `null` key is a cleared storage.
   ctx.effect(() => {
@@ -112,7 +112,7 @@ export function apply(ctx) {
     }
     window.addEventListener('storage', onStorage)
     return () => window.removeEventListener('storage', onStorage)
-  }, 'ds-bot: follow other windows')
+  }, 'Nova Bots: follow other windows')
   const activity = createSource({})
   // Per Bot, the turn it runs and its tool; and the approvals waiting for the user.
   const work = createSource({ bots: {}, approvals: [] })
@@ -217,7 +217,7 @@ export function apply(ctx) {
         ui.set(state => (state.bootFailed ? { ...state, bootFailed: false } : state))
       } catch (error) {
         if (!stopped) {
-          console.warn('[ds-bot] state', error)
+          console.warn('[nova] state', error)
           // Only a missing Bot API counts toward a failed start: while the
           // host plugin stays unmounted the route answers 404. A network miss
           // is the host reconnecting, not a start-up failure (#516).
@@ -233,7 +233,7 @@ export function apply(ctx) {
     document.addEventListener('visibilitychange', wake)
     void loop()
     return () => { stopped = true; clearTimeout(timer); document.removeEventListener('visibilitychange', wake) }
-  }, 'ds-bot: roster poll')
+  }, 'Nova Bots: roster poll')
 
   // Plugin updates: every window that opens asks the host once (the host keeps its
   // answer for a while), again each hour, and every two seconds while installing.
@@ -253,10 +253,10 @@ export function apply(ctx) {
     wakeUpdate = loop
     void loop()
     return () => { stopped = true; clearTimeout(timer); wakeUpdate = () => {} }
-  }, 'ds-bot: update check')
+  }, 'Nova Bots: update check')
 
-  // A packaged DSH updates through its own updater; what that updater found is
-  // kept beside the host's answer so the card can match it to the verified DSH.
+  // A packaged Nova updates through its own updater; what that updater found is
+  // kept beside the host's answer so the card can match it to the verified Nova.
   const appUpdates = window.dshDesktop?.protocolVersion === 1 ? window.dshDesktop.updates ?? null : null
   if (appUpdates?.status && appUpdates.subscribe) {
     ctx.effect(() => {
@@ -265,10 +265,10 @@ export function apply(ctx) {
       void appUpdates.status().then(take, () => {})
       const unsubscribe = appUpdates.subscribe(take)
       return () => { stopped = true; unsubscribe?.() }
-    }, 'ds-bot: app update status')
+    }, 'Nova Bots: app update status')
   }
 
-  // The DS Bot app's own updater; its state goes beside the host's answer as ownApp,
+  // The Nova Bots app's own updater; its state goes beside the host's answer as ownApp,
   // which the About row turns into the app's update state and buttons.
   const ownAppUpdates = globalThis.dsBotApp?.updates ?? null
   if (ownAppUpdates?.state && ownAppUpdates.subscribe) {
@@ -278,10 +278,10 @@ export function apply(ctx) {
       void ownAppUpdates.state().then(take, () => {})
       const unsubscribe = ownAppUpdates.subscribe(take)
       return () => { stopped = true; unsubscribe?.() }
-    }, 'ds-bot: own app update state')
+    }, 'Nova Bots: own app update state')
   }
 
-  // Bot browsers need a webview bridge: DSH Desktop's, or the desktop app's of the
+  // Bot browsers need a webview bridge: Nova Desktop's, or the desktop app's of the
   // same shape. The host serves read_browser only in those two (`browser` in the state).
   const bridge = (window.dshDesktop?.protocolVersion === 1 ? window.dshDesktop.browser : globalThis.dsBotApp?.browser) ?? null
   const browsers = bridge ? createBotBrowsers({ bridge, createSource }) : null
@@ -303,15 +303,15 @@ export function apply(ctx) {
       sync()
       const offRoster = roster.subscribe(sync)
       return () => { offRoster(); stopReads?.(); browsers.dispose() }
-    }, 'ds-bot: Bot browsers')
+    }, 'Nova Bots: Bot browsers')
   }
 
-  ctx.effect(() => () => { markupCache.clear() }, 'ds-bot: character markup')
+  ctx.effect(() => () => { markupCache.clear() }, 'Nova Bots: character markup')
 
   // Mentions wear each Bot's color and character silhouette (or its photo). A message
-  // DSH still draws itself, while it waits to be sent or to join a running turn, shows
+  // Nova still draws itself, while it waits to be sent or to join a running turn, shows
   // "@Name" as a file reference; one whose label is a whole Bot name wears the Bot's
-  // mark there too (a name with a space is cut by DSH, so it stays as DSH draws it).
+  // mark there too (a name with a space is cut by Nova, so it stays as Nova draws it).
   const installMentions = () => {
     const style = installStyles('', 'mentions')
     let last = ''
@@ -345,7 +345,7 @@ export function apply(ctx) {
       const snapshot = roster.getSnapshot()
       const prefs = snapshot.ready ? snapshot.prefs ?? {} : savedPrefs
       const themes = allThemes()
-      const id = themes[prefs.theme] ? prefs.theme : 'deepseek'
+      const id = themes[prefs.theme] ? prefs.theme : 'nova'
       const accent = isHex(prefs.accent) ? prefs.accent : undefined
       const motion = prefs.motion === 'quiet' || prefs.motion === 'lively' ? prefs.motion : 'normal'
       const layout = layoutOf(prefs)
@@ -360,7 +360,7 @@ export function apply(ctx) {
       key = next
       style.textContent = themeCss(themes[id], accent)
       const release = releaseTokens
-      releaseTokens = ctx.theme.overrideTokens('ds-bot', shellTokens(themes[id]))
+      releaseTokens = ctx.theme.overrideTokens('nova', shellTokens(themes[id]))
       if (typeof release === 'function') release()
       if (snapshot.ready) {
         try { localStorage.setItem(PREFS_KEY, JSON.stringify({ theme: prefs.theme, accent: prefs.accent, motion: prefs.motion, layout: prefs.layout, width: prefs.width, flatWidth: prefs.flatWidth, thinking: prefs.thinking })) } catch { /* storage unavailable */ }
@@ -388,15 +388,15 @@ export function apply(ctx) {
     const hub = { registerShape, registerTheme, themes: () => Object.keys(allThemes()), shapes: () => Object.keys(SHAPES) }
     const queued = Array.isArray(window.dshBotQueue) ? window.dshBotQueue : []
     window.dshBot = hub
-    window.dshBotQueue = { push: (task) => { try { task(hub) } catch (error) { console.warn('[ds-bot] registration', error); noteClientError('registration', error) } } }
+    window.dshBotQueue = { push: (task) => { try { task(hub) } catch (error) { console.warn('[nova] registration', error); noteClientError('registration', error) } } }
     for (const task of queued) window.dshBotQueue.push(task)
     return () => {
       if (window.dshBot === hub) delete window.dshBot
       delete window.dshBotQueue
     }
-  }, 'ds-bot: registry')
+  }, 'Nova Bots: registry')
 
-  ctx.inject(['shortcuts'], scope => { scope.effect(() => holdShellShortcuts(scope.shortcuts), 'ds-bot: settings shortcut') })
+  ctx.inject(['shortcuts'], scope => { scope.effect(() => holdShellShortcuts(scope.shortcuts), 'Nova Bots: settings shortcut') })
 
   const after = promise => promise.then(async (value) => { await pull().catch(() => {}); return value })
   // A Bot id or a group chat id, or any part of either's chat, opens the current part.
@@ -453,7 +453,7 @@ export function apply(ctx) {
     // or the click appears to do nothing.
     isAgentSession: id => isAgentSessionId(id),
     openSession: (id) => {
-      // A DSH Agent Session id lands on the plain surface, not the Bot skin.
+      // A Nova Agent Session id lands on the plain surface, not the Bot skin.
       if (isAgentSessionId(id)) return actions.openAgentSession(id)
       ui.set(state => (state.newChat || state.exchange || state.menu || state.palette ? { ...state, newChat: null, exchange: null, menu: null, palette: null } : state))
       setPlain(false)
@@ -658,7 +658,7 @@ export function apply(ctx) {
   actions.accountT = () => ctx.get('locale').bind('settings.account')
   // The Voice Input plugin's speech Remote; absent while that plugin is off.
   actions.speech = () => ctx.get('remote.speech') ?? undefined
-  // DSH's own settings: models, providers, keys and its plugins.
+  // Nova's own settings: models, providers, keys and its plugins.
   actions.openHarnessSettings = openHarnessSettings
   actions.openHarnessOnboarding = openHarnessOnboarding
   // With the plugin manager mounted, setup is its bundle page (the model's size
@@ -690,7 +690,7 @@ export function apply(ctx) {
     update.set(previous => ({ ...previous, ...value }))
     wakeUpdate()
   }
-  // The DSH the newest released DS Bot verified installs the same way.
+  // The Nova the newest released Nova Bots verified installs the same way.
   actions.installDshUpdate = async () => {
     const dsh = await call('dsh-update-install')
     update.set(previous => ({ ...previous, dsh }))
@@ -722,20 +722,20 @@ export function apply(ctx) {
     roster,
     shownSession: () => Object.values(ctx.sessions.list.getSnapshot().byId ?? {}).find(session => (session?.retainedBy?.mainView ?? 0) > 0)?.id,
     openSession: id => actions.openSession(id),
-  }), 'ds-bot: approval notifications')
+  }), 'Nova Bots: approval notifications')
   const assistantFace = (sessionId) => {
     const binding = ctx.sessions.binding(sessionId)
-    if (binding === undefined) throw new Error(`ds-bot: unknown session "${sessionId}"`)
+    if (binding === undefined) throw new Error(`Nova Bots: unknown session "${sessionId}"`)
     const chat = ctx.uiConversation.binding(binding).target('chat')
     return { ...face(), keyedHooks: {
       turnSteps: (turn) => {
         const snapshot = chat.getSnapshot()
-        if (snapshot === undefined) throw new Error('ds-bot: Chat target is unavailable')
+        if (snapshot === undefined) throw new Error('Nova Bots: Chat target is unavailable')
         return snapshot.nodes.turnDataSource(Number(turn), 'assistant-step')
       },
       turnContext: (turn) => {
         const snapshot = chat.getSnapshot()
-        if (snapshot === undefined) throw new Error('ds-bot: Chat target is unavailable')
+        if (snapshot === undefined) throw new Error('Nova Bots: Chat target is unavailable')
         return snapshot.nodes.turnDataSource(Number(turn), 'context')
       },
     } }
@@ -766,7 +766,7 @@ export function apply(ctx) {
       return () => {}
     }
   }
-  // A terminal tab in DSH's right column, only where the terminal plugin
+  // A terminal tab in Nova's right column, only where the terminal plugin
   // registered its type and the column face is there.
   actions.canOpenTerminal = () => ctx.get('sidebarRight') !== undefined && ctx.get('sidebarRightTabs')?.get('terminal') !== undefined
   actions.newTerminal = () => {
@@ -778,7 +778,7 @@ export function apply(ctx) {
       actions.reportError(error, 'right-sidebar')
     }
   }
-  // The same hand-off for DSH's files tab, where that plugin registered it.
+  // The same hand-off for Nova's files tab, where that plugin registered it.
   actions.canOpenFiles = () => ctx.get('sidebarRight') !== undefined && ctx.get('sidebarRightTabs')?.get('files') !== undefined
   actions.openFiles = () => {
     actions.closePanel()
@@ -789,7 +789,7 @@ export function apply(ctx) {
     }
   }
 
-  // The drawer and DSH's right column never share the window: whichever the
+  // The drawer and Nova's right column never share the window: whichever the
   // user asked for last wins. The column's state is read off the frame's
   // attributes through a MutationObserver. `mounted` moves before the DOM of a
   // Session switch does, so a switch opens a timed window (createSwitchWindow):
@@ -828,7 +828,7 @@ export function apply(ctx) {
       drawer = next
     })
     return () => { observer.disconnect(); offMounted(); offUi() }
-  }, 'ds-bot: one right panel')
+  }, 'Nova Bots: one right panel')
 
   // A Bot surface owns the cells it shadows. It starts far below the -10 that plugins
   // commonly use and goes below whatever already holds the cell, so a plugin that
@@ -860,7 +860,7 @@ export function apply(ctx) {
           atMenu = null
           for (const off of offs) off()
         }
-      }, 'ds-bot: @ menu')
+      }, 'Nova Bots: @ menu')
     })
     return () => fiber.dispose()
   }
@@ -924,7 +924,7 @@ export function apply(ctx) {
     () => shadow('sidebar.brand.name', { priority: BOT_PRIORITY }, BrandName),
     () => shadow('sidebar.footer.action', { id: 'bot-account', order: -200, inject: face }, FooterAccount),
     () => shadow('settings.trigger', { priority: BOT_PRIORITY }, YouAvatar),
-    // The whale wins the seat over a shell account plugin's own launcher (the
+    // The Nova spark wins the seat over a shell account plugin's own launcher (the
     // Desktop's "··· More"), which comes back in Agent mode.
     () => shadow('settings.launcher', { priority: BOT_PRIORITY, inject: face }, AccountLauncher),
     () => shadow('shell.overlay', { id: 'bot', order: 50, inject: face }, Overlays),
@@ -940,7 +940,7 @@ export function apply(ctx) {
     () => shadow('conversation.chat.node', { key: 'turn-trigger', priority: BOT_PRIORITY, locale: 'chat', inject: face }, TriggerCell),
     () => shadow('conversation.chat.node', { key: 'tool-call', priority: BOT_PRIORITY, locale: 'chat', inject: face }, ToolCell),
     () => shadow('conversation.chat.node', { key: 'turn-process', priority: BOT_PRIORITY, locale: 'chat', inject: face }, TurnProcessCell),
-    // DSH's own turn tail stays, so what other plugins add there shows, such as the
+    // Nova's own turn tail stays, so what other plugins add there shows, such as the
     // cards of the files a turn delivered; its copy and branch row is hidden.
     () => shadow('conversation.chat.turnTail', { id: 'bot-turn-separators', order: 1000, inject: face }, TurnTailCell),
     // A side question is not a transcript row. After its snapshot turn closes it
@@ -951,7 +951,7 @@ export function apply(ctx) {
     // every message.
     () => shadow('conversation.chat.node', { key: 'question-reply', priority: BOT_PRIORITY, locale: 'chat' }, AnsweredReply),
     () => shadow('conversation.chat.node', { key: 'compaction', priority: BOT_PRIORITY, locale: 'chat' }, CellEmpty),
-    // A Bot chat leaves DSH's context lines (tool updates, injected context) out; a Bot
+    // A Bot chat leaves Nova's context lines (tool updates, injected context) out; a Bot
     // message spliced in mid-turn gets an event line from the step that reads it instead.
     () => shadow('conversation.chat.node', { key: 'context', priority: BOT_PRIORITY, locale: 'chat' }, CellEmpty),
     ...(canDrawUserMessages() ? ['user', 'steering'].map(key => () => shadow('conversation.chat.node', { key, priority: BOT_PRIORITY, locale: 'chat', inject: face }, UserMessageCell)) : []),
@@ -978,13 +978,13 @@ export function apply(ctx) {
     () => shadow('conversation.input.dock', { id: 'bot-learning', order: 850, priority: BOT_PRIORITY, inject: face }, LearningDock),
   ]
   // The return button belongs to neither group: it renders only in Agent mode.
-  ctx.effect(() => installCompiledStyles(RETURN_CSS, 'return'), 'ds-bot: return styles')
+  ctx.effect(() => installCompiledStyles(RETURN_CSS, 'return'), 'Nova Bots: return styles')
   shadow('sidebar.footer.action', { id: 'bot-return', order: -300, inject: face }, BotReturn)
 
-  // The main view decides `plain`: a DSH Agent Session keeps the Bot shell but
+  // The main view decides `plain`: a Nova Agent Session keeps the Bot shell but
   // withdraws the conversation replacements, so the native dsh page shows. A jump
   // this plugin did not start — the hero's workspace picker or a fork — opens an
-  // unowned Session; coming from a DSH Agent Session it is adopted into that Agent.
+  // unowned Session; coming from a Nova Agent Session it is adopted into that Agent.
   ctx.effect(() => {
     let previous
     const sync = () => {
@@ -1022,7 +1022,7 @@ export function apply(ctx) {
       setPlain(true)
       void call('agent-adopt', { agentId, sessionId: main }).then(() => pull()).catch((error) => {
         pendingAdopt.delete(main)
-        console.warn('[ds-bot] agent-adopt', error)
+        console.warn('[nova] agent-adopt', error)
         // The Session never joined the Agent: the sync puts the team surface
         // back (a Map delete fires no subscription), and the user hears why.
         sync()
@@ -1039,7 +1039,7 @@ export function apply(ctx) {
     const offRoster = roster.subscribe(sync)
     sync()
     return () => { offList(); offRoster() }
-  }, 'ds-bot: agent surface')
+  }, 'Nova Bots: agent surface')
 
   ctx.effect(() => {
     const groups = surfaceGroups({ shell: installShell, conversation: installConversation }, {
@@ -1073,7 +1073,7 @@ export function apply(ctx) {
       }
       if (verifyAttempts >= 3) return
       verifyAttempts += 1
-      console.warn('[ds-bot] sidebar entry missing after shell mount; remounting')
+      console.warn('[nova] sidebar entry missing after shell mount; remounting')
       groups.remount('shell')
       verifyTimer = setTimeout(verifySidebar, 250)
     }
@@ -1091,5 +1091,5 @@ export function apply(ctx) {
       clearTimeout(verifyTimer)
       groups.dispose()
     }
-  }, 'ds-bot: surface')
+  }, 'Nova Bots: surface')
 }

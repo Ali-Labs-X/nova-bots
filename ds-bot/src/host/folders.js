@@ -13,7 +13,7 @@ export const within = (inner, outer) => inner === outer || inner.startsWith(oute
 
 const expandHome = text => (text === '~' ? homedir() : /^~[\\/]/.test(text) ? join(homedir(), text.slice(2)) : text)
 
-// Read as DSH reads it, so the team's data and the guarded folder are where DSH keeps
+// Read as Nova reads it, so the team's data and the guarded folder are where Nova keeps
 // its own: a blank value counts as unset.
 export const dshHomeOf = value => resolve(expandHome(value?.trim() ? value : join(homedir(), '.dsh')))
 
@@ -49,10 +49,10 @@ export function install(rt) {
     const team = teamFolder()
     return team === undefined ? undefined : real(team)
   }
-  // Where `input` leads from `base`, as a real path, the way DSH's working_directory resolves
+  // Where `input` leads from `base`, as a real path, the way Nova's working_directory resolves
   // a change; undefined when nothing is there.
   const folderAt = (base, input) => realpath(resolve(base, input)).catch(() => undefined)
-  // Where a Session works: the folder DSH has for it, else the one DS Bot made it for.
+  // Where a Session works: the folder Nova has for it, else the one Nova Bots made it for.
   const sessionFolder = (session) => {
     const reported = session?.header === undefined ? undefined : ctx.get?.('workingDirectory')?.get?.(session) ?? session.header.cwd
     if (reported !== undefined) return reported
@@ -61,10 +61,10 @@ export function install(rt) {
     if (room !== undefined) return workDirOf({ roomId: room.id }) ?? teamFolder()
     return workDirOf({ botId: rt.selfOf?.(id), roomId: rt.groupOwners?.get(id)?.roomId }) ?? teamFolder()
   }
-  // The desktop app runs its own DSH and names the user's, which Bots must not write either.
+  // The desktop app runs its own Nova and names the user's, which Bots must not write either.
   const dataRoots = () => [rt.dshHome, rt.home, process.env.DS_BOT_USER_DSH_HOME?.trim()].filter(Boolean)
 
-  // A Bot that could write where DSH or the team keeps its data could change its own
+  // A Bot that could write where Nova or the team keeps its data could change its own
   // permissions or the team, so neither those folders nor one that holds them is allowed.
   // The workspace exception covers only a workspace lying inside the data root (the
   // plugin's default does): one that holds or is a data root does not open it up.
@@ -78,7 +78,7 @@ export function install(rt) {
     return false
   }
 
-  // A file a Bot names to read into the team, such as a photo, may not come from DSH's or
+  // A file a Bot names to read into the team, such as a photo, may not come from Nova's or
   // the team's data; the team workspace, which can lie in it, is the exception, for the
   // same reason as in guarded().
   async function inData(path) {
@@ -109,7 +109,7 @@ export function install(rt) {
 
   // A folder, as a real path, as a working folder: undefined for the team workspace.
   async function workFolder(path) {
-    if (await guarded(path)) throw new Error(`${path} holds DeepSeek Harness data, so Bots cannot work there`)
+    if (await guarded(path)) throw new Error(`${path} holds Nova Bots data, so Bots cannot work there`)
     return path === await realTeam() ? undefined : path
   }
 
@@ -120,7 +120,7 @@ export function install(rt) {
     const text = unquote(input)
     const expanded = expandHome(text)
     if (text === '' || !isAbsolute(expanded)) throw new Error(`Give the full path of the folder, not ${text}`)
-    // The plugin's own default lies in DSH's data, and going back to it stays possible: that
+    // The plugin's own default lies in Nova's data, and going back to it stays possible: that
     // folder itself, not where a link put in its place leads.
     const fallback = resolve(defaultTeamFolder())
     const own = join(await realBeyond(dirname(fallback)), basename(fallback))
@@ -131,15 +131,15 @@ export function install(rt) {
       return roots.some(data => within(path, data))
     }
     // A folder to be made counts where it would be made: a link above it can lead into the data.
-    if (await holdsData(await realBeyond(resolve(expanded)))) throw new Error(`${text} holds DeepSeek Harness data, so it cannot be the team workspace`)
+    if (await holdsData(await realBeyond(resolve(expanded)))) throw new Error(`${text} holds Nova Bots data, so it cannot be the team workspace`)
     await mkdir(expanded, { recursive: true })
     const path = await realpath(expanded)
     if (!(await isFolder(path))) throw new Error(`${text} is a file, not a folder`)
-    if (await holdsData(path)) throw new Error(`${text} holds DeepSeek Harness data, so it cannot be the team workspace`)
+    if (await holdsData(path)) throw new Error(`${text} holds Nova Bots data, so it cannot be the team workspace`)
     if (path === await realTeam()) return path
     const clash = await rt.privateClash(path)
     if (clash) throw new Error(`${text} is in or around the folder of ${clash.name}, a private Bot, so it cannot be the team workspace`)
-    const workspace = await ctx.workspaceRegistry.resolveByPath(path) ?? await ctx.workspaceRegistry.create(path, 'DS Bot')
+    const workspace = await ctx.workspaceRegistry.resolveByPath(path) ?? await ctx.workspaceRegistry.create(path, 'Nova Bots')
     state.workspaceId = workspace.id
     await rt.save()
     return path
@@ -212,12 +212,12 @@ export function install(rt) {
       }
       case 'folder-pick': {
         const native = picker()
-        if (native?.kind !== 'native') throw new Error('This DeepSeek Harness has no folder chooser')
+        if (native?.kind !== 'native') throw new Error('This Nova Bots has no folder chooser')
         return await native.pick(AbortSignal.any([signal, AbortSignal.timeout(PICK_TIMEOUT_MS)].filter(Boolean)))
       }
       case 'folder-list': {
         const browse = picker()
-        if (browse?.kind !== 'browse') throw new Error('This DeepSeek Harness cannot list folders')
+        if (browse?.kind !== 'browse') throw new Error('This Nova Bots cannot list folders')
         const listing = await browse.list(typeof body.path === 'string' && body.path !== '' ? body.path : undefined, signal)
         return { path: listing.path, home: listing.home, crumbs: listing.crumbs, entries: listing.entries, truncated: listing.truncated }
       }

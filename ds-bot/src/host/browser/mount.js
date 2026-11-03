@@ -57,7 +57,7 @@ async function saveShot(ctx, value) {
       })
       return { text: value.text, attachment }
     } catch (error) {
-      ctx.logger?.warn?.('ds-bot: screenshot could not be stored: %s', error?.message ?? error)
+      ctx.logger?.warn?.('Nova Bots: screenshot could not be stored: %s', error?.message ?? error)
     }
   }
   return { text: `${value.text ?? ''} (The screenshot could not be attached.)` }
@@ -72,7 +72,7 @@ export function mountBrowserPlugin(ctx, { toolDefs, defineTool, keyOf, profileRo
   const names = new Set(toolDefs.map(tool => tool.name))
   // Tool results persist their rendered blocks, so changing render() cannot fix
   // old screenshots. Replace only this plugin's malformed image blocks through
-  // DSH's public surface API, keeping the original log for the transcript.
+  // Nova's public surface API, keeping the original log for the transcript.
   ctx.on?.('agent/pre-step', async ({ agent }, next) => {
     const session = agent.session
     let changed = false
@@ -111,7 +111,7 @@ export function mountBrowserPlugin(ctx, { toolDefs, defineTool, keyOf, profileRo
     const open = [...sessions.values()]
     sessions.clear()
     await Promise.all(open.map(session => Promise.resolve(session).then(opened => opened.close(), () => {})))
-  }, 'ds-bot: browser plugin')
+  }, 'Nova Bots: browser plugin')
 
   // Closes a Bot's browser and removes its profile directory; used when the Bot is deleted.
   async function drop(botId) {

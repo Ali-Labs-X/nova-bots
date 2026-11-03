@@ -4,7 +4,7 @@
 import { copyFileSync, mkdirSync, readFileSync, statSync } from 'node:fs'
 import { mkdir, unlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { LEGACY_THEMES, MAX_EXCHANGES, ROOM_MODES, TEXT_KEPT } from './constants.js'
+import { LEGACY_SHAPES, LEGACY_THEMES, MAX_EXCHANGES, ROOM_MODES, TEXT_KEPT } from './constants.js'
 import { replaceFile } from './files.js'
 import { homeLock } from './home-lock.js'
 import { currentColor, headOf, normalize, unquote } from './text.js'
@@ -56,14 +56,14 @@ export function install(rt) {
       // save that then cannot write still rejects.
       lockBroken = true
       holder = undefined
-      warn('ds-bot: cannot lock %s, so another dsh on the same data could undo changes: %s', home, error)
+      warn('Nova Bots: cannot lock %s, so another Nova instance on the same data could undo changes: %s', home, error)
     }
   }
   const readOnly = () => {
-    if (stuck !== undefined) return `The Bot team file ${statePath} could not be read (${stuck}). DS Bot does not change it; fix or move the file and reload.`
+    if (stuck !== undefined) return `The Bot team file ${statePath} could not be read (${stuck}). Nova Bots does not change it; fix or move the file and reload.`
     if (holder === undefined) return undefined
     const where = holder.pid ? `pid ${holder.pid}${holder.host ? ` on ${holder.host}` : ''}` : 'unknown process'
-    return `The Bot team in ${home} is open in another dsh (Web or Desktop, ${where}). This window shows the team but cannot change it; close the other one and reload.`
+    return `The Bot team in ${home} is open in another Nova instance (Web or Desktop, ${where}). This window shows the team but cannot change it; close the other one and reload.`
   }
 
   // Synchronous on purpose: the saved team and the session indexes built from it
@@ -79,7 +79,7 @@ export function install(rt) {
         return undefined
       }
       stuck = error?.code ?? error?.message ?? String(error)
-      warn('ds-bot: unreadable state %s: %s', statePath, error)
+      warn('Nova Bots: unreadable state %s: %s', statePath, error)
       return undefined
     }
     seen = stamp()
@@ -91,10 +91,10 @@ export function install(rt) {
       try {
         copyFileSync(statePath, backup)
         stuck = undefined
-        warn('ds-bot: unreadable state %s: %s; backed up as %s', statePath, error, backup)
+        warn('Nova Bots: unreadable state %s: %s; backed up as %s', statePath, error, backup)
       } catch (copyError) {
         stuck = copyError?.code ?? copyError?.message ?? error?.message ?? String(error)
-        warn('ds-bot: unreadable state %s: %s; backup failed: %s', statePath, error, copyError)
+        warn('Nova Bots: unreadable state %s: %s; backup failed: %s', statePath, error, copyError)
       }
       return undefined
     }
@@ -102,7 +102,7 @@ export function install(rt) {
       stuck = undefined
       return parsed
     }
-    stuck = 'saved by a newer DS Bot; update DS Bot'
+    stuck = 'saved by a newer Nova Bots; update Nova Bots'
     return undefined
   }
 
@@ -114,7 +114,7 @@ export function install(rt) {
     for (const key of Object.keys(state)) delete state[key]
     Object.assign(state, JSON.parse(EMPTY), parsed ?? {})
     state.prefs ??= {}
-    // Teams saved before the DSH Agent existed carry no `agents`; corrupt values reset.
+    // Teams saved before the Nova Agent existed carry no `agents`; corrupt values reset.
     if (state.agents === null || typeof state.agents !== 'object' || Array.isArray(state.agents)) state.agents = {}
     let migrated = !hadCapabilities
     if (state.capabilities === null || typeof state.capabilities !== 'object' || Array.isArray(state.capabilities)) {
@@ -150,20 +150,33 @@ export function install(rt) {
     }
     state.mainBotIds = state.mainBotIds.filter(id => state.bots[id])
     if (!Array.isArray(state.privateArchives)) state.privateArchives = []
-    // Teams from before the whale was stored at setup: their first Bot, while still a
-    // Main Bot, gets it once wherever it has no look of its own. After that the whale is
-    // an ordinary look the user can change, and it never passes to another Bot.
+    // Teams from before the Main Bot's look was stored: their first Bot, while still a
+    // Main Bot, gets the Nova spark once wherever it has no look of its own.
     if (state.whaleStored !== true) {
       const first = Object.values(state.bots).reduce((best, bot) => (best === undefined || (bot.createdAt ?? 0) < (best.createdAt ?? 0) ? bot : best), undefined)
       if (first !== undefined && state.mainBotIds.includes(first.id)) {
-        if (!first.avatar?.shape && !first.avatar?.image) first.avatar = { ...first.avatar, shape: 'whale' }
-        if (!first.color) first.color = 'deepseek'
+        if (!first.avatar?.shape && !first.avatar?.image) first.avatar = { ...first.avatar, shape: 'nova' }
+        if (!first.color) first.color = 'nova'
       }
       state.whaleStored = true
       if (first !== undefined) migrated = true
     }
+    // Rebrand: the old mascot look and the old ink id become Nova everywhere, including
+    // Bots a user made before the rename.
+    for (const bot of Object.values(state.bots)) {
+      if (Object.hasOwn(LEGACY_SHAPES, bot.avatar?.shape ?? '')) {
+        bot.avatar = { ...bot.avatar, shape: LEGACY_SHAPES[bot.avatar.shape] }
+        migrated = true
+      }
+      if (bot.color === 'deepseek') {
+        bot.color = 'nova'
+        migrated = true
+      }
+    }
     if (Object.hasOwn(LEGACY_THEMES, state.prefs.theme ?? '')) {
       state.prefs.theme = LEGACY_THEMES[state.prefs.theme]
+      // The old accent was picked against the old palette; let the Nova accent lead.
+      state.prefs.accent = null
       migrated = true
     }
     if (state.works === null || typeof state.works !== 'object' || Array.isArray(state.works)) state.works = {}
@@ -237,7 +250,7 @@ export function install(rt) {
 
   const load = () => loaded ??= (async () => {
     claimLock()
-    if (holder !== undefined) warn('ds-bot: %s', readOnly())
+    if (holder !== undefined) warn('Nova Bots: %s', readOnly())
     const { migrated, stale } = adopt(readFileState())
     if (holder !== undefined) return
     if (migrated && stuck === undefined) {
@@ -246,7 +259,7 @@ export function install(rt) {
       try {
         await save()
       } catch (error) {
-        warn('ds-bot: saving the migrated Bot team failed: %s', error)
+        warn('Nova Bots: saving the migrated Bot team failed: %s', error)
       }
     }
     // Not awaited: renaming a session must not hold up the first roster read.
@@ -265,9 +278,9 @@ export function install(rt) {
         const aside = `${statePath}.replaced-${Date.now()}`
         try {
           await writeFile(aside, JSON.stringify(state))
-          warn('ds-bot: %s changed while no host held the team; it is adopted and this host\'s state is kept as %s', statePath, aside)
+          warn('Nova Bots: %s changed while no host held the team; it is adopted and this host\'s state is kept as %s', statePath, aside)
         } catch (error) {
-          warn('ds-bot: %s changed while no host held the team; it is adopted, and this host\'s state is lost because it could not be kept aside: %s', statePath, error)
+          warn('Nova Bots: %s changed while no host held the team; it is adopted, and this host\'s state is lost because it could not be kept aside: %s', statePath, error)
         }
       }
       adopt(readFileState())
@@ -295,7 +308,7 @@ export function install(rt) {
     if (hadHolder) {
       claimLock()
       if (holder === undefined) {
-        warn('ds-bot: the other dsh has closed; this one now saves the Bot team')
+        warn('Nova Bots: the other Nova instance has closed; this one now saves the Bot team')
         warnedReadOnly = false
         adopt(readFileState())
         return
@@ -310,7 +323,7 @@ export function install(rt) {
         await reclaimHeld()
         return
       }
-      warn('ds-bot: %s', readOnly())
+      warn('Nova Bots: %s', readOnly())
     }
     if (adopting !== undefined) return adopting
     if ((stuck !== undefined || holder !== undefined) && stamp() !== seen) adopt(readFileState())
@@ -319,7 +332,7 @@ export function install(rt) {
   const warnReadOnly = () => {
     if (!warnedReadOnly) {
       warnedReadOnly = true
-      warn('ds-bot: not saving the Bot team: %s', readOnly())
+      warn('Nova Bots: not saving the Bot team: %s', readOnly())
     }
     return false
   }
@@ -348,7 +361,7 @@ export function install(rt) {
     if (!writable()) return required ? Promise.reject(new Error(`This host cannot save the Bot team: ${readOnly()}`)) : writing
     const run = writing.then(async () => {
       // Re-check writability once the queued write runs: an adopt queued before
-      // it may have made this host read-only (e.g. a file a newer DS Bot wrote).
+      // it may have made this host read-only (e.g. a file a newer Nova Bots wrote).
       if (stuck !== undefined || holder !== undefined) {
         if (required) throw new Error(`This host cannot save the Bot team: ${readOnly()}`)
         warnReadOnly()
@@ -373,7 +386,7 @@ export function install(rt) {
           // A different epoch means an adopt replaced the state this snapshot was
           // taken from — another host's writes, or an outside edit it adopted.
           if (!owned || changed || lockEpoch !== epoch) {
-            const error = new Error(changed ? 'ds-bot: the Bot team file changed under this host\'s lock' : 'ds-bot lost the state lock to another dsh')
+            const error = new Error(changed ? 'Nova Bots: the Bot team file changed under this host\'s lock' : 'Nova Bots lost the state lock to another Nova instance')
             error.code = 'ELOCKLOST'
             throw error
           }
@@ -392,7 +405,7 @@ export function install(rt) {
     })
     writing = run.catch(() => {})
     return run.catch(error => {
-      warn('ds-bot: state write failed: %s', error)
+      warn('Nova Bots: state write failed: %s', error)
       throw error
     })
   }
@@ -400,7 +413,7 @@ export function install(rt) {
   ctx.effect(() => () => {
     stopped = true
     return writing.finally(() => lock.release())
-  }, 'ds-bot: state lock')
+  }, 'Nova Bots: state lock')
 
   const botOf = id => (id === undefined ? undefined : own(state.bots, id))
   // A group's own Session moves on to a fresh part when the group's folder no longer
@@ -450,7 +463,7 @@ export function install(rt) {
       }
       for (const [botId, sessionId] of Object.entries(room.sessions ?? {})) groupOwners.set(sessionId, { botId, roomId: room.id })
     }
-    // The agents module owns the DSH Agent session index, and tools.js re-syncs
+    // The agents module owns the Nova Agent session index, and tools.js re-syncs
     // the scoped tools with this ownership (drops Sessions that left, scopes
     // live Agents that joined); both install after this.
     rt.indexAgents?.()
@@ -476,7 +489,7 @@ export function install(rt) {
     // that no longer has it.
     void ctx.workspaceRegistry.archiveSession(sessionId, { stopActivity: true }).catch(() => {})
   }
-  // A group Session DSH can no longer open is set aside; the member's earlier parts in
+  // A group Session Nova can no longer open is set aside; the member's earlier parts in
   // the group stay, and its next turn there starts a new Session.
   const retireGroupSession = (room, botId) => {
     const sessionId = room.sessions?.[botId]

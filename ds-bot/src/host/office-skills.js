@@ -2,13 +2,13 @@
 // platform's own bundled router) and `office-tools` (the CLI that inspects,
 // checks and edits Office packages). Registered when a `skills` service exists;
 // the sub-fiber stays inactive where it does not, so the plugin runs the same
-// in DSH Web, DSH Desktop and the desktop app.
+// in Nova Web, Nova Desktop and the desktop app.
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, sep } from 'node:path'
 import { isSea } from 'node:sea'
 import { fileURLToPath } from 'node:url'
 
-const PROVIDER = 'ds-bot-office'
+const PROVIDER = 'nova-office'
 const RANK = { office: 550, 'office-tools': 600 }
 const ASSETS = join(dirname(fileURLToPath(import.meta.url)), '..', 'office', 'skills')
 const CLI = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'office.js')
@@ -29,7 +29,7 @@ export function cliPath(manifest = CLI) {
 }
 
 // Where the commands run: the app's Office payload when it shipped, plain Node
-// hosts (DSH Web, a developer Node), or the workspace-dependencies tool's node.
+// hosts (Nova Web, a developer Node), or the workspace-dependencies tool's node.
 export function officeNode(env = process.env) {
   const bundled = env.DS_BOT_OFFICE_NODE
   if (bundled !== undefined && existsSync(bundled)) return { node: bundled }

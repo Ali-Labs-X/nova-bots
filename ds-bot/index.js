@@ -1,4 +1,4 @@
-// DS Bot: a team of long-lived Bots on top of ordinary dsh root Sessions.
+// Nova Bots: a team of long-lived Bots on top of ordinary engine root Sessions.
 // Every Bot is one root Session; the roster, rooms, and the bot-to-bot exchange log live
 // in one JSON file under DSH_HOME so they survive restarts without new Session event types.
 import { join } from 'node:path'
@@ -44,7 +44,7 @@ import * as officeSkills from './src/host/office-skills.js'
 
 export { COLORS } from './src/host/constants.js'
 
-export const name = 'ds-bot'
+export const name = 'nova-bots'
 export const inject = ['llm', 'tools', 'systemPrompt', 'sessionController', 'sessions', 'sessionTitle', 'workspaceRegistry', 'connection']
 
 // Each module's install(rt) registers its listeners, tools, and effects, and puts on `rt`
@@ -71,8 +71,8 @@ export function createRuntime(ctx, config = {}) {
     // Bot Session's own scope, never globally (see shareBotTools).
     teamTools: [],
     defaults: {
-      mainName: config.mainName ?? 'Chief',
-      mainRole: config.mainRole ?? 'Chief of Staff',
+      mainName: config.mainName ?? 'Orion',
+      mainRole: config.mainRole ?? 'Mission Commander',
     },
   }
   for (const module of MODULES) module.install(rt)

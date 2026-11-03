@@ -1,4 +1,4 @@
-// Delivery: how one Bot, the user, or DS Bot itself puts a message into a Bot Session.
+// Delivery: how one Bot, the user, or Nova Bots itself puts a message into a Bot Session.
 import { randomUUID } from 'node:crypto'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { HISTORY_TIMEOUT_MS, LONG_HEAD, MESSAGE_INLINE_MAX, READ_LINE_MAX, SOURCE_KIND, TEXT_KEPT, TEXT_SHOW_MAX } from './constants.js'
@@ -21,10 +21,10 @@ export function install(rt) {
     if (deferred && role === 'report') return `[Group chat "${roomName}" · replies to your post · you read them during your last task; go on with the work they are for now${goesOn}]`
     if (deferred && role !== 'room') return `[Message from ${fromName} · you read it during your last task; answer it now]`
     if (retried && role !== 'room') return '[Your last reply wrote a tool call as text, so nothing ran]'
-    if (resumed && role === 'resume') return '[DeepSeek Harness restarted while you were working]'
-    if (resumed && role !== 'room') return `[Message from ${fromName} · DeepSeek Harness restarted while you were working on it]`
-    if (resent && role === 'reply') return `[Reply from ${fromName} · DeepSeek Harness restarted before it could reach you]`
-    if (resent && role !== 'room') return `[Message from ${fromName} · DeepSeek Harness restarted before it could reach you]`
+    if (resumed && role === 'resume') return '[Nova Bots restarted while you were working]'
+    if (resumed && role !== 'room') return `[Message from ${fromName} · Nova Bots restarted while you were working on it]`
+    if (resent && role === 'reply') return `[Reply from ${fromName} · Nova Bots restarted before it could reach you]`
+    if (resent && role !== 'room') return `[Message from ${fromName} · Nova Bots restarted before it could reach you]`
     if (role === 'reply') return `[Reply from ${fromName}${goesOn}]`
     if (role === 'stopped') return `[Stopped by ${fromName}]`
     if (role === 'room') return `[Group chat "${roomName}" · ${note}]`
@@ -49,7 +49,7 @@ export function install(rt) {
   // a message a shutdown cancelled; its first send may not have been recorded.
   // `askedBy` is the member whose @mention called a group turn (groups.js).
   // `fromRoomId`: the group whose Session the sender wrote from; the reply goes back
-  // to that Session (turns.js). `files` go along as file blocks, which DSH turns into
+  // to that Session (turns.js). `files` go along as file blocks, which Nova turns into
   // a read-only path the recipient's tools can read. `length`: the whole message's
   // length when it went as a file (attachLong). `work`: the work (handoffs.js) a
   // result that came back goes on with. `merged`: a request that takes in an earlier
@@ -124,14 +124,14 @@ export function install(rt) {
         return { text: headOf(text, TEXT_SHOW_MAX), whole: text.length <= TEXT_SHOW_MAX }
       }
     } catch (error) {
-      rt.warn('ds-bot: message %s not read back: %s', entry.id, error)
+      rt.warn('message %s not read back: %s', entry.id, error)
     }
     return { text: entry.text, whole: false }
   }
 
-  // A message a Bot sends past MESSAGE_INLINE_MAX goes as a DSH file: it is stored once,
+  // A message a Bot sends past MESSAGE_INLINE_MAX goes as a Nova file: it is stored once,
   // not in every Session it reaches, and the model reads it with its file tools when it
-  // needs it. Undefined when this DSH cannot store files.
+  // needs it. Undefined when this Nova cannot store files.
   async function attachLong(text, name) {
     if (text.length <= MESSAGE_INLINE_MAX) return { text, files: [] }
     try {
@@ -142,7 +142,7 @@ export function install(rt) {
       const note = `[A long message: ${text.length} characters. Its start is below; all of it is in the attached file. Read the file before you act on it.${wide ? ` Some lines are longer than the ${READ_LINE_MAX} characters the read tool shows of a line; read those with a shell command.` : ''}]`
       return { text: `${note}\n${headOf(text, LONG_HEAD)}…`, files: [file], length: text.length }
     } catch (error) {
-      rt.warn('ds-bot: long message not stored as a file: %s', error)
+      rt.warn('long message not stored as a file: %s', error)
       return undefined
     }
   }
@@ -159,7 +159,7 @@ export function install(rt) {
         if (text.length > TEXT_SHOW_MAX) return { text: headOf(text, TEXT_SHOW_MAX), whole: false }
       }
     } catch (error) {
-      rt.warn('ds-bot: file %s not read: %s', file?.name, error)
+      rt.warn('file %s not read: %s', file?.name, error)
       return undefined
     }
     text += decoder.decode()

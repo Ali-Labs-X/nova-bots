@@ -1,0 +1,4 @@
+# The portal's own settings hold the database password, the signing secret and
+# the admin token: they stay on this machine.
+portal.env
+node_modules/
