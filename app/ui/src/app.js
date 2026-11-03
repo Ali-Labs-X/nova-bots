@@ -11,7 +11,9 @@ import { createTeam } from './team.js'
 // The team's theme and accent, as the plugin paints them.
 function useTheme(prefs) {
   useEffect(() => {
-    const theme = allThemes()[prefs?.theme] ?? allThemes().deepseek
+    // The theme the team chose; a theme the plugin does not know reads as the default one.
+    const themes = allThemes()
+    const theme = themes[prefs?.theme] ?? themes.nova
     const style = document.createElement('style')
     style.textContent = themeCss(theme, prefs?.accent)
     document.head.append(style)

@@ -6,7 +6,7 @@ import { homedir, tmpdir } from 'node:os'
 import { dirname, join, relative } from 'node:path'
 import { after, before, describe, test } from 'node:test'
 import { parse } from 'yaml'
-import { copySessions, findTeam, importTeam, newerSessions, restoreSessions, sessionIdsOf, teamInUse, userDshHome } from '../src/import.mjs'
+import { copySessions, findTeam, importTeam, MODEL_ROWS, newerSessions, restoreSessions, sessionIdsOf, teamInUse, userDshHome } from '../src/import.mjs'
 
 const write = (path, text) => {
   mkdirSync(dirname(path), { recursive: true })
@@ -322,5 +322,33 @@ describe('finding the team', () => {
     assert.equal(userDshHome({}), join(homedir(), '.dsh'))
     assert.equal(userDshHome({ DSH_HOME: ' ' }), join(homedir(), '.dsh'))
     assert.equal(userDshHome({ DSH_HOME: '~/dsh-x' }), join(homedir(), 'dsh-x'))
+  })
+})
+
+// The rows the first-run import copies are the rows the runtime keeps its model settings in.
+// A row that the runtime does not know is never copied, so a name that is off by a rename
+// silently loses the team's own settings.
+describe('the model rows of the import', () => {
+  test('names the rows the runtime keeps its model settings in', () => {
+    assert.ok(MODEL_ROWS.includes('llm-deepseek'), 'llm-deepseek is a model row')
+    assert.ok(MODEL_ROWS.includes('llm-deepseek-account'), 'llm-deepseek-account is a model row')
+    assert.equal(MODEL_ROWS.includes('llm-nova'), false, 'the runtime knows no llm-nova row')
+    assert.equal(MODEL_ROWS.includes('llm-nova-account'), false, 'the runtime knows no llm-nova-account row')
+  })
+
+  test('a profile whose settings live in those rows keeps them', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ds-bot-app-model-rows-'))
+    try {
+      const from = join(root, 'dsh')
+      write(join(from, 'bot', 'state.json'), JSON.stringify(TEAM))
+      write(join(from, 'profiles', 'desktop', 'cordis.patch.yml'), [
+        '- id: llm-deepseek', '  config:', '    apiKey: fake',
+        '- id: llm-deepseek-account', '  config:', '    account: fake', '',
+      ].join('\n'))
+      const found = findTeam(from)
+      assert.deepEqual(found.profiles.map(entry => [entry.name, entry.rows.map(row => row.id)]), [['desktop', ['llm-deepseek', 'llm-deepseek-account']]])
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
   })
 })

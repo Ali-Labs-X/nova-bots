@@ -25,7 +25,7 @@ export const UPDATE_TEXT = {
 }
 
 const CHECK_EVERY_MS = 4 * 60 * 60_000
-export const RELEASES_URL = 'https://api.github.com/repos/alilabsx/Nova-Bots/releases?per_page=20'
+export const RELEASES_URL = 'https://api.github.com/repos/Jahanzaib211/nova-bots/releases?per_page=20'
 
 function parseVersion(version) {
   if (typeof version !== 'string') return null

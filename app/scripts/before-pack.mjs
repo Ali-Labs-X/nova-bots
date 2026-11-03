@@ -1,8 +1,11 @@
 // electron-builder's beforePack hook. The native modules go into the package as npm installed them
 // (npmRebuild: false), so they fit only the architecture of the Node that ran npm. An app built for
 // another architecture would carry them and not start, so such a build stops here.
+// The app's own UI is built here too: the Host serves it at its own origin, so the package
+// must carry the built dist (see app/src/ui-patch.mjs).
 import { Arch } from 'electron-builder'
-import { readFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { preparePrimaryRuntime, runtimeTarget } from './prepare-runtime.mjs'
 
@@ -41,11 +44,24 @@ export function officeRuntimeRequest(context) {
   }
 }
 
-export async function beforePack(context, prepare = preparePrimaryRuntime) {
+/**
+ * The app's own UI, which the Host serves at its own origin: the package must carry the
+ * built dist, so the build runs here, before the files are collected.
+ * @param {*} context - electron-builder's beforePack context.
+ */
+export function buildUi(context) {
+  const appDir = context.packager.appDir ?? context.packager.projectDir
+  const vite = join(appDir, 'node_modules', 'vite', 'bin', 'vite.js')
+  if (!existsSync(vite)) throw new Error('The UI build (vite) is not installed: run npm ci in app/ before packing.')
+  execFileSync(process.execPath, [vite, 'build'], { cwd: appDir, stdio: 'inherit' })
+}
+
+export async function beforePack(context, prepare = preparePrimaryRuntime, build = buildUi) {
   const targets = []
   for (const archToNames of context.packager?.packagerOptions?.targets?.values() ?? [])
     for (const arch of archToNames.keys()) targets.push(Arch[arch])
   const problem = archProblem({ target: Arch[context.arch], platform: context.electronPlatformName, targets })
   if (problem !== undefined) throw new Error(problem)
+  build(context)
   await prepare(officeRuntimeRequest(context))
 }

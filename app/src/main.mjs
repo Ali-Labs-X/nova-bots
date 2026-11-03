@@ -1,11 +1,12 @@
 // Electron main process: one window for the Bot team, served by the app's own DSH Host.
 // The window loads the Host's loopback address as DSH Web does: DSH's sign-in sends the page's
-// origin as the address the browser comes back to, and accepts only a loopback one.
+// origin as the address the browser comes back to, and accepts only a loopback one. The Host
+// serves the app's own UI there, so the page is same-origin with the Host.
 import { app, BrowserWindow, WebContentsView, dialog, ipcMain, Menu, nativeImage, nativeTheme, powerMonitor, session, shell as electronShell, Tray } from 'electron'
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { readFile, rm } from 'node:fs/promises'
 import { release } from 'node:os'
-import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
+import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { fileURLToPath } from 'node:url'
 import { getDshRuntimeVersion } from '@deepseek-ai/dsh-app-boot'
@@ -53,6 +54,13 @@ const UPDATE_DOWNLOAD_WAIT_MS = 15 * 60_000
 
 const here = dirname(fileURLToPath(import.meta.url))
 const assets = join(here, '..', 'assets')
+// The app's own UI, which the Host serves at its own origin. The Host is a plain Node
+// process and reads the index from a real directory, so a packaged app points at the
+// tree electron-builder writes beside the asar.
+const uiIndexFile = () => {
+  const file = join(here, '..', 'ui', 'dist', 'index.html')
+  return app.isPackaged ? file.replace(`${sep}app.asar${sep}`, `${sep}app.asar.unpacked${sep}`) : file
+}
 // Drawn by scripts/icon.mjs. Windows takes the .ico for its several sizes.
 const iconFile = join(assets, process.platform === 'win32' ? 'icon.ico' : 'icon.png')
 // The tray icon of this platform: Windows takes the .ico, macOS the template and its @2x,
@@ -185,7 +193,7 @@ async function start() {
   const newHost = () => new HostProcess({
     entry: join(here, 'host.mjs'),
     cwd: profileDir,
-    env: { ...process.env, DSH_HOME: where.dataDir, DS_BOT_PORT: String(port), DS_BOT_APP: '1', DS_BOT_USER_DSH_HOME: userDshHome(), DS_BOT_RUNTIME_DIR: runtimeDir, ...(where.workspace ? { DS_BOT_WORKSPACE: where.workspace } : {}) },
+    env: { ...process.env, DSH_HOME: where.dataDir, DS_BOT_PORT: String(port), DS_BOT_APP: '1', DS_BOT_USER_DSH_HOME: userDshHome(), DS_BOT_RUNTIME_DIR: runtimeDir, NOVA_BOTS_UI_INDEX: uiIndexFile(), ...(where.workspace ? { DS_BOT_WORKSPACE: where.workspace } : {}) },
     pnpm,
     onFailure: fail,
   })
@@ -361,9 +369,10 @@ async function start() {
   // A packaged app has the icon in its bundle; Electron's own run shows Electron's.
   if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(iconFile)
   createWindow()
-  // The launch URL trades its token for the Host's cookie and goes on to the page. The cookie
-  // is there once that load came through. The token is good for one browser only: it is spent
-  // as soon as a window carries it.
+  // The launch URL trades its token for the Host's cookie and goes on to the page, which is
+  // the app's own UI: the Host serves it at its own origin. The cookie is there once that
+  // load came through. The token is good for one browser only: it is spent as soon as a
+  // window carries it.
   bootstrap = (async () => {
     const { url } = await ready
     launchUrl = url
