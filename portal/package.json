@@ -8,7 +8,10 @@
   "scripts": {
     "start": "node server.mjs",
     "setup-db": "node setup-db.mjs",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "test:integration": "node --test --test-concurrency=1 --test-timeout=1200000 test/integration/tenants.integration.mjs",
+    "staging": "node test/integration/stack.mjs",
+    "tenants:backfill": "node tenants-backfill.mjs"
   },
   "dependencies": {
     "bcryptjs": "3.0.2",
