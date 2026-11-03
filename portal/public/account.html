@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nova Bots — Account</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<style>
+  :root { color-scheme: dark; --bg:#060010; --ink:#f0f0fa; --ink-2:rgba(228,228,245,.72); --violet:#a78bfa; --cyan:#22d3ee; --line:rgba(150,140,220,.18); --panel:rgba(22,28,60,.58); }
+  body { margin:0; min-height:100vh; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  main { max-width:760px; margin:0 auto; padding:48px 24px 80px; }
+  a { color:var(--cyan); text-decoration:none; }
+  .top { display:flex; align-items:center; gap:10px; margin-bottom:32px; color:var(--ink); font-weight:700; text-decoration:none; }
+  h1 { font-size:2.2rem; letter-spacing:-.03em; margin:0 0 12px; }
+  .lead { color:var(--ink-2); font-size:1.05rem; line-height:1.6; margin:0 0 32px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:24px; margin:0 0 20px; }
+  .row { display:flex; justify-content:space-between; gap:16px; padding:10px 0; border-bottom:1px solid var(--line); }
+  .row:last-child { border-bottom:0; }
+  .label { color:var(--ink-2); font-size:.9rem; }
+  .value { font-weight:600; text-align:right; }
+  .muted { color:var(--ink-2); font-size:.95rem; line-height:1.6; }
+  .actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:20px; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; padding:10px 16px; border-radius:10px; border:1px solid var(--line); color:var(--ink); text-decoration:none; }
+  .btn:hover { border-color:var(--violet); color:var(--violet); }
+</style>
+</head>
+<body>
+<main>
+  <a class="top" href="/"><svg width="24" height="24" viewBox="0 0 48 48" fill="none" aria-hidden="true"><path d="M24 2.5C26 15 33 22 45.5 24 33 26 26 33 24 45.5 22 33 15 26 2.5 24 15 22 22 15 24 2.5Z" fill="#a78bfa"/></svg>Nova Bots</a>
+  <h1>Account</h1>
+  <p class="lead">Your Nova Bots profile and session details.</p>
+  <div id="status" class="muted">Loading your account…</div>
+  <div id="profile" class="card" hidden></div>
+  <div id="tokens" class="card" hidden>
+    <h2 style="margin:0 0 12px;font-size:1.15rem;color:var(--violet)">Tokens</h2>
+    <p class="muted" id="tokenText">Token usage is managed by your model provider. Nova Bots does not meter model tokens, so a live "tokens remaining" value is not available yet.</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="/app/">Open workspace</a>
+    <a class="btn" href="/docs">Documentation</a>
+  </div>
+</main>
+<script>
+  (async () => {
+    const status = document.getElementById('status');
+    const profile = document.getElementById('profile');
+    try {
+      const res = await fetch('/api/v1/auth/me', { credentials: 'same-origin' });
+      if (!res.ok) { window.location.assign('/login'); return; }
+      const user = await res.json();
+      status.hidden = true;
+      profile.hidden = false;
+      profile.innerHTML = `
+        <div class="row"><span class="label">Email</span><span class="value">${escapeHtml(user.email || '—')}</span></div>
+        <div class="row"><span class="label">Role</span><span class="value">${escapeHtml(user.system_role || 'user')}</span></div>
+        <div class="row"><span class="label">Account ID</span><span class="value">${escapeHtml(user.id || '—')}</span></div>
+        <div class="row"><span class="label">Created</span><span class="value">${escapeHtml(user.created_at || '—')}</span></div>
+        <div class="row"><span class="label">Last sign-in</span><span class="value">${escapeHtml(user.last_sign_in_at || 'never')}</span></div>
+        <div class="row"><span class="label">Setup needed</span><span class="value">${user.needs_setup ? 'yes' : 'no'}</span></div>
+      `;
+      document.getElementById('tokens').hidden = false;
+    } catch (error) {
+      status.textContent = 'Could not load your account.';
+    }
+  })();
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  }
+</script>
+</body>
+</html>
