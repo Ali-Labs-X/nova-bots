@@ -29,6 +29,7 @@ import { execFile } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { Auth } from './auth.mjs'
 import { handleAdmin } from './admin.mjs'
+import { clearEngineCookies, engineAccess, policyFromEnv, signupAllowed } from './gate.mjs'
 
 const PORT = Number(process.env.NOVA_PORTAL_PORT ?? 13081)
 const HOST = process.env.NOVA_PORTAL_HOST ?? '127.0.0.1'
@@ -42,6 +43,10 @@ const auth = new Auth({
   jwtSecret: process.env.NOVA_JWT_SECRET ?? '',
   tokenExpiryDays: Number(process.env.NOVA_TOKEN_EXPIRY_DAYS ?? 7),
 })
+
+// Who reaches the engine and who may sign up (see gate.mjs). Fails closed.
+const POLICY = policyFromEnv()
+const SUPPORT_CONTACT = process.env.NOVA_SUPPORT_CONTACT ?? 'jahanzaib@alilabs.com'
 
 const clientIp = (req) => {
   const forwarded = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim()
@@ -158,6 +163,7 @@ const me = async (req, res) => {
   if ((user.token_version ?? 0) !== (payload.ver ?? 0)) {
     return json(res, 401, { detail: { code: 'not_authenticated', message: 'The session ended. Sign in again.' } })
   }
+  const credits = await auth.credits(user.id)
   json(res, 200, {
     id: user.id,
     email: user.email,
@@ -165,6 +171,10 @@ const me = async (req, res) => {
     needs_setup: user.needs_setup,
     created_at: user.created_at,
     last_sign_in_at: user.last_sign_in_at,
+    plan: credits?.plan ?? user.plan ?? 'free',
+    bonus_daily_tokens: credits?.bonus_daily_tokens ?? 0,
+    bonus_expires_at: credits?.bonus_expires_at ?? null,
+    daily_limit: credits?.total_daily ?? 250000,
   })
 }
 
@@ -193,11 +203,18 @@ const register = async (req, res) => {
     return json(res, 429, { detail: { message: `Too many accounts from this address. Try again in ${limit.retryAfter} seconds.` } })
   }
 
+  // Accounts are by invitation unless sign-up is explicitly opened; the first
+  // account still bootstraps the workspace.
+  const count = await auth.countUsers()
+  if (!signupAllowed(POLICY, count)) {
+    await auth.audit({ action: 'sign-up-refused', actor: email, ok: false, ip, detail: { reason: 'signup-closed' } })
+    return json(res, 403, { detail: { code: 'signup_closed', message: `Nova Bots is invitation-only for now. Contact ${SUPPORT_CONTACT} for access.` } })
+  }
+
   const existing = await auth.findByEmail(email)
   if (existing) return json(res, 409, { detail: { message: 'That address already has an account.' } })
 
   // The first account owns the workspace; every later one is a plain member.
-  const count = await auth.countUsers()
   const user = await auth.createUser({
     email,
     password,
@@ -268,7 +285,7 @@ const tokenFromLog = () => new Promise(resolve => {
   })
 })
 
-const proxy = (req, res, { engineCookies = [] } = {}) => {
+const proxy = (req, res, { engineCookies = [], retried = false } = {}) => {
   const url = new URL(req.url ?? '/', 'http://portal.local')
   // The app is served under /app, the engine lives at the root.
   const path = url.pathname.startsWith('/app/') ? url.pathname.slice(4) || '/' : url.pathname
@@ -288,8 +305,42 @@ const proxy = (req, res, { engineCookies = [] } = {}) => {
       headers,
     },
     upstreamResponse => {
-      // An engine that no longer knows the browser sends 401: drop the stale
-      // cookie and send the visitor to the login page.
+      // An engine that no longer knows the browser sends 401. A stale engine
+      // cookie (left over from an older host, port or expiry) is the usual
+      // cause: mint a fresh one from the portal session and retry once before
+      // giving up.
+      if (upstreamResponse.statusCode === 401 && !retried) {
+        upstreamResponse.resume()
+        const payload = auth.verifyToken(cookieValue(req.headers.cookie, COOKIE))
+        const user = payload ? auth.findById(payload.sub) : null
+        Promise.resolve(user).then(async resolved => {
+          if (resolved && !resolved.is_forbidden && (resolved.token_version ?? 0) === (payload.ver ?? 0)) {
+            const token = await tokenFor()
+            if (token) {
+              const minted = await mintEngineCookie(token, req)
+              if (minted.length) {
+                return proxy(req, res, { engineCookies: minted, retried: true })
+              }
+            }
+          }
+          res.setHeader('set-cookie', 'dsh-auth-x=; Path=/; Max-Age=0')
+          if (req.headers.accept?.includes('text/html')) {
+            res.writeHead(302, { location: '/login' })
+            return res.end()
+          }
+          res.writeHead(401, { 'content-type': 'text/plain; charset=utf-8' })
+          return res.end('Sign in first.')
+        }).catch(() => {
+          res.setHeader('set-cookie', 'dsh-auth-x=; Path=/; Max-Age=0')
+          if (req.headers.accept?.includes('text/html')) {
+            res.writeHead(302, { location: '/login' })
+            return res.end()
+          }
+          res.writeHead(401, { 'content-type': 'text/plain; charset=utf-8' })
+          return res.end('Sign in first.')
+        })
+        return
+      }
       if (upstreamResponse.statusCode === 401) {
         upstreamResponse.resume()
         res.setHeader('set-cookie', 'dsh-auth-x=; Path=/; Max-Age=0')
@@ -323,89 +374,118 @@ const proxy = (req, res, { engineCookies = [] } = {}) => {
 // the rest of the app: a browser with a good portal session but no engine
 // cookie gets one minted first, so the upgrade is not rejected.
 const upgrade = async (req, socket, head) => {
-  const url = new URL(req.url ?? '/', 'http://portal.local')
-  // The app is served under /app, the engine lives at the root.
-  const path = url.pathname.startsWith('/app/') ? url.pathname.slice(4) || '/' : url.pathname
-  const upstream = new URL(path + url.search, ENGINE)
-  const headers = { ...req.headers, host: req.headers.host ?? 'bots.alilabsx.com' }
-  delete headers['accept-encoding']
+  const attempt = async (engineCookies = [], retried = false) => {
+    const url = new URL(req.url ?? '/', 'http://portal.local')
+    // The app is served under /app, the engine lives at the root.
+    const path = url.pathname.startsWith('/app/') ? url.pathname.slice(4) || '/' : url.pathname
+    const upstream = new URL(path + url.search, ENGINE)
+    const headers = { ...req.headers, host: req.headers.host ?? 'bots.alilabsx.com' }
+    delete headers['accept-encoding']
+    if (engineCookies.length) {
+      const minted = engineCookies.map(cookie => String(cookie).split(';')[0]).filter(Boolean).join('; ')
+      headers.cookie = [headers.cookie, minted].filter(Boolean).join('; ')
+    }
 
-  if (!hasEngineCookie(req)) {
-    const payload = auth.verifyToken(cookieValue(req.headers.cookie, COOKIE))
-    const user = payload ? await auth.findById(payload.sub) : null
-    if (user && !user.is_forbidden && (user.token_version ?? 0) === (payload.ver ?? 0)) {
-      const token = await tokenFor()
-      if (token) {
-        const engineCookies = await mintEngineCookie(token, req)
-        if (engineCookies.length) {
-          const minted = engineCookies.map(cookie => String(cookie).split(';')[0]).filter(Boolean).join('; ')
-          headers.cookie = [headers.cookie, minted].filter(Boolean).join('; ')
-        } else {
-          socket.destroy()
-          return
+    // When no engine cookie is present at all, mint one first.
+    if (!engineCookies.length && !hasEngineCookie(req) && !retried) {
+      const payload = auth.verifyToken(cookieValue(req.headers.cookie, COOKIE))
+      const user = payload ? await auth.findById(payload.sub) : null
+      if (user && !user.is_forbidden && (user.token_version ?? 0) === (payload.ver ?? 0)) {
+        const token = await tokenFor()
+        if (token) {
+          const minted = await mintEngineCookie(token, req)
+          if (minted.length) return attempt(minted, true)
         }
-      } else {
-        socket.destroy()
-        return
       }
-    } else {
       socket.destroy()
       return
     }
-  }
 
-  const request = httpRequest({
-    hostname: upstream.hostname,
-    port: upstream.port || 80,
-    path: upstream.pathname + upstream.search,
-    method: req.method,
-    headers,
-  })
-  request.on('upgrade', (upstreamResponse, upstreamSocket, upstreamHead) => {
-    // Write a clean 101 response; strip headers that would conflict with
-    // a raw socket upgrade.
-    const responseHeaders = Object.entries(upstreamResponse.headers)
-      .filter(([key]) => !['transfer-encoding', 'content-length', 'connection', 'upgrade'].includes(key.toLowerCase()))
-      .map(([key, value]) => `${key}: ${value}`)
-      .join('\r\n')
-    socket.write(`HTTP/1.1 101 Switching Protocols\r\n${responseHeaders}\r\nConnection: Upgrade\r\nUpgrade: websocket\r\n\r\n`)
-    if (upstreamHead?.length) socket.unshift(upstreamHead)
-    upstreamSocket.pipe(socket).pipe(upstreamSocket)
-  })
-  request.on('response', (upstreamResponse) => {
-    upstreamResponse.resume()
+    const request = httpRequest({
+      hostname: upstream.hostname,
+      port: upstream.port || 80,
+      path: upstream.pathname + upstream.search,
+      method: req.method,
+      headers,
+    })
+    request.on('upgrade', (upstreamResponse, upstreamSocket, upstreamHead) => {
+      const responseHeaders = Object.entries(upstreamResponse.headers)
+        .filter(([key]) => !['transfer-encoding', 'content-length', 'connection', 'upgrade'].includes(key.toLowerCase()))
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\r\n')
+      socket.write(`HTTP/1.1 101 Switching Protocols\r\n${responseHeaders}\r\nConnection: Upgrade\r\nUpgrade: websocket\r\n\r\n`)
+      if (upstreamHead?.length) socket.unshift(upstreamHead)
+      upstreamSocket.pipe(socket).pipe(upstreamSocket)
+    })
+    request.on('response', async (upstreamResponse) => {
+      upstreamResponse.resume()
+      if (upstreamResponse.statusCode === 401 && !retried) {
+        const payload = auth.verifyToken(cookieValue(req.headers.cookie, COOKIE))
+        const user = payload ? await auth.findById(payload.sub) : null
+        if (user && !user.is_forbidden && (user.token_version ?? 0) === (payload.ver ?? 0)) {
+          const token = await tokenFor()
+          if (token) {
+            const minted = await mintEngineCookie(token, req)
+            if (minted.length) return attempt(minted, true)
+          }
+        }
+      }
+      socket.destroy()
+    })
+    request.on('error', () => socket.destroy())
+    socket.on('close', () => console.log(`portal: socket closed for ${req.url}`))
+    socket.on('error', () => socket.destroy())
+    if (head?.length) request.write(head)
+    request.end()
+  }
+  try {
+    // Same rule as the HTTP bridge: no socket without an entitled session.
+    const { access } = await accessFor(req)
+    if (access !== 'ok') return socket.destroy()
+    await attempt()
+  } catch {
     socket.destroy()
-  })
-  request.on('error', (error) => {
-    socket.destroy()
-  })
-  socket.on('close', () => console.log(`portal: socket closed for ${req.url}`))
-  socket.on('error', () => socket.destroy())
-  if (head?.length) request.write(head)
-  request.end()
+  }
+}
+
+// The portal session decides every request, including ones that carry an
+// engine cookie: the engine's cookie says the engine knows the browser, not
+// that the account behind it is still allowed in (see gate.mjs).
+const accessFor = async (req) => {
+  const payload = auth.verifyToken(cookieValue(req.headers.cookie, COOKIE))
+  const user = payload ? await auth.findById(payload.sub) : null
+  return { user, access: engineAccess(payload, user, POLICY) }
+}
+
+const heldPage = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nova Bots</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#070814;color:#e6e8ff;font:16px/1.6 system-ui,sans-serif}main{max-width:32rem;padding:2rem;text-align:center}h1{font-size:1.4rem;margin:0 0 .5rem}a{color:#7cc4ff}</style></head>
+<body><main><h1>Your workspace is being prepared</h1><p>Your account is signed in. A private Nova Bots workspace is set up for each account; yours is not ready yet.</p><p>Questions: <a href="mailto:${SUPPORT_CONTACT}">${SUPPORT_CONTACT}</a> · <a href="/account">Account</a></p></main></body></html>`
+
+const holdOut = (req, res) => {
+  const headers = { 'set-cookie': clearEngineCookies(req.headers.cookie) }
+  if (req.headers.accept?.includes('text/html')) {
+    return send(res, 403, heldPage, { ...headers, 'content-type': 'text/html; charset=utf-8' })
+  }
+  json(res, 403, { detail: { code: 'workspace_not_ready', message: 'Your private workspace is not ready yet.' } }, headers)
 }
 
 const bridge = async (req, res) => {
-  if (hasEngineCookie(req)) return proxy(req, res)
-  const payload = auth.verifyToken(cookieValue(req.headers.cookie, COOKIE))
-  if (payload) {
-    const user = await auth.findById(payload.sub)
-    if (user && !user.is_forbidden && (user.token_version ?? 0) === (payload.ver ?? 0)) {
-      const token = await tokenFor()
-      if (token) {
-        const engineCookies = await mintEngineCookie(token, req)
-        if (engineCookies.length) return proxy(req, res, { engineCookies })
-      } else {
-      }
-    } else {
+  const { access } = await accessFor(req)
+  if (access === 'not-entitled') return holdOut(req, res)
+  if (access === 'ok') {
+    if (hasEngineCookie(req)) return proxy(req, res)
+    const token = await tokenFor()
+    if (token) {
+      const engineCookies = await mintEngineCookie(token, req)
+      if (engineCookies.length) return proxy(req, res, { engineCookies })
     }
-  } else {
+    return send(res, 503, 'The Nova Bots engine is not reachable.', { 'content-type': 'text/plain; charset=utf-8' })
   }
   if (req.headers.accept?.includes('text/html')) {
-    res.writeHead(302, { location: '/login' })
+    res.writeHead(302, { location: '/login', 'set-cookie': clearEngineCookies(req.headers.cookie) })
     return res.end()
   }
-  send(res, 401, 'Sign in first.', { 'content-type': 'text/plain; charset=utf-8' })
+  send(res, 401, 'Sign in first.', { 'content-type': 'text/plain; charset=utf-8', 'set-cookie': clearEngineCookies(req.headers.cookie) })
 }
 
 // ---- the server ---------------------------------------------------------

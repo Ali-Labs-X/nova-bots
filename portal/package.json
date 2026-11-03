@@ -7,7 +7,8 @@
   "main": "server.mjs",
   "scripts": {
     "start": "node server.mjs",
-    "setup-db": "node setup-db.mjs"
+    "setup-db": "node setup-db.mjs",
+    "test": "node --test test/*.test.mjs"
   },
   "dependencies": {
     "bcryptjs": "3.0.2",
