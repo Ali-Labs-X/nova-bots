@@ -52,6 +52,9 @@ const stagingNginx = () => {
     .replace(/upstream nova_bots_engine \{[^}]*\}\n/, '')
     .replace('proxy_pass http://nova_bots_engine;', 'proxy_pass http://nova_bots_portal;')
     .replace('listen 80;', `listen 127.0.0.1:${WEB_PORT};`)
+    // Staging runs on a port: keep it in Host so it matches the browser's
+    // Origin (production has no port, where $host and $http_host agree).
+    .replaceAll('proxy_set_header Host $host;', 'proxy_set_header Host $http_host;')
   const path = join(OUT, 'nginx.conf')
   writeFileSync(path, conf)
   return path
@@ -92,12 +95,25 @@ try {
     const text = (await page.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 160)
     log(`[${name}] ${label}\n     url=${new URL(page.url()).pathname}  text="${text}"`)
   }
-  const state = (page) => page.evaluate(async () => {
-    const r = await fetch('/app/api/bot', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: 'state', payload: null }) })
-    if (!r.ok) return { status: r.status }
-    const v = (await r.json()).value
-    return { status: r.status, workspaceId: v.workspaceId, bots: v.bots.map(b => `${b.name}:${b.id.slice(-8)}`) }
-  })
+  const state = async (page) => {
+    let last
+    for (let i = 0; i < 15; i += 1) {
+      last = await page.evaluate(async () => {
+        try {
+          const r = await fetch('/app/api/bot', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: 'state', payload: null }) })
+          const text = await r.text()
+          if (!r.ok) return { status: r.status, text: text.slice(0, 160) }
+          const v = JSON.parse(text).value
+          return { status: r.status, workspaceId: v.workspaceId, bots: v.bots.map(b => `${b.name}:${b.id.slice(-8)}`) }
+        } catch (error) {
+          return { status: 0, text: String(error) }
+        }
+      }).catch(error => ({ status: -1, text: String(error) }))
+      if (last.status === 200) return last
+      await sleep(2000)
+    }
+    throw new Error(`engine state not readable: ${JSON.stringify(last)}`)
+  }
   const waitForEngine = async (page, label) => {
     let sawProvisioning = false
     for (let i = 0; i < 120; i += 1) {
@@ -105,12 +121,12 @@ try {
       if (/Setting up your|Waking up your/.test(text)) {
         if (!sawProvisioning) await shot(page, `${label} provisioning page`)
         sawProvisioning = true
-      } else if (await page.title().catch(() => '') === 'Nova Bots' && !/sign in to continue/i.test(text) && (await page.locator('#root, #app, [data-dsh-root], body > div').count()) > 0 && !/Setting up/.test(text)) {
+      } else if (/Orion/.test(text)) {
         break
       }
       await sleep(1000)
     }
-    await sleep(3000)
+    await sleep(2000)
     return sawProvisioning
   }
   const signIn = async (page, email, password) => {
