@@ -62,6 +62,7 @@ const stagingNginx = () => {
 
 let browser
 let stack
+const pages = []
 try {
   await stop()
   stack = await start({ portalPort: PORTAL_PORT })
@@ -79,6 +80,8 @@ try {
   const contextB = await browser.newContext({ viewport: { width: 1280, height: 800 } })
   const pageA = await contextA.newPage()
   const pageB = await contextB.newPage()
+  pages.push(['A', pageA], ['B', pageB])
+  for (const [who, page] of pages) page.on('pageerror', error => log(`   ${who} page error: ${error.message}`))
   const responses = []
   for (const [who, page] of [['A', pageA], ['B', pageB]]) {
     page.on('response', r => {
@@ -185,6 +188,7 @@ try {
 
   // 4. B signs up in another browser: B's own engine, none of A's bots.
   await pageB.goto(`${WEB}/login`)
+  await shot(pageB, 'B opens the sign-in page')
   await pageB.click('#to-signup')
   await pageB.fill('#email', B.email)
   await pageB.fill('#password', B.password)
@@ -234,6 +238,10 @@ try {
   log('\nRESULT: PASS')
 } catch (error) {
   log(`\nRESULT: FAIL ${error.stack ?? error}`)
+  for (const [who, page] of pages) {
+    await page.screenshot({ path: join(OUT, `failure-${who}.png`) }).catch(() => {})
+    log(`   ${who} at ${page.url()}: ${(await page.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 200)}`)
+  }
   process.exitCode = 1
 } finally {
   await browser?.close().catch(() => {})
