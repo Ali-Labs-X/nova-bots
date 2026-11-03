@@ -1,0 +1,79 @@
+staging: web http://127.0.0.1:13180 -> portal http://127.0.0.1:13181 (NOVA_TENANCY=isolated, NOVA_SIGNUP_MODE=open)
+[01-login-when-sign-up-is-closed-shows-request-access.png] login when sign-up is closed shows Request access
+     url=/login  text="← Back to home Nova Bots · your AI team on your hardware Welcome back. Let's ship. Sign in to your private Nova Bots workspace. Email Password Show Sign in OR N"
+   ok: closed mode: "Request access" shown, "Create one" hidden
+   ok: no internal "imported accounts" copy
+[02-login-when-sign-up-is-open-shows-create-one.png] login when sign-up is open shows Create one
+     url=/login  text="← Back to home Nova Bots · your AI team on your hardware Welcome back. Let's ship. Sign in to your private Nova Bots workspace. Email Password Show Sign in OR N"
+   ok: open mode: "Create one" shown
+[03-a-fills-the-sign-up-form.png] A fills the sign-up form
+     url=/login  text="← Back to home Nova Bots · your AI team on your hardware Create your account. Your own private workspace. Pick a password. Your own private AI team is set up fo"
+[04-a-first-visit-provisioning-page.png] A first visit provisioning page
+     url=/app/  text="Nova Bots · your AI team on your hardware Setting up your private workspace… Your own Nova Bots engine is being created: its own Bots, memory and files, not sha"
+   ok: A saw the provisioning page while its engine was created
+[05-a-lands-in-its-own-nova-bots-engine.png] A lands in its own Nova Bots engine
+     url=/app/  text="Orion Memory updated Hi, I'm Orion. I don't have a model yet. How do you want to set one up? Enter a Nova API key Open settings to set up a custom model Describ"
+   tenant containers running: nbt-test-t-f73212bc-6bec-4957-90e8-8bb0edb27fc8
+   A workspace 8f89b1c8-8b54-49e3-8c51-a321209b5b00 bots Orion:32c019fa
+   ok: A is served by one freshly provisioned nbt-test-t-* engine
+[06-a-account-page.png] A account page
+     url=/account  text="Nova Bots Account Your Nova Bots profile and session details. Email alpha-1793714556491@nbt-test.example Role admin Account ID ee67ca60-c722-4fb9-9a38-a416eddfc"
+[07-a-after-sign-out-is-sent-to-sign-in.png] A after sign-out is sent to sign-in
+     url=/login  text="← Back to home Nova Bots · your AI team on your hardware Welcome back. Let's ship. Sign in to your private Nova Bots workspace. Email Password Show Sign in OR N"
+   ok: signed out: /app/ redirects to /login
+[08-a-signed-in-again-same-workspace.png] A signed in again - same workspace
+     url=/app/  text="Orion Memory updated Hi, I'm Orion. I don't have a model yet. How do you want to set one up? Enter a Nova API key Open settings to set up a custom model Describ"
+   ok: same workspace after sign-in again (8f89b1c8-8b54-49e3-8c51-a321209b5b00)
+[09-b-opens-the-sign-in-page.png] B opens the sign-in page
+     url=/login  text="← Back to home Nova Bots · your AI team on your hardware Welcome back. Let's ship. Sign in to your private Nova Bots workspace. Email Password Show Sign in OR N"
+[10-b-first-visit-provisioning-page.png] B first visit provisioning page
+     url=/app/  text="Nova Bots · your AI team on your hardware Setting up your private workspace… Your own Nova Bots engine is being created: its own Bots, memory and files, not sha"
+[11-b-lands-in-its-own-nova-bots-engine.png] B lands in its own Nova Bots engine
+     url=/app/  text="Orion Memory updated Hi, I'm Orion. I don't have a model yet. How do you want to set one up? Enter a Nova API key Open settings to set up a custom model Describ"
+   B workspace 5e45b34c-04f0-4b85-a822-afc6ff83287f bots Orion:071f2371
+   ok: B has a different workspace than A
+   ok: B sees none of A's bots
+   ok: A's file does not exist in B's engine
+[12-b-with-a-engine-cookie-planted-still-sees-only-b.png] B with A engine cookie planted still sees only B
+     url=/app/  text="Orion Memory updated Hi, I'm Orion. I don't have a model yet. How do you want to set one up? Enter a Nova API key Open settings to set up a custom model Describ"
+   ok: B's browser carrying A's engine cookie still reaches only B's workspace
+   ok: the portal deleted the planted engine cookie from B's browser
+   ok: A engine is stopped
+[13-a-wake-provisioning-page.png] A wake provisioning page
+     url=/app/  text="Nova Bots · your AI team on your hardware Waking up your workspace… Your workspace was asleep to save resources. It is starting again with all your Bots and fil"
+   ok: A saw the waking page
+[14-a-after-restart-workspace-back.png] A after restart - workspace back
+     url=/app/  text="Orion Memory updated Hi, I'm Orion. I don't have a model yet. How do you want to set one up? Enter a Nova API key Open settings to set up a custom model Describ"
+   ok: after stop + restart A has the same workspace and its file
+
+auth/app responses:
+  A 200 GET /login
+  A 200 GET /api/v1/auth/setup-status
+  A 200 GET /login
+  A 200 GET /api/v1/auth/setup-status
+  A 200 POST /api/v1/auth/register
+  A 202 GET /app/
+  A 202 GET /app/
+  A 200 GET /app/
+  A 200 GET /api/v1/auth/me
+  A 200 POST /api/v1/auth/logout
+  A 302 GET /app/
+  A 200 GET /login
+  A 200 GET /api/v1/auth/setup-status
+  A 200 GET /login
+  A 200 GET /api/v1/auth/setup-status
+  A 200 POST /api/v1/auth/login/local
+  A 200 GET /app/
+  B 200 GET /login
+  B 200 GET /api/v1/auth/setup-status
+  B 200 POST /api/v1/auth/register
+  B 202 GET /app/
+  B 202 GET /app/
+  B 200 GET /app/
+  B 200 GET /app/
+  A 202 GET /app/
+  A 202 GET /app/
+  A 200 GET /app/
+
+RESULT: PASS
+cleanup: leftover nbt-test-* objects {"containers":[],"volumes":[],"networks":[]}

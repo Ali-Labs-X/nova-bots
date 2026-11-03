@@ -220,7 +220,12 @@ try {
   const remaining = (await contextB.cookies()).filter(c => c.name.startsWith('dsh-auth-'))
   assert(remaining.length === 0, 'the portal deleted the planted engine cookie from B\'s browser')
 
-  // 6. A is stopped (as the idle reaper does); A's next visit wakes it with its data.
+  // 6. A leaves (tab closed), its engine is stopped (as the idle reaper does);
+  // A's next visit wakes it with its data. While a tab is open its live feed
+  // reconnects and would start the engine again, which is the intended
+  // behaviour for an active user.
+  await pageA.goto('about:blank')
+  await sleep(1000)
   const stopRes = await fetch(`${stack.base}/api/v1/bots-admin/tenants`, { headers: { 'x-nova-bots-token': stack.adminToken } }).then(r => r.json())
   const tenantA = stopRes.tenants.find(t => t.email === A.email)
   await fetch(`${stack.base}/api/v1/bots-admin/tenants/${tenantA.id}/stop`, { method: 'POST', headers: { 'x-nova-bots-token': stack.adminToken } })
