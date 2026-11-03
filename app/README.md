@@ -19,7 +19,9 @@ When GitHub downloads are slow, set `ELECTRON_MIRROR=https://npmmirror.com/mirro
 
 ### Working folder: the runtime's folder picker
 
-The Working folder menu (in a Bot's details and in group settings) offers **"Choose a folder…"** when the runtime mounts a native directory picker, and **"Browse folders…"** when it mounts the in-app browser instead: the runtime's own `@deepseek-ai/dsh-host-directory-picker-auto` picks the backend at boot (the OS chooser on macOS, Windows and a Linux desktop with a chooser; the in-app browser everywhere else), and the app adds no picker of its own. "Enter a path…" always works.
+The plugin's Working folder menu (in a Bot's details, in Bot and group settings, and in Settings → Locations) offers **"Choose a folder…"** when the runtime mounts a native directory picker, and **"Browse folders…"** when it mounts the in-app browser instead: the runtime's own `@deepseek-ai/dsh-host-directory-picker-auto` picks the backend at boot (the OS chooser on macOS, Windows and a Linux desktop with a chooser; the in-app browser everywhere else), and the app adds no picker of its own. "Enter a path…" always works.
+
+The app's own window (`ui/`) reaches that menu through the plugin's own settings dialog: `ui/src/app.js` renders the plugin's `Overlays`, and the plugin's Locations section mounts the menu for the team workspace (`ds-bot/src/client/settings.js:144`). It takes only the menu's stylesheet from `folder-menu.js` (`ui/src/main.js`, `FOLDER_CSS`), so the app's window has no Bot details drawer — that one place has no folder menu. Without a built `ui/dist` the Host answers the window with the runtime's front end, and the menu is in every place.
 
 The folder must already exist, must be absolute, and must not be inside Nova Bots' own data or the team's data root. Picking a folder outside the team workspace asks the user's approval once, just like typing a path does.
 
@@ -168,9 +170,9 @@ The launch URL of the Host is good for one use only. When the first load never c
 | `src/import.mjs` | The import of a Bot team from the user's runtime |
 | `src/move-data.mjs` | The move of the data location: which folders can take it, and the copy through a staging folder |
 | `src/updates.mjs` | The self-updates (Windows installer, Linux AppImage) and the release-page checks (macOS, Linux deb) |
-| `engine/` | On hold, not installed: the bundle `novabots-engine` for the app's own window in `ui/` |
+| `engine/` | On hold, not installed: the bundle `novabots-engine`, kept next to the app's own UI in `ui/` |
 | `test/` | `npm test`: the composition of the profile, the dependencies that the package needs, and the window and the tray (the main process runs there with the Electron parts as test doubles, in `test/helpers/`) |
-| `ui/` | On hold, not built or packaged: the app's own window. React, built with Vite (`vite.config.js`) into `ui/dist`. It draws the plugin's own Bot views from `../ds-bot/src/client/` (sidebar, chat rows, docks, dialogs and their stylesheets) and puts its own Markdown in place of the runtime's. It uses the plugin's `api/bot` channel and its live feed `api/bot/feed` |
+| `ui/` | The app's own window. React, built with Vite (`vite.config.js`) into `ui/dist` by `npm run build`, and again by `beforePack` when the package is built. The Host serves that dist at its own origin (`src/ui-patch.mjs`), and the package carries it (`ui/dist/**`, unpacked from the asar). It draws the plugin's own Bot views from `../ds-bot/src/client/` (sidebar, chat rows, docks, dialogs and their stylesheets) and puts its own Markdown in place of the runtime's. It uses the plugin's `api/bot` channel and its live feed `api/bot/feed` |
 | `assets/` | The app icon: `icon.svg`, `icon.png` (1024 px) and `icon.ico` (Windows, 16 to 256 px), and the tray marks: `tray.ico` (Windows), `tray.png` (Linux) and `trayTemplate.png` with its `@2x` (macOS). `npm run icon` (`scripts/icon.mjs`) draws them again from the Main Bot's Nova spark in `../ds-bot` |
 | `electron-builder.yml`, `build/` | The package and the installers: app identity, files, icons, the Windows installer, the macOS zip and the Linux AppImage and deb |
 | `scripts/check-packed.mjs` | `npm run check-packed`: the check of a packaged app |
