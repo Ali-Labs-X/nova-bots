@@ -32,8 +32,11 @@
   <div id="status" class="muted">Loading your account…</div>
   <div id="profile" class="card" hidden></div>
   <div id="tokens" class="card" hidden>
-    <h2 style="margin:0 0 12px;font-size:1.15rem;color:var(--violet)">Tokens</h2>
-    <p class="muted" id="tokenText">Token usage is managed by your model provider. Nova Bots does not meter model tokens, so a live "tokens remaining" value is not available yet.</p>
+    <h2 style="margin:0 0 12px;font-size:1.15rem;color:var(--violet)">Token tier</h2>
+    <div class="row"><span class="label">Plan</span><span class="value" id="planValue">—</span></div>
+    <div class="row"><span class="label">Daily limit</span><span class="value" id="limitValue">—</span></div>
+    <div class="row"><span class="label">Bonus tokens/day</span><span class="value" id="bonusValue">—</span></div>
+    <p class="muted" style="margin-top:12px">Token usage itself is managed by your model provider, so a live "tokens remaining" value is not available. Your tier sets the daily budget Nova Bots reports to operators.</p>
   </div>
   <div class="actions">
     <a class="btn" href="/app/">Open workspace</a>
@@ -58,6 +61,9 @@
         <div class="row"><span class="label">Last sign-in</span><span class="value">${escapeHtml(user.last_sign_in_at || 'never')}</span></div>
         <div class="row"><span class="label">Setup needed</span><span class="value">${user.needs_setup ? 'yes' : 'no'}</span></div>
       `;
+      document.getElementById('planValue').textContent = user.plan || 'free';
+      document.getElementById('limitValue').textContent = (user.daily_limit || 0).toLocaleString();
+      document.getElementById('bonusValue').textContent = (user.bonus_daily_tokens || 0).toLocaleString();
       document.getElementById('tokens').hidden = false;
     } catch (error) {
       status.textContent = 'Could not load your account.';

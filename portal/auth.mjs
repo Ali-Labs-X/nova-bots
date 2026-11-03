@@ -6,7 +6,7 @@
 // the database are Nova Bots' own: the accounts live in their own database on
 // the shared Postgres server, and nothing here calls the Nova application.
 
-import { createHash } from 'node:crypto'
+import { createHash, createHmac } from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import { Pool } from 'pg'
 
@@ -34,7 +34,7 @@ const base64url = (value) => Buffer.from(value).toString('base64url')
 const sign = (payload, secret) => {
   const header = base64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
   const body = base64url(JSON.stringify(payload))
-  const signature = createHash('sha256').update(`${header}.${body}`).digest('base64url')
+  const signature = createHmac('sha256', String(secret ?? '')).update(`${header}.${body}`).digest('base64url')
   return `${header}.${body}.${signature}`
 }
 
@@ -67,6 +67,13 @@ export class Auth {
       )
     `)
     await this.pool.query('CREATE INDEX IF NOT EXISTS idx_nb_users_email ON users (lower(email))')
+    // Token tiers: a plan (free/plus/enterprise) plus an optional daily bonus
+    // that expires. Mirrors Nova's credit system so Nova Ops can manage Nova
+    // Bots accounts the same way it manages Nova users.
+    await this.pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS plan varchar(16) NOT NULL DEFAULT 'free'")
+    await this.pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS bonus_daily_tokens integer NOT NULL DEFAULT 0')
+    await this.pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS bonus_expires_at timestamptz')
+    await this.pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS daily_limit_override integer')
     await this.pool.query(`
       CREATE TABLE IF NOT EXISTS audit_log (
         id         bigserial PRIMARY KEY,
@@ -93,8 +100,12 @@ export class Auth {
   }
 
   async findById(id) {
-    const { rows } = await this.pool.query('SELECT * FROM users WHERE id = $1', [id])
-    return rows[0] ?? null
+    try {
+      const { rows } = await this.pool.query('SELECT * FROM users WHERE id = $1', [id])
+      return rows[0] ?? null
+    } catch {
+      return null
+    }
   }
 
   async createUser({ email, password, systemRole = 'user', needsSetup = false }) {
@@ -124,7 +135,7 @@ export class Auth {
   // not among them, so it cannot reach an answer by accident.
   async listUsers() {
     const { rows } = await this.pool.query(
-      `SELECT id, email, system_role, needs_setup, is_forbidden, token_version, created_at, last_sign_in_at
+      `SELECT id, email, system_role, needs_setup, is_forbidden, token_version, created_at, last_sign_in_at, plan, bonus_daily_tokens, bonus_expires_at, daily_limit_override
          FROM users
         ORDER BY created_at DESC`,
     )
@@ -135,7 +146,7 @@ export class Auth {
   // in at the end.
   async listUsersByActivity() {
     const { rows } = await this.pool.query(
-      `SELECT id, email, system_role, needs_setup, is_forbidden, token_version, created_at, last_sign_in_at
+      `SELECT id, email, system_role, needs_setup, is_forbidden, token_version, created_at, last_sign_in_at, plan, bonus_daily_tokens, bonus_expires_at, daily_limit_override
          FROM users
         ORDER BY last_sign_in_at DESC NULLS LAST, created_at DESC`,
     )
@@ -164,14 +175,18 @@ export class Auth {
   // Forbidding an account ends its sessions, so the token version moves with
   // it: a session signed with the old version stops working at once.
   async setForbidden(id, forbidden) {
-    const { rows } = await this.pool.query(
-      `UPDATE users
-          SET is_forbidden = $2, token_version = token_version + 1, updated_at = now()
-        WHERE id = $1
-        RETURNING id, email, system_role, needs_setup, is_forbidden, token_version, created_at, last_sign_in_at`,
-      [id, forbidden],
-    )
-    return rows[0] ?? null
+    try {
+      const { rows } = await this.pool.query(
+        `UPDATE users
+            SET is_forbidden = $2, token_version = token_version + 1, updated_at = now()
+          WHERE id = $1
+          RETURNING id, email, system_role, needs_setup, is_forbidden, token_version, created_at, last_sign_in_at`,
+        [id, forbidden],
+      )
+      return rows[0] ?? null
+    } catch {
+      return null
+    }
   }
 
   async bumpTokenVersion(id) {
@@ -183,6 +198,78 @@ export class Auth {
       [id],
     )
     return rows[0] ?? null
+  }
+
+  // ---- token tiers ------------------------------------------------------
+
+  static DAILY_LIMITS = { free: 250000, plus: 5000000, enterprise: 50000000 }
+  static DEFAULT_DAILY_LIMIT = 250000
+
+  dailyLimitForPlan(plan) {
+    return Auth.DAILY_LIMITS[String(plan ?? 'free').toLowerCase()] ?? Auth.DEFAULT_DAILY_LIMIT
+  }
+
+  async setPlan(id, plan) {
+    const value = ['free', 'plus', 'enterprise'].includes(String(plan)) ? plan : 'free'
+    try {
+      const { rows } = await this.pool.query(
+        `UPDATE users SET plan = $2, updated_at = now() WHERE id = $1
+         RETURNING id, email, system_role, needs_setup, is_forbidden, token_version, created_at, last_sign_in_at, plan, bonus_daily_tokens, bonus_expires_at, daily_limit_override`,
+        [id, value],
+      )
+      return rows[0] ?? null
+    } catch {
+      return null
+    }
+  }
+
+  async grantBonus(id, dailyBonusTokens, days) {
+    const bonus = Math.max(1, Math.min(100000000, Number(dailyBonusTokens) || 0))
+    const span = Math.max(1, Math.min(365, Number(days) || 1))
+    try {
+      const { rows } = await this.pool.query(
+        `UPDATE users
+            SET bonus_daily_tokens = $2,
+                bonus_expires_at = now() + ($3 || ' days')::interval,
+                updated_at = now()
+          WHERE id = $1
+          RETURNING id, email, system_role, needs_setup, is_forbidden, token_version, created_at, last_sign_in_at, plan, bonus_daily_tokens, bonus_expires_at, daily_limit_override`,
+        [id, bonus, span],
+      )
+      return rows[0] ?? null
+    } catch {
+      return null
+    }
+  }
+
+  async clearBonus(id) {
+    try {
+      const { rows } = await this.pool.query(
+        `UPDATE users SET bonus_daily_tokens = 0, bonus_expires_at = null, updated_at = now() WHERE id = $1
+         RETURNING id, email, system_role, needs_setup, is_forbidden, token_version, created_at, last_sign_in_at, plan, bonus_daily_tokens, bonus_expires_at, daily_limit_override`,
+        [id],
+      )
+      return rows[0] ?? null
+    } catch {
+      return null
+    }
+  }
+
+  async credits(id) {
+    const user = await this.findById(id)
+    if (!user) return null
+    const base = (typeof user.daily_limit_override === 'number' && user.daily_limit_override >= 0)
+      ? user.daily_limit_override
+      : this.dailyLimitForPlan(user.plan)
+    const now = new Date()
+    const bonusActive = user.bonus_expires_at && new Date(user.bonus_expires_at) > now ? (user.bonus_daily_tokens ?? 0) : 0
+    return {
+      plan: user.plan ?? 'free',
+      daily_limit: base,
+      bonus_daily_tokens: bonusActive,
+      bonus_expires_at: user.bonus_expires_at ? new Date(user.bonus_expires_at).toISOString() : null,
+      total_daily: base + bonusActive,
+    }
   }
 
   // The audit trail is written on the side: an entry that cannot be stored
@@ -310,7 +397,7 @@ export class Auth {
     const parts = token.split('.')
     if (parts.length !== 3) return null
     const [header, body, signature] = parts
-    const expected = createHash('sha256').update(`${header}.${body}`).digest('base64url')
+    const expected = createHmac('sha256', String(this.jwtSecret ?? '')).update(`${header}.${body}`).digest('base64url')
     if (expected.length !== signature.length || !timingSafeEqual(expected, signature)) return null
     let payload
     try {

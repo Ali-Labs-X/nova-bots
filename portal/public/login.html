@@ -245,7 +245,7 @@
             ? "Pick a password and your AI team is one click away."
             : "Sign in to your Nova Bots workspace. Six imported accounts are ready to go.";
           submit.textContent = signUp ? "Create account" : "Sign in";
-          accountForm.setAttribute("action", signUp ? REGISTER_PATH : LOGIN_PATH);
+          form.setAttribute("action", signUp ? REGISTER_PATH : LOGIN_PATH);
           const autocompleteValue = (signUp ? "new" : "current") + "-password";
           password.setAttribute("autocomplete", autocompleteValue);
           confirmField.hidden = !signUp;

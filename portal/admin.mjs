@@ -51,6 +51,10 @@ const publicUser = (row) => ({
   token_version: row.token_version,
   created_at: row.created_at,
   last_sign_in_at: row.last_sign_in_at,
+  plan: row.plan ?? 'free',
+  bonus_daily_tokens: row.bonus_daily_tokens ?? 0,
+  bonus_expires_at: row.bonus_expires_at ? new Date(row.bonus_expires_at).toISOString() : null,
+  daily_limit_override: row.daily_limit_override ?? null,
 })
 
 // ---- the service overview ------------------------------------------------
@@ -195,6 +199,47 @@ const revokeSessions = async (res, auth, id, ip) => {
   json(res, 200, { ok: true })
 }
 
+const readBody = async (req) => {
+  const chunks = []
+  for await (const chunk of req) chunks.push(chunk)
+  return Buffer.concat(chunks).toString('utf8')
+}
+
+const setPlan = async (res, auth, id, req, ip) => {
+  const body = await readBody(req)
+  const form = new URLSearchParams(body)
+  const plan = (form.get('plan') ?? '').trim() || ( (() => { try { return JSON.parse(body).plan } catch { return '' } })() )
+  const user = await auth.setPlan(id, plan)
+  if (!user) return json(res, 404, { detail: { message: 'No such account.' } })
+  await auth.audit({ action: 'plan-set', actor: 'admin', target: user.email, ok: true, ip, detail: { user_id: user.id, plan: user.plan } })
+  json(res, 200, { ok: true, user: publicUser(user) })
+}
+
+const grantBonus = async (res, auth, id, req, ip) => {
+  const body = await readBody(req)
+  let daily = 0, days = 7
+  try {
+    const parsed = JSON.parse(body)
+    daily = parsed.daily_bonus_tokens ?? parsed.daily ?? 0
+    days = parsed.days ?? 7
+  } catch {
+    const form = new URLSearchParams(body)
+    daily = Number(form.get('daily_bonus_tokens') ?? 0)
+    days = Number(form.get('days') ?? 7)
+  }
+  const user = await auth.grantBonus(id, daily, days)
+  if (!user) return json(res, 404, { detail: { message: 'No such account.' } })
+  await auth.audit({ action: 'bonus-grant', actor: 'admin', target: user.email, ok: true, ip, detail: { user_id: user.id, daily_bonus_tokens: user.bonus_daily_tokens } })
+  json(res, 200, { ok: true, user: publicUser(user) })
+}
+
+const clearBonus = async (res, auth, id, ip) => {
+  const user = await auth.clearBonus(id)
+  if (!user) return json(res, 404, { detail: { message: 'No such account.' } })
+  await auth.audit({ action: 'bonus-clear', actor: 'admin', target: user.email, ok: true, ip, detail: { user_id: user.id } })
+  json(res, 200, { ok: true, user: publicUser(user) })
+}
+
 const auditLog = async (res, auth) => {
   json(res, 200, { entries: await auth.auditEntries(200) })
 }
@@ -227,6 +272,9 @@ export const handleAdmin = async (req, res, path, { auth, clientIp }) => {
     if (action === 'forbid' && req.method === 'POST') return setForbidden(res, auth, id, true, ip)
     if (action === 'unforbid' && req.method === 'POST') return setForbidden(res, auth, id, false, ip)
     if (action === 'revoke-sessions' && req.method === 'POST') return revokeSessions(res, auth, id, ip)
+    if (action === 'plan' && req.method === 'POST') return setPlan(res, auth, id, req, ip)
+    if (action === 'grant' && req.method === 'POST') return grantBonus(res, auth, id, req, ip)
+    if (action === 'clear-bonus' && req.method === 'POST') return clearBonus(res, auth, id, ip)
   }
 
   return json(res, 404, { detail: { message: 'Unknown endpoint.' } })
