@@ -12,6 +12,8 @@ import { createHash } from 'node:crypto'
 const META = /<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]*)"\s*\/?>/u
 const HEAD = /<head(?:\s[^>]*)?>/iu
 const SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script>/giu
+// A directive name is case-insensitive, and a page may carry the same directive twice.
+const SCRIPT_SRC = /^script-src(\s|$)/iu
 
 /**
  * The hashes of the inline scripts of a served page, one per script.
@@ -37,9 +39,14 @@ export function scriptHashes(html) {
 export function policyWithHashes(content, hashes) {
   const directives = content.split(';').map(directive => directive.trim()).filter(directive => directive !== '')
   const scriptSrc = ["'self'", ...hashes].join(' ')
-  const script = directives.find(directive => directive.startsWith('script-src'))
-  if (script === undefined) directives.push(`script-src ${scriptSrc}`)
-  else directives[directives.indexOf(script)] = `script-src ${scriptSrc}`
+  const indexes = []
+  for (const [index, directive] of directives.entries()) {
+    if (SCRIPT_SRC.test(directive)) indexes.push(index)
+  }
+  if (indexes.length === 0) directives.push(`script-src ${scriptSrc}`)
+  // Every copy of the directive is rewritten: a page that carries it twice, or in
+  // another case, must not keep a wider rule of its own.
+  for (const index of indexes) directives[index] = `script-src ${scriptSrc}`
   return directives.join('; ')
 }
 
