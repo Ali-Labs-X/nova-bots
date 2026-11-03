@@ -320,8 +320,10 @@ keeps this folder's `nova-bots` engine as its own tenant. Default
   `POST tenants/backfill`, `POST users/<id>/delete` (with `{"export":true}`
   the volumes are archived to `NOVA_TENANT_EXPORT_DIR` first). Every action
   is in the audit log.
-- **Host firewall**: `sudo ops/tenant-firewall.sh apply` keeps tenants away
-  from host services and the LAN (see SECURITY_MODEL.md).
+- **Host firewall**: `ops/tenant-firewall.sh` (installed as the system unit
+  `ops/nova-bots-tenant-firewall.service`) keeps tenants away from host
+  services and the LAN. Tenants resolve names through `NOVA_TENANT_DNS`
+  (default `1.1.1.1,1.0.0.1`), never the LAN router (see SECURITY_MODEL.md).
 
 Turning it on, verifying and rolling back: [docs/TENANCY_ROLLOUT.md](docs/TENANCY_ROLLOUT.md).
 

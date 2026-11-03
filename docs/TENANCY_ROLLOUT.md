@@ -21,17 +21,24 @@ verify).
 ## 1. Host firewall (root, once)
 
 Tenants must not reach host services through their gateway (the portal on
-`0.0.0.0:13081`, services bound to `172.17.0.1`, the LAN).
+`0.0.0.0:13081`, services bound to `172.17.0.1`, the LAN router and other
+private ranges). The internet stays open, and DNS goes to the public
+resolvers the tenants are started with (`NOVA_TENANT_DNS`, default
+`1.1.1.1,1.0.0.1`). The host's own upstream is the Wi-Fi router, a `10.x`
+address that this firewall blocks, so the two resolver lists must match.
 
 ```sh
-sudo BRIDGE=nb-tenants ~/Desktop/Nova-Bots/ops/tenant-firewall.sh apply
-sudo ~/Desktop/Nova-Bots/ops/tenant-firewall.sh status
-# keep it across reboots (Debian/Ubuntu):
-sudo apt-get install -y iptables-persistent && sudo netfilter-persistent save
+sh ~/Desktop/Nova-Bots/ops/tenant-firewall.sh plan          # read the ordered rules first
+sudo install -m 0755 ~/Desktop/Nova-Bots/ops/tenant-firewall.sh /usr/local/sbin/nova-bots-tenant-firewall
+sudo install -m 0644 ~/Desktop/Nova-Bots/ops/nova-bots-tenant-firewall.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now nova-bots-tenant-firewall       # applies now and at every boot / docker restart
+sudo /usr/local/sbin/nova-bots-tenant-firewall status
 ```
 
-The rules match the interface name, so they can be applied before the
-tenant network exists.
+The rules match the interface name (`nb-tenants`), so they can be applied
+before the tenant network exists. The unit is `PartOf=docker.service`, so a
+docker restart re-applies the hook.
 
 ## 2. Settings in `portal/portal.env`
 
@@ -45,6 +52,8 @@ NOVA_LEGACY_TENANT_EMAIL=<admin email>
 #   openssl rand -base64 48
 NOVA_TENANT_SECRET_KEY=<generated>
 NOVA_TENANT_TRUSTED_HOST=localhost,127.0.0.1,bots.alilabsx.com,bot.alilabsx.com
+# Public resolvers for the tenants; keep equal to RESOLVERS in the firewall unit.
+NOVA_TENANT_DNS=1.1.1.1,1.0.0.1
 NOVA_TENANT_IDLE_MINUTES=30
 NOVA_TENANT_MAX_RUNNING=10
 NOVA_TENANT_MAX_TOTAL=150
@@ -113,6 +122,13 @@ Then in a browser (or the staging e2e against the public URL):
 2. Sign in as the admin: the existing workspace with all its Bots.
 3. Check that a non-admin account cannot see any admin Bot or file.
 4. `curl -s -o /dev/null -w '%{http_code}\n' -H 'Accept: text/html' http://127.0.0.1:13081/app/` → `302` (no session).
+5. From a tenant engine: the internet and DNS work, the host and the LAN do not:
+   ```sh
+   C=$(docker ps --filter label=nova-bots.role=tenant-engine --format '{{.Names}}' | head -1)
+   docker exec $C sh -c "curl -s -m 10 -o /dev/null -w '%{http_code}\n' https://api.openai.com/v1/models"   # 401 = reachable
+   docker exec $C sh -c "curl -s -m 4 -o /dev/null -w '%{http_code}\n' http://172.17.0.1:8080/ || true"     # 000 = blocked
+   docker exec $C sh -c "curl -s -m 4 -o /dev/null -w '%{http_code}\n' http://10.162.159.131/ || true"      # 000 = blocked
+   ```
 
 ## 6. Operating
 
@@ -158,5 +174,6 @@ Remove everything tenant-related (destructive, after an export if needed):
 docker ps -aq --filter label=nova-bots.instance=production --filter label=nova-bots.role=tenant-engine | xargs -r docker rm -f
 docker volume ls -q --filter label=nova-bots.instance=production | xargs -r docker volume rm
 docker network rm nova-bots-tenants
-sudo ~/Desktop/Nova-Bots/ops/tenant-firewall.sh remove
+sudo systemctl disable --now nova-bots-tenant-firewall   # runs "remove"
+sudo rm /etc/systemd/system/nova-bots-tenant-firewall.service /usr/local/sbin/nova-bots-tenant-firewall
 ```

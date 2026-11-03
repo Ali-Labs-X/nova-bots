@@ -236,6 +236,55 @@ test('tenants cannot reach each other over the network; files stay in their own 
   assert.equal(inB, 'checked')
 })
 
+test('DNS and egress: a tenant resolves and reaches the internet through explicit resolvers; the firewall plan blocks host and private ranges', { timeout: 240000 }, async () => {
+  const info = await inspect(S.ta.container)
+  assert.deepEqual(info.HostConfig.Dns, ['1.1.1.1', '1.0.0.1'])
+  const egress = await docker(['exec', S.ta.container, 'sh', '-c', "curl -s -m 15 -o /dev/null -w '%{http_code}' https://api.openai.com/v1/models; echo \" exit=$?\""], { allowFail: true })
+  evidence(`tenant A (--dns ${info.HostConfig.Dns.join(',')}) -> https://api.openai.com/v1/models: ${egress}`)
+  assert.match(egress, /^[1-5]\d\d exit=0/)
+
+  // The firewall rules, applied by ops/tenant-firewall.sh itself (lab-apply:
+  // the same ordered plan on the lab container's OUTPUT chain, the network
+  // gateway standing in for the host). The host firewall itself needs root.
+  const network = JSON.parse(await docker(['network', 'inspect', 'nbt-test-tenants']))[0]
+  const gateway = network.IPAM.Config[0].Gateway
+  const script = new URL('../../../ops/tenant-firewall.sh', import.meta.url).pathname
+  const routerDns = process.env.NBT_ROUTER_DNS ?? '10.162.159.131'
+  const hostPort = process.env.NBT_HOST_PROBE_PORT ?? '13081'
+  const labs = { 'nbt-test-fwlab': ['--dns', '1.1.1.1', '--dns', '1.0.0.1'], 'nbt-test-fwlab-nodns': [] }
+  const results = {}
+  try {
+    for (const [name, dns] of Object.entries(labs)) {
+      await docker(['run', '-d', '--name', name, '--network', 'nbt-test-tenants', '--cap-add', 'NET_ADMIN', ...dns,
+        '-v', `${script}:/fw.sh:ro`, '--label', 'nova-bots.instance=nbt-test', 'alpine:3', 'sleep', '600'])
+      await docker(['exec', name, 'apk', 'add', '--no-cache', '-q', 'iptables', 'curl'], { timeout: 180000 })
+    }
+    const probe = (name) => docker(['exec', name, 'sh', '-c', [
+      `nc -z -w 3 ${gateway} ${hostPort} && echo host=open || echo host=blocked`,
+      'nc -z -w 3 172.17.0.1 8080 && echo docker0=open || echo docker0=blocked',
+      `nc -z -w 3 ${routerDns} 53 && echo lan=open || echo lan=blocked`,
+      'nslookup -timeout=4 api.openai.com >/dev/null 2>&1 && echo dns=ok || echo dns=fail',
+      "echo https=$(curl -s -m 12 -o /dev/null -w '%{http_code}' https://api.openai.com/v1/models)",
+    ].join('; ')], { allowFail: true, timeout: 90000 }).then(out => Object.fromEntries(out.split('\n').filter(l => l.includes('=')).map(l => l.split('='))))
+    results.before = await probe('nbt-test-fwlab')
+    for (const name of Object.keys(labs)) {
+      await docker(['exec', '-e', `GATEWAY=${gateway}`, '-e', 'RESOLVERS=1.1.1.1 1.0.0.1', name, 'sh', '/fw.sh', 'lab-apply'])
+    }
+    results.after = await probe('nbt-test-fwlab')
+    results.afterNoDns = await probe('nbt-test-fwlab-nodns')
+  } finally {
+    await docker(['rm', '-f', ...Object.keys(labs)], { allowFail: true })
+  }
+  evidence(`firewall lab BEFORE rules (--dns 1.1.1.1): ${JSON.stringify(results.before)}`)
+  evidence(`firewall lab AFTER rules  (--dns 1.1.1.1): ${JSON.stringify(results.after)}`)
+  evidence(`firewall lab AFTER rules  (no --dns, host upstream ${routerDns}): ${JSON.stringify(results.afterNoDns)}`)
+  assert.equal(results.after.host, 'blocked')
+  assert.equal(results.after.docker0, 'blocked')
+  assert.equal(results.after.lan, 'blocked')
+  assert.equal(results.after.dns, 'ok')
+  assert.match(results.after.https, /^[1-5]\d\d$/)
+})
+
 test('revoking sessions ends an open live feed', { timeout: 60000 }, async () => {
   const { socket, status } = await wsOpen('/app/api/remote.mux', S.b.cookie)
   assert.match(status, / 101 /)

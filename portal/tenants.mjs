@@ -68,6 +68,11 @@ export const tenancyConfigFromEnv = (env = process.env) => ({
   maxTotal: number(env.NOVA_TENANT_MAX_TOTAL, 150),
   startTimeoutMs: number(env.NOVA_TENANT_START_TIMEOUT_MS, 120000),
   trustedHosts: csv(env.NOVA_TENANT_TRUSTED_HOST ?? 'localhost,127.0.0.1,bots.alilabsx.com'),
+  // Explicit public resolvers. Without them Docker's embedded DNS forwards to
+  // the host's upstream (here the LAN router, a private address the tenant
+  // firewall blocks), so name resolution would break. Keep in step with
+  // RESOLVERS in ops/tenant-firewall.sh. Empty = Docker's default.
+  dns: csv(env.NOVA_TENANT_DNS ?? '1.1.1.1,1.0.0.1'),
   // Provider key env names the operator may assign to a tenant.
   keyEnvs: csv(env.NOVA_TENANT_KEY_ENVS ?? 'DEEPSEEK_API_KEY,DEEPSEEK_BASE_URL,MINIMAX_API_KEY,FIREWORKS_API_KEY'),
   secretKey: env.NOVA_TENANT_SECRET_KEY ?? '',
@@ -195,6 +200,10 @@ export const containerArgs = ({ tenant, config, envFile }) => {
     '--label', `nova-bots.tenant=${tenant.id}`,
     '--label', 'nova-bots.role=tenant-engine',
     '--network', assertName(config.network, 'network'),
+    ...(config.dns ?? []).flatMap(server => {
+      if (!/^[0-9a-fA-F:.]+$/.test(server)) throw new Error(`invalid DNS server: ${server}`)
+      return ['--dns', server]
+    }),
     '--publish', `${config.bindHost}:${Number(tenant.port)}:3080`,
     '--cap-drop', 'ALL',
     '--cap-add', 'CHOWN', '--cap-add', 'SETUID', '--cap-add', 'SETGID', '--cap-add', 'DAC_OVERRIDE',

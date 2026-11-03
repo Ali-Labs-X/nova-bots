@@ -36,6 +36,29 @@ test('tenant containers get no docker socket, no host folder, no host gateway an
   assert.ok(!args.includes('--env-file'))
 })
 
+test('tenants resolve through explicit public resolvers (configurable), never the host upstream', () => {
+  assert.deepEqual(pairs(containerArgs({ tenant, config }), '--dns'), ['1.1.1.1', '1.0.0.1'])
+  const custom = tenancyConfigFromEnv({ NOVA_TENANT_DNS: '9.9.9.9' })
+  assert.deepEqual(pairs(containerArgs({ tenant, config: custom }), '--dns'), ['9.9.9.9'])
+  assert.deepEqual(pairs(containerArgs({ tenant, config: tenancyConfigFromEnv({ NOVA_TENANT_DNS: '' }) }), '--dns'), [])
+  assert.throws(() => containerArgs({ tenant, config: { ...config, dns: ['1.1.1.1 --privileged'] } }))
+})
+
+test('the firewall plan allows the resolvers on port 53 before any private-range drop', async () => {
+  const { execFileSync } = await import('node:child_process')
+  const script = new URL('../../ops/tenant-firewall.sh', import.meta.url).pathname
+  const plan = execFileSync('sh', [script, 'plan'], { env: { PATH: process.env.PATH, RESOLVERS: '1.1.1.1 1.0.0.1' } }).toString().trim().split('\n')
+  const firstDrop = plan.findIndex(line => line.startsWith('fwd') && line.endsWith('-j DROP'))
+  for (const resolver of ['1.1.1.1', '1.0.0.1']) {
+    for (const proto of ['udp', 'tcp']) {
+      const at = plan.indexOf(`fwd -d ${resolver} -p ${proto} --dport 53 -j ALLOW`)
+      assert.ok(at >= 0 && at < firstDrop, `${resolver}/${proto} allowed before the drops`)
+    }
+  }
+  for (const net of ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', '169.254.0.0/16']) assert.ok(plan.includes(`fwd -d ${net} -j DROP`))
+  assert.equal(plan.at(-1), 'host -j DROP')
+})
+
 test('per-tenant limits override the defaults; names are validated', () => {
   const args = containerArgs({ tenant: { ...tenant, limits: { memory: '3g', cpus: '2', pids: 1024 } }, config })
   assert.deepEqual(pairs(args, '--memory'), ['3g'])

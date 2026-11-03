@@ -140,8 +140,7 @@ const me = async (req, res) => {
   if ((user.token_version ?? 0) !== (payload.ver ?? 0)) {
     return json(res, 401, { detail: { code: 'not_authenticated', message: 'The session ended. Sign in again.' } })
   }
-  // Token tiers are optional: an account store without them answers defaults.
-  const credits = typeof auth.credits === 'function' ? await auth.credits(user.id).catch(() => null) : null
+  const credits = await auth.credits(user.id)
   json(res, 200, {
     id: user.id,
     email: user.email,
