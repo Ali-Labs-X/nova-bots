@@ -34,7 +34,7 @@ html = html.replace(/<title>[^<]*<\/title>/, '<title>Nova Bots</title>')
 html = html.replace(/[ \t]*<link rel="icon"[^>]*>\r?\n?/g, '')
 html = html.replace(
   /<link rel="manifest" href="\.\/manifest\.webmanifest" \/>/,
-  '<link rel="manifest" href="./manifest.webmanifest" />\n    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />\n    <meta name="theme-color" content="#070A16" />',
+  '<link rel="manifest" href="./manifest.webmanifest" />\n    <link rel="icon" type="image/svg+xml" href="./nova-icon.svg" />\n    <meta name="theme-color" content="#070A16" />',
 )
 html = html.replace(
   '</head>',
@@ -44,8 +44,10 @@ if (!html.includes('nova-brand.js') || !html.includes('nova-ui.css')) fail('coul
 write(htmlPath, html)
 
 // ---- icons and static assets -------------------------------------------
-copyFileSync(join(HERE, 'favicon.svg'), join(DIST, 'favicon.svg'))
-copyFileSync(join(HERE, 'favicon.svg'), join(DIST, 'favicon-dark.svg'))
+// Our own mark, under our own name. The shell's dark variant keeps the name
+// the shell asks for, so the file it requests still holds our icon.
+copyFileSync(join(HERE, 'nova-icon.svg'), join(DIST, 'nova-icon.svg'))
+copyFileSync(join(HERE, 'nova-icon.svg'), join(DIST, 'favicon-dark.svg'))
 copyFileSync(join(HERE, 'nova-ui.css'), join(DIST, 'nova-ui.css'))
 copyFileSync(join(HERE, 'nova-brand.js'), join(DIST, 'nova-brand.js'))
 
@@ -57,6 +59,8 @@ manifest.short_name = 'Nova'
 manifest.description = 'A team of long-lived Bots that work together'
 manifest.theme_color = '#070A16'
 manifest.background_color = '#070A16'
+// The shell's manifest pointed at its own icon; ours is the one now.
+manifest.icons = [{ src: 'nova-icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }]
 write(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`)
 
 // ---- default sidebar brand module --------------------------------------
