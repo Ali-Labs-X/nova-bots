@@ -13,24 +13,24 @@ staging: web http://127.0.0.1:13180 -> portal http://127.0.0.1:13181 (NOVA_TENAN
    ok: A saw the provisioning page while its engine was created
 [05-a-lands-in-its-own-nova-bots-engine.png] A lands in its own Nova Bots engine
      url=/app/  text="Orion Memory updated Hi, I'm Orion. I don't have a model yet. How do you want to set one up? Enter a Nova API key Open settings to set up a custom model Describ"
-   tenant containers running: nbt-test-t-f73212bc-6bec-4957-90e8-8bb0edb27fc8
-   A workspace 8f89b1c8-8b54-49e3-8c51-a321209b5b00 bots Orion:32c019fa
+   tenant containers running: nbt-test-t-70ab2d70-5976-4b7c-b2b3-cc461d3a132d
+   A workspace cb258732-0f4a-42ec-b52b-da37b986bb27 bots Orion:8ae5245c
    ok: A is served by one freshly provisioned nbt-test-t-* engine
 [06-a-account-page.png] A account page
-     url=/account  text="Nova Bots Account Your Nova Bots profile and session details. Email alpha-1793714556491@nbt-test.example Role admin Account ID ee67ca60-c722-4fb9-9a38-a416eddfc"
+     url=/account  text="Nova Bots Account Your Nova Bots profile and session details. Email alpha-1793715287949@nbt-test.example Role admin Account ID 9e5683c9-1ab2-4826-aed5-9421404bc"
 [07-a-after-sign-out-is-sent-to-sign-in.png] A after sign-out is sent to sign-in
      url=/login  text="← Back to home Nova Bots · your AI team on your hardware Welcome back. Let's ship. Sign in to your private Nova Bots workspace. Email Password Show Sign in OR N"
    ok: signed out: /app/ redirects to /login
 [08-a-signed-in-again-same-workspace.png] A signed in again - same workspace
      url=/app/  text="Orion Memory updated Hi, I'm Orion. I don't have a model yet. How do you want to set one up? Enter a Nova API key Open settings to set up a custom model Describ"
-   ok: same workspace after sign-in again (8f89b1c8-8b54-49e3-8c51-a321209b5b00)
+   ok: same workspace after sign-in again (cb258732-0f4a-42ec-b52b-da37b986bb27)
 [09-b-opens-the-sign-in-page.png] B opens the sign-in page
      url=/login  text="← Back to home Nova Bots · your AI team on your hardware Welcome back. Let's ship. Sign in to your private Nova Bots workspace. Email Password Show Sign in OR N"
 [10-b-first-visit-provisioning-page.png] B first visit provisioning page
      url=/app/  text="Nova Bots · your AI team on your hardware Setting up your private workspace… Your own Nova Bots engine is being created: its own Bots, memory and files, not sha"
 [11-b-lands-in-its-own-nova-bots-engine.png] B lands in its own Nova Bots engine
      url=/app/  text="Orion Memory updated Hi, I'm Orion. I don't have a model yet. How do you want to set one up? Enter a Nova API key Open settings to set up a custom model Describ"
-   B workspace 5e45b34c-04f0-4b85-a822-afc6ff83287f bots Orion:071f2371
+   B workspace 773489a4-7ac3-451d-afbb-b5498e0fcab7 bots Orion:e1455ed0
    ok: B has a different workspace than A
    ok: B sees none of A's bots
    ok: A's file does not exist in B's engine
