@@ -135,6 +135,11 @@ export const proxyHttp = async (req, res, target, { retried = false } = {}) => {
       return unavailable(res, 503, 'The Nova Bots workspace did not accept the session. Reload the page.')
     }
     const headers = { ...upstreamResponse.headers }
+    // Hop-by-hop headers describe the engine's connection to the portal, not
+    // the portal's connection to the client: forwarding them (keep-alive on a
+    // connection the client asked to close) desynchronises a keep-alive pool
+    // in front of the portal and every other request fails with a 400.
+    for (const name of HOP_BY_HOP) delete headers[name]
     const cookies = responseCookies(req, headers['set-cookie'])
     delete headers['set-cookie']
     if (cookies.length) headers['set-cookie'] = cookies

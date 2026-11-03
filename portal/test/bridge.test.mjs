@@ -26,7 +26,7 @@ const fakeEngine = (name) => {
       return res.end()
     }
     if (!cookieOk(req)) { res.writeHead(401); return res.end('no') }
-    res.writeHead(200, { 'content-type': 'text/plain', 'set-cookie': ['dsh-auth-h=leak; Path=/', 'access_token=evil; Path=/', 'pref=1; Path=/'] })
+    res.writeHead(200, { 'content-type': 'text/plain', connection: 'keep-alive', 'keep-alive': 'timeout=99', 'set-cookie': ['dsh-auth-h=leak; Path=/', 'access_token=evil; Path=/', 'pref=1; Path=/'] })
     res.end(`engine ${name}`)
   })
   server.on('upgrade', (req, socket) => {
@@ -137,4 +137,15 @@ test('the /app prefix maps to the engine root', () => {
   assert.equal(enginePath('/app/'), '/')
   assert.equal(enginePath('/app/api/x?y=1'), '/api/x?y=1')
   assert.equal(enginePath('/assets/a.js'), '/assets/a.js')
+})
+
+test("hop-by-hop headers from the engine are not forwarded (a client's Connection: close is honoured)", async () => {
+  const res = await new Promise((resolve, reject) => {
+    const req = request({ host: '127.0.0.1', port: portalPort, path: '/app/', headers: { host: 'h', 'x-test-user': 'alice', connection: 'close' } }, r => { r.resume(); r.on('end', () => resolve(r)) })
+    req.on('error', reject)
+    req.end()
+  })
+  assert.equal(res.statusCode, 200)
+  assert.equal(res.headers.connection, 'close')
+  assert.equal(res.headers['keep-alive'], undefined)
 })
