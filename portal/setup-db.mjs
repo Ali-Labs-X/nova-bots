@@ -39,7 +39,7 @@ if (existing.rowCount === 0) {
 await admin.end()
 
 // 2. the table
-const auth = new Auth({ databaseUrl, jwtSecret: process.env.NOVA_JWT_SECRET ?? 'setup' })
+const auth = new Auth({ databaseUrl, jwtSecret: process.env.NOVA_JWT_SECRET || 'setup-db-does-not-sign-sessions' })
 await auth.migrate()
 console.log('the users table is ready')
 

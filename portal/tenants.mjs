@@ -380,6 +380,7 @@ export class Tenants {
     this.tokens = new Map()
     this.activity = new Map()
     this.sockets = new Map()
+    this.failures = new Map()
     this.timer = null
   }
 
@@ -576,6 +577,34 @@ export class Tenants {
       cookie: (host, { fresh = false } = {}) => this.jar.get({ key: tenant.id, url, host, fresh, token: () => this.tokenFor(tenant, { fresh }) }),
       invalidate: () => this.forget(tenant.id),
     }
+  }
+
+  // For a page load: { ready } when the account's engine is up; otherwise the
+  // start is kicked off in the background and the caller shows a page that
+  // refreshes ('first' when the tenant has never run, 'capacity', 'failed').
+  async readiness(user) {
+    let tenant = await this.store.byUser(user.id)
+    if (!tenant) tenant = await this.ensureRow(user)
+    if (tenant.kind === 'legacy') return { ready: true, tenant }
+    if (!this.inflight.has(tenant.id)) {
+      const state = await this.docker.inspect(tenant.container)
+      if (state.running && this.tokens.has(tenant.id)) return { ready: true, tenant }
+      if (state.running) {
+        // Running but not yet known to this portal (after a portal restart):
+        // the mint below is quick, so let the request wait for it.
+        return { ready: true, tenant }
+      }
+      const failure = this.failures.get(tenant.id)
+      if (failure && Date.now() - failure.at < 15000) return { ready: false, tenant, status: failure.code === 'CAPACITY' ? 'capacity' : 'failed' }
+      this.ensureRunning(tenant).then(
+        () => this.failures.delete(tenant.id),
+        error => {
+          this.failures.set(tenant.id, { code: error.code ?? 'FAILED', at: Date.now() })
+          this.log.error(`tenants: start of ${tenant.id} failed: ${error.message}`)
+        },
+      )
+    }
+    return { ready: false, tenant, status: tenant.started_at ? 'starting' : 'first' }
   }
 
   touch(id) {

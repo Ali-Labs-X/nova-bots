@@ -43,8 +43,8 @@ export const policyFromEnv = (env = process.env) => ({
   engineEmails: list(env.NOVA_ENGINE_ALLOWED_EMAILS),
   // Roles that get a tenant of their own in isolated mode.
   tenantRoles: list(env.NOVA_TENANT_ALLOWED_ROLES ?? 'admin,user'),
-  // closed: only the bootstrap account may sign up; open: anyone may — but
-  // only when tenancy is isolated (see signupAllowed).
+  // closed: only the bootstrap account may sign up; open: anyone may (an
+  // open sign-up never grants the shared engine; see signupAllowed).
   signupMode: String(env.NOVA_SIGNUP_MODE ?? 'closed').trim().toLowerCase() === 'open' ? 'open' : 'closed',
   // Optional sign-up allowlists. Both empty means any address may sign up.
   signupEmails: list(env.NOVA_SIGNUP_ALLOWED_EMAILS),
@@ -90,12 +90,13 @@ export const signupEmailAllowed = (policy, email) => {
 }
 
 // The first account bootstraps the workspace and is always allowed. Later
-// accounts only when sign-up is open AND every account gets an isolated
-// engine: an open sign-up in front of a shared engine would hand strangers
-// the operator's workspace.
+// accounts only when sign-up is open (and the address passes the optional
+// allowlists). Opening sign-up never opens an engine: in shared mode a new
+// account is held out of the shared engine (routeFor -> 'not-entitled'), in
+// isolated mode it gets its own engine.
 export const signupAllowed = (policy, existingUsers, email = '') => {
   if (existingUsers === 0) return true
-  if (policy.tenancy !== 'isolated' || policy.signupMode !== 'open') return false
+  if (policy.signupMode !== 'open') return false
   return signupEmailAllowed(policy, email)
 }
 

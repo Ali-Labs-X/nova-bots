@@ -168,11 +168,12 @@ export const proxyUpgrade = async (req, socket, head, target, { onOpen, onClose,
     }
     for (const cookie of responseCookies(req, upstreamResponse.headers['set-cookie'])) lines.push(`set-cookie: ${cookie}`)
     socket.write(`HTTP/1.1 101 Switching Protocols\r\n${lines.join('\r\n')}${lines.length ? '\r\n' : ''}Connection: Upgrade\r\nUpgrade: ${upstreamResponse.headers.upgrade ?? 'websocket'}\r\n\r\n`)
-    if (upstreamHead?.length) socket.unshift(upstreamHead)
+    // Bytes the engine sent right after its 101 belong to the browser.
+    if (upstreamHead?.length) socket.write(upstreamHead)
     upstreamSocket.on('error', () => socket.destroy())
     socket.on('error', () => upstreamSocket.destroy())
     socket.on('close', () => upstreamSocket.destroy())
-    upstreamSocket.on('close', () => socket.destroy())
+    upstreamSocket.on('close', () => socket.end())
     upstreamSocket.pipe(socket).pipe(upstreamSocket)
     onOpen?.(socket)
     socket.once('close', () => onClose?.(socket))
