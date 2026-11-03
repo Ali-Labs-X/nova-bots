@@ -17,7 +17,7 @@ each other and report back in one place. The interface is a deep-space console:
 violet-to-cyan aurora, a living starfield, glass panels and a soft glow on every
 surface that matters.
 
-![Say one sentence to Orion, and it sets up the bots and the group chat](docs/images/team.png)
+![Say one sentence to Orion, and it sets up the bots and the group chat]
 
 ## Quick start
 
@@ -69,7 +69,7 @@ Talk to a bot the way you talk to a person. It remembers what you told it,
 keeps its working folder, and picks up where it left off. Its details panel
 shows its model, memory and usage; switch models there whenever you need to.
 
-![Bot details: model, memory, usage](docs/images/details.png)
+![Bot details: model, memory, usage]
 
 ### Orion, your Main Bot
 
@@ -94,7 +94,7 @@ group's details panel shows every handoff and can stop one.
 Each group has its own memory. What you say in the group stays there: its
 members use it, and your other chats do not see it.
 
-![Group chat: Orion hands the work to Writer and Coder](docs/images/group.png)
+![Group chat: Orion hands the work to Writer and Coder]
 
 ### Capabilities
 
@@ -108,7 +108,7 @@ you or a Main Bot can change or delete it.
 
 **Settings → Usage** breaks token usage down by time, bot and model.
 
-![Usage page](docs/images/usage.png)
+![Usage page]
 
 ### Office files
 
