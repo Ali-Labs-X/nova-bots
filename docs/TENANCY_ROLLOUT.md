@@ -60,18 +60,21 @@ NOVA_TENANT_MAX_TOTAL=150
 NOVA_TENANT_MEMORY=1536m
 NOVA_TENANT_CPUS=1.0
 NOVA_TENANT_PIDS=512
-NOVA_TENANT_EXPORT_DIR=/home/jahanzaib/nova-bots-exports
+NOVA_TENANT_EXPORT_DIR=/srv/nova-bots/exports
 ```
 
-The portal unit has `ProtectHome=read-only`, so the export folder needs a
-write exception:
+The portal unit has `ProtectHome=read-only`, so the export folder must sit
+outside the user's home. `/srv` is such a place; create it once, owned by
+the user the portal runs as:
 
 ```sh
-mkdir -p ~/nova-bots-exports && chmod 700 ~/nova-bots-exports
-mkdir -p ~/.config/systemd/user/nova-bots-portal.service.d
-printf '[Service]\nReadWritePaths=%%h/nova-bots-exports\n' > ~/.config/systemd/user/nova-bots-portal.service.d/tenancy.conf
-systemctl --user daemon-reload
+sudo mkdir -p /srv/nova-bots/exports
+sudo chown "$USER":"$USER" /srv/nova-bots/exports
+chmod 700 /srv/nova-bots/exports
 ```
+
+A folder outside the home needs no write exception, so the unit needs no
+drop-in file for it.
 
 ## 3. Backfill: every account present now
 
