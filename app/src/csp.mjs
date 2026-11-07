@@ -14,6 +14,8 @@ const HEAD = /<head(?:\s[^>]*)?>/iu
 const SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script>/giu
 // A directive name is case-insensitive, and a page may carry the same directive twice.
 const SCRIPT_SRC = /^script-src(\s|$)/iu
+const SCRIPT_SRC_ELEM = /^script-src-elem(\s|$)/iu
+const SCRIPT_SRC_ATTR = /^script-src-attr(\s|$)/iu
 
 // The frame of a deep-view widget is built from srcDoc, so it inherits this policy: the
 // frame's own 'unsafe-inline' meta cannot widen what the parent allows. Its one script
@@ -65,6 +67,17 @@ export function policyWithHashes(content, hashes) {
   // Every copy of the directive is rewritten: a page that carries it twice, or in
   // another case, must not keep a wider rule of its own.
   for (const index of indexes) directives[index] = `script-src ${scriptSrc}`
+  // The two finer directives of CSP level 3 take precedence over script-src, so a page that
+  // carries one of them could widen the script policy the page is served under. Neither is
+  // used in our tree, so both are clamped to what script-src already implies.
+  // script-src-elem gets the same list as script-src: 'none' there would block the Host's
+  // own hashed inline scripts and the frame script of a widget.
+  // script-src-attr gets 'none', which is what script-src already implies here, because the
+  // script policy has no 'unsafe-inline'.
+  for (const [index, directive] of directives.entries()) {
+    if (SCRIPT_SRC_ELEM.test(directive)) directives[index] = `script-src-elem ${scriptSrc}`
+    else if (SCRIPT_SRC_ATTR.test(directive)) directives[index] = "script-src-attr 'none'"
+  }
   return directives.join('; ')
 }
 
