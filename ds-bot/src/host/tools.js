@@ -437,7 +437,7 @@ export function install(rt) {
     parameters: {},
     output,
     async execute() {
-      const models = await rt.catalog({ fresh: true })
+      const models = await rt.chatModels({ fresh: true })
       if (models.length === 0) return 'No models are configured. Ask the user to add one in Settings → Models.'
       const fallback = rt.defaultRef()
       // Only catalog entries that already carry `reasoning` (models a Bot runs on)

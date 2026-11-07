@@ -6,7 +6,7 @@ import { checkKey, install, keyRefFor } from '../src/host/providers.js'
 // A DSH with the official DeepSeek route, an account route, and the pi-ai adapter: its
 // directory offers catalog providers, and its settings take path writes the way DSH's
 // do, under a revision. Routes come and go with the pi-ai section.
-function dsh({ keys = {}, readOnly = [], user = {}, base = {}, catalog = { anthropic: ['claude-a', 'claude-b'], moonshotai: ['kimi-k3'] } } = {}) {
+function dsh({ keys = {}, readOnly = [], user = {}, base = {}, defaultSelection, catalog = { anthropic: ['claude-a', 'claude-b'], moonshotai: ['kimi-k3'] } } = {}) {
   const store = { ...keys }
   const writes = []
   const listeners = new Map()
@@ -44,6 +44,7 @@ function dsh({ keys = {}, readOnly = [], user = {}, base = {}, catalog = { anthr
     },
   }
   const discovered = []
+  if (defaultSelection !== undefined) services.agentDefaultModel = { currentSelection: () => defaultSelection }
   const ctx = {
     on(name, listener) { listeners.set(name, listener); return () => listeners.delete(name) },
     get: name => services[name],
@@ -53,7 +54,9 @@ function dsh({ keys = {}, readOnly = [], user = {}, base = {}, catalog = { anthr
         if (id === 'deepseek-official') return [{ id: 'deepseek-flash', name: 'DeepSeek Flash' }]
         if (id === 'deepseek-account') return []
         const profile = piValue().providers[id]
-        return profile.models ?? (catalog[id] ?? []).map(model => ({ id: model }))
+        const models = (catalog[id] ?? profile.models ?? []).map(model => (typeof model === 'string' ? { id: model } : model))
+        // The runtime's model list carries the id and the name, and nothing else.
+        return models.map(model => ({ id: model.id, ...(model.name ? { name: model.name } : {}) }))
       },
       listConfigurableProviders: () => [
         { provider: 'deepseek-official', displayName: 'DeepSeek', settingsNs: 'llm-deepseek', settingsPath: [] },
@@ -178,6 +181,82 @@ test('fetching models asks DSH about the endpoint, with the typed key for that q
   // A provider DSH ships is answered from its own catalog.
   await rt.discoverModels({ provider: 'anthropic' })
   assert.deepEqual(discovered.at(-1), ['llm-pi-ai', { provider: 'anthropic' }])
+})
+
+test('a model the profile marks as embedding is no chat model, and is listed as one', async () => {
+  const user = { providers: { 'llama-cpp': { api: 'openai-completions', baseURL: 'http://127.0.0.1:8200/v1', models: [{ id: 'smollm2-135m-instruct', name: 'SmolLM2' }, { id: 'bge-small-en-v1.5', name: 'bge', embedding: true }] } } }
+  const { rt } = dsh({ user })
+  const catalog = await rt.catalog({ fresh: true })
+  // The provider still serves it, so the catalog still has it, tagged.
+  assert.deepEqual(catalog.filter(entry => entry.provider === 'llama-cpp').map(entry => [entry.ref, entry.embedding === true]), [
+    ['llama-cpp/smollm2-135m-instruct', false],
+    ['llama-cpp/bge-small-en-v1.5', true],
+  ])
+  // No picker offers it: the list the client gets and the list the tools offer.
+  assert.deepEqual(rt.cachedChatModels().filter(entry => entry.provider === 'llama-cpp').map(entry => entry.ref), ['llama-cpp/smollm2-135m-instruct'])
+  assert.deepEqual((await rt.chatModels()).filter(entry => entry.provider === 'llama-cpp').map(entry => entry.ref), ['llama-cpp/smollm2-135m-instruct'])
+  // The page lists it once, marked.
+  assert.deepEqual(row(await rt.providersView(), 'llama-cpp').models, [
+    { ref: 'llama-cpp/smollm2-135m-instruct', name: 'SmolLM2' },
+    { ref: 'llama-cpp/bge-small-en-v1.5', name: 'bge', embedding: true },
+  ])
+})
+
+test('a Bot already pointed at an embedding model keeps it, and the provider answers', async () => {
+  const user = { providers: { 'llama-cpp': { api: 'openai-completions', baseURL: 'http://127.0.0.1:8200/v1', models: [{ id: 'smollm2-135m-instruct', name: 'SmolLM2' }, { id: 'bge-small-en-v1.5', name: 'bge', embedding: true }] } } }
+  const { rt } = dsh({ user })
+  // The plugin does not refuse over a mark it cannot verify: the Bot keeps its model
+  // and the provider's own error is what it hears.
+  assert.equal(await rt.desiredModel({ model: 'llama-cpp/bge-small-en-v1.5' }), 'llama-cpp/bge-small-en-v1.5')
+  // The picker does not offer it as a chat model.
+  await assert.rejects(rt.resolveModel('llama-cpp/bge-small-en-v1.5'), /is an embedding model, not a chat model/)
+  await assert.rejects(rt.resolveModel('bge-small-en-v1.5'), /is an embedding model, not a chat model/)
+})
+
+test('an embedding model is never the default model', async () => {
+  const user = { providers: { 'llama-cpp': { api: 'openai-completions', baseURL: 'http://127.0.0.1:8200/v1', models: [{ id: 'bge-small-en-v1.5', name: 'bge', embedding: true }, { id: 'smollm2-135m-instruct', name: 'SmolLM2' }] } } }
+  const { rt } = dsh({ user })
+  await rt.catalog({ fresh: true })
+  assert.notEqual(rt.cachedDefault(), 'llama-cpp/bge-small-en-v1.5')
+  assert.ok(rt.cachedChatModels().some(entry => entry.ref === rt.cachedDefault()))
+  // Not even when the profile's own default is the embedding model.
+  const chosen = dsh({ user, defaultSelection: { provider: 'llama-cpp', model: 'bge-small-en-v1.5' } })
+  await chosen.rt.catalog({ fresh: true })
+  assert.notEqual(chosen.rt.cachedDefault(), 'llama-cpp/bge-small-en-v1.5')
+  assert.ok(chosen.rt.cachedChatModels().some(entry => entry.ref === chosen.rt.cachedDefault()))
+})
+
+test('a profile id that differs from the runtime id by case or spacing leaves the model a chat model', async () => {
+  const user = { providers: { 'llama-cpp': { api: 'openai-completions', baseURL: 'http://127.0.0.1:8200/v1', models: [{ id: ' BGE-Small-En-V1.5 ', name: 'bge', embedding: true }] } } }
+  const { rt } = dsh({ user, catalog: { 'llama-cpp': ['bge-small-en-v1.5'] } })
+  const catalog = await rt.catalog({ fresh: true })
+  assert.deepEqual(catalog.filter(entry => entry.provider === 'llama-cpp').map(entry => [entry.ref, entry.embedding === true]), [['llama-cpp/bge-small-en-v1.5', false]])
+  assert.deepEqual((await rt.chatModels()).filter(entry => entry.provider === 'llama-cpp').map(entry => entry.ref), ['llama-cpp/bge-small-en-v1.5'])
+})
+
+test('a mark that is not the strict boolean true leaves the model a chat model', async () => {
+  const models = [{ id: 'm-false', embedding: false }, { id: 'm-string', embedding: 'false' }, { id: 'm-one', embedding: 1 }, { id: 'm-text', embedding: 'true' }]
+  const { rt } = dsh({ user: { providers: { relay: { api: 'openai-completions', baseURL: 'https://relay.example/v1', models } } } })
+  const catalog = await rt.catalog({ fresh: true })
+  assert.deepEqual(catalog.filter(entry => entry.provider === 'relay').map(entry => [entry.ref, entry.embedding === true]), models.map(model => [`relay/${model.id}`, false]))
+  assert.deepEqual((await rt.chatModels()).filter(entry => entry.provider === 'relay').map(entry => entry.ref), models.map(model => `relay/${model.id}`))
+  assert.deepEqual(row(await rt.providersView(), 'relay').models.map(model => model.ref), models.map(model => `relay/${model.id}`))
+})
+
+test('a provider without a stored model list keeps every model it serves', async () => {
+  const { rt } = dsh()
+  const catalog = await rt.catalog({ fresh: true })
+  assert.ok(catalog.some(entry => entry.ref === 'deepseek-official/deepseek-flash'))
+  assert.deepEqual(row(await rt.providersView(), 'deepseek-official').models, [{ ref: 'deepseek-official/deepseek-flash', name: 'DeepSeek Flash' }])
+})
+
+test('the stored profile keeps the mark only when it is the boolean true', async () => {
+  const { rt, writes } = dsh()
+  await rt.addProvider({
+    custom: true, provider: 'relay', api: 'openai-completions', baseURL: 'https://relay.example/v1',
+    models: [{ id: 'r-1' }, { id: 'r-2', embedding: true }, { id: 'r-3', embedding: false }],
+  })
+  assert.deepEqual(writes[0][1][0].value.models, [{ id: 'r-1' }, { id: 'r-2', embedding: true }, { id: 'r-3' }])
 })
 
 test('removing a provider takes its key along unless another provider names it', async () => {

@@ -45,6 +45,10 @@ function modelEntry(model) {
     ...(whole(model?.contextWindow) ? { contextWindow: model.contextWindow } : {}),
     ...(whole(model?.maxTokens) ? { maxTokens: model.maxTokens } : {}),
     ...(Array.isArray(model?.inputModalities) && model.inputModalities.length > 0 ? { input: model.inputModalities.filter(kind => typeof kind === 'string') } : {}),
+    // A model that serves embeddings rather than chat. Only the strict boolean true is
+    // a flag, and the key is left out when there is none: a profile without it stays
+    // exactly as it was.
+    ...(model?.embedding === true ? { embedding: true } : {}),
   }
 }
 
@@ -91,6 +95,29 @@ export function install(rt) {
     return missing
   }
 
+  // The models a stored provider profile marks as embedding models, per provider. The
+  // profile is Nova's own, where the route is set up: the runtime does not carry the
+  // flag into its model list. Only the strict boolean true is a flag.
+  function markedModels(map) {
+    const models = new Map()
+    for (const entry of ctx.llm.listConfigurableProviders()) {
+      const profile = profileOf(entry, map)
+      const list = Array.isArray(profile?.models) ? profile.models : []
+      const marked = list.filter(model => model?.embedding === true).map(model => ({ id: model.id, name: model.name ?? model.id }))
+      if (marked.length > 0) models.set(entry.provider, marked)
+    }
+    return models
+  }
+
+  // The embedding models of every provider, as the model catalog reads them. A provider
+  // whose profile cannot be read marks no model: a chat model is never lost to a
+  // settings service that did not answer.
+  function embeddingModels() {
+    const found = seams()
+    if (found === undefined) return new Map()
+    try { return markedModels(sections(found.settings)) } catch { return new Map() }
+  }
+
   // The providers set up in Nova, with their models and key state, and the ones Nova
   // can add. A provider with no key and no models (Nova's account route before a
   // sign-in) is left out.
@@ -108,7 +135,10 @@ export function install(rt) {
         continue
       }
       const ref = refOf(profile)
-      const models = catalog.filter(model => model.provider === entry.provider).map(model => ({ ref: model.ref, name: model.name }))
+      // Every model the provider serves, each once; the embedding models are marked, so
+      // the user sees that they exist and that they are not chat models.
+      const models = catalog.filter(model => model.provider === entry.provider)
+        .map(model => ({ ref: model.ref, name: model.name, ...(model.embedding === true ? { embedding: true } : {}) }))
       if (ref === undefined && models.length === 0 && entry.error === undefined) continue
       const info = ref === undefined ? undefined : await found.credentials.describe(ref).catch(() => undefined)
       providers.push({
@@ -222,5 +252,5 @@ export function install(rt) {
     return providersView()
   }
 
-  Object.assign(rt, { keyRefs, missingKeys, providersView, setProviderKey, clearProviderKey, addProvider, discoverModels, removeProvider })
+  Object.assign(rt, { keyRefs, missingKeys, providersView, setProviderKey, clearProviderKey, addProvider, discoverModels, removeProvider, embeddingModels })
 }
