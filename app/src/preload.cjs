@@ -124,6 +124,18 @@ function frameless(height, mica) {
   captionColors(mica)
 }
 
+// The column the caption buttons stand on. The runtime's front end names its own columns,
+// which the app does not know; our own page marks the column that carries the colour of
+// the buttons. There it is the conversation in both windows: the runtime paints its band
+// with the sidebar colour across the top, ours paints nothing there.
+function captionColumn(document, mica) {
+  const own = document.querySelector('[data-caption-surface]')
+  if (own !== null) return own
+  if (!mica) return document.querySelector('div[class*="_sidebarCol"]')
+  const right = document.querySelector('div[class*="_rightbarCol"]')
+  return right !== null && right.getBoundingClientRect().width > 0 ? right : document.querySelector('div[class*="_centerCol"]')
+}
+
 // The caption buttons stand on the rightmost open column with Mica (the right sidebar or the
 // conversation) and on the sidebar-colored band without it. Theme variables can resolve apart
 // from what is painted, so the color comes from the element itself: the first one up from it
@@ -157,11 +169,7 @@ function captionColors(mica) {
     const [red, green, blue] = context.getImageData(0, 0, 1, 1).data
     return `rgb(${red}, ${green}, ${blue})`
   }
-  const column = () => {
-    if (!mica) return document.querySelector('div[class*="_sidebarCol"]')
-    const right = document.querySelector('div[class*="_rightbarCol"]')
-    return right !== null && right.getBoundingClientRect().width > 0 ? right : document.querySelector('div[class*="_centerCol"]')
-  }
+  const column = () => captionColumn(document, mica)
   let frame
   const surface = () => {
     const start = column()
@@ -205,3 +213,6 @@ function captionColors(mica) {
   document.head.addEventListener('load', send, true)
   send()
 }
+
+// The column lookup, for the test that runs the shipped file.
+module.exports = { captionColumn }
