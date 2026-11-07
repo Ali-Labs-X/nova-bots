@@ -104,6 +104,10 @@ function updatesBridge() {
 function frameless(height, mica) {
   const root = document.documentElement
   root.dataset.windowsTitlebar = ''
+  // The window has the material only on Windows 11 22H2 and later, and only then is its
+  // background transparent. The page's own surfaces let the material through only then, so
+  // the page has to know which window it is in.
+  if (mica) root.dataset.mica = ''
   root.style.setProperty('--dsh-windows-titlebar-height', `${height}px`)
   // DSH keeps the dialog mask off the caption band, which then stays bright above a dimmed
   // page; here the band is part of the page, so the mask covers it too.
@@ -118,6 +122,18 @@ function frameless(height, mica) {
   new MutationObserver(sendTheme).observe(root, { attributeFilter: ['data-ds-theme-source'] })
   sendTheme()
   captionColors(mica)
+}
+
+// The column the caption buttons stand on. The runtime's front end names its own columns,
+// which the app does not know; our own page marks the column that carries the colour of
+// the buttons. There it is the conversation in both windows: the runtime paints its band
+// with the sidebar colour across the top, ours paints nothing there.
+function captionColumn(document, mica) {
+  const own = document.querySelector('[data-caption-surface]')
+  if (own !== null) return own
+  if (!mica) return document.querySelector('div[class*="_sidebarCol"]')
+  const right = document.querySelector('div[class*="_rightbarCol"]')
+  return right !== null && right.getBoundingClientRect().width > 0 ? right : document.querySelector('div[class*="_centerCol"]')
 }
 
 // The caption buttons stand on the rightmost open column with Mica (the right sidebar or the
@@ -153,11 +169,7 @@ function captionColors(mica) {
     const [red, green, blue] = context.getImageData(0, 0, 1, 1).data
     return `rgb(${red}, ${green}, ${blue})`
   }
-  const column = () => {
-    if (!mica) return document.querySelector('div[class*="_sidebarCol"]')
-    const right = document.querySelector('div[class*="_rightbarCol"]')
-    return right !== null && right.getBoundingClientRect().width > 0 ? right : document.querySelector('div[class*="_centerCol"]')
-  }
+  const column = () => captionColumn(document, mica)
   let frame
   const surface = () => {
     const start = column()
@@ -201,3 +213,7 @@ function captionColors(mica) {
   document.head.addEventListener('load', send, true)
   send()
 }
+
+// The same function is in app/src/caption-column.cjs, which the test reads. The preload
+// cannot require it: it runs in a sandbox, where require only resolves a fixed list of
+// modules. The test checks that the two copies are the same text.
