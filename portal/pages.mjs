@@ -10,7 +10,7 @@ const page = ({ title, lead, body = '', refreshSeconds = 0, contact }) => `<!doc
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 ${refreshSeconds ? `<meta http-equiv="refresh" content="${Number(refreshSeconds)}" />` : ''}
 <title>Nova Bots</title>
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" type="image/svg+xml" href="/nova-icon.svg" />
 <style>
   :root {
     --bg: #060010; --panel: rgba(22, 28, 60, 0.58); --ink: #f4f3ff; --ink-2: rgba(228, 228, 245, 0.7);
