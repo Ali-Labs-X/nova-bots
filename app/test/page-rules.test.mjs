@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { APP_UI_PARTS, composerTextExpression, cssRules, pageKindExpression, surfaceTreatment } from '../scripts/page-rules.mjs'
+import { APP_UI_PARTS, composerTextExpression, cssRules, micaVariable, pageKindExpression, surfaceTreatment, translucentBackground } from '../scripts/page-rules.mjs'
 
 // The stylesheet of our own UI, the one the app's own page is painted with.
 const ownCss = () => readFileSync(new URL('../ui/src/app.css', import.meta.url), 'utf8')
@@ -62,4 +62,21 @@ test('the sidebar shows the material of the window only when the window has it',
   // The conversation stays opaque, so the text on it stays readable.
   assert.equal(treatment['.dsb-main'].mica, false, 'the conversation shows the material')
   assert.equal(treatment['.dsb-main'].opaque, true, 'the conversation has no colour of its own')
+})
+
+test('the visible sidebar is the column of the plugin, and it shows the material', () => {
+  // The plugin's column is portalled over ours and paints the theme's sidebar colour; the
+  // app gives it the fill through the variable the plugin's own rules follow.
+  const fill = micaVariable(ownCss(), '--bt-leftcol-fill')
+  assert.ok(fill !== undefined, 'the column of the plugin has no fill of its own')
+  assert.equal(translucentBackground(`background:${fill}`), true, 'the column of the plugin hides the material')
+  // The fill is a translucent variant of the theme's own colour, so the theme still reads.
+  assert.match(fill, /var\(--bt-sidebar\)/u)
+  assert.match(fill, /45%/u)
+  // The app's own stylesheet does not paint that column, so the plugin's rules decide: the
+  // drawer that floats over the conversation keeps the opaque fill the plugin asks for.
+  assert.equal(ownCss().includes('.bt-leftcol'), false, 'the app paints the column of the plugin')
+  const pluginCss = readFileSync(new URL('../../ds-bot/src/client/styles.js', import.meta.url), 'utf8')
+  assert.match(pluginCss, /\.bt-leftcol\{[^}]*background:var\(--bt-leftcol-fill/u)
+  assert.match(pluginCss, /\.bt-leftcol\[data-left=drawer\]\{[^}]*background:var\(--bt-sidebar\)/u)
 })

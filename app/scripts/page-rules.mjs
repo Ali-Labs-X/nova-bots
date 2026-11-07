@@ -79,6 +79,21 @@ export function opaqueBackground(text) {
 const paints = (selectors, surface) => selectors.some(selector => selector === surface || selector.endsWith(` ${surface}`))
 
 /**
+ * The value a stylesheet gives a custom property in the window that has the material.
+ * @param {string} css - the stylesheet.
+ * @param {string} name - the name of the custom property.
+ * @returns {string|undefined} the value, or undefined when no rule sets it.
+ */
+export function micaVariable(css, name) {
+  const blocks = cssBlocks(css).filter(block => block.selectors.some(selector => selector.includes(MICA)))
+  for (const block of blocks) {
+    const match = new RegExp(`(?:^|;)\\s*${name}\\s*:\\s*([^;]+)`, 'u').exec(block.text)
+    if (match !== null) return match[1].trim()
+  }
+  return undefined
+}
+
+/**
  * How the stylesheet of our own UI paints its surfaces: whether a rule lets the material
  * of the window through them, and whether a rule paints them with a colour of the theme.
  * @param {string} css - the stylesheet of our own UI.
