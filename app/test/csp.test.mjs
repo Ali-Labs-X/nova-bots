@@ -230,3 +230,65 @@ test('the frame script does not depend on the widget, so one hash covers every w
   assert.equal(await frameScriptText('<p>a chart</p>', hostileVars), benign, 'the frame script depends on the theme variables')
   assert.equal(await frameScriptHash('<p>a chart</p>', hostileVars), await frameScriptHash(), 'the frame script hash depends on the theme variables')
 })
+
+test('the finer script directives cannot widen the script policy', async () => {
+  const module = await import('../src/csp.mjs')
+  const tap = module.cspTap()
+  const page = [
+    '<!doctype html>',
+    '<html lang="en">',
+    '<head>',
+    '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\'; script-src-elem \'unsafe-inline\'; script-src-attr \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\'">',
+    '</head>',
+    '<body>',
+    '<script>globalThis.__DSH_BOOT__ = { a: 1 }</script>',
+    '<script type="module" src="./assets/index.js"></script>',
+    '</body>',
+    '</html>',
+  ].join('\n')
+
+  const policy = policyOf(tap(page))
+  const scriptSrc = policy.get('script-src') ?? []
+  const elem = policy.get('script-src-elem') ?? []
+  const attr = policy.get('script-src-attr') ?? []
+
+  // script-src-elem takes precedence over script-src, so it may not be wider than it.
+  assert.deepEqual([...elem].sort(), [...scriptSrc].sort(), 'the element directive is wider than script-src')
+  assert.equal(elem.includes('\'unsafe-inline\''), false, 'the element directive allows inline scripts')
+  assert.equal(elem.includes('*'), false, 'the element directive allows a wildcard')
+  // It keeps the same origin, so the page's own module script still loads.
+  assert.equal(elem.includes('\'self\''), true, 'the element directive drops the same-origin scripts')
+  // The inline scripts of the page stay allowed by their hash, and the frame script too.
+  assert.equal(elem.includes(`'sha256-${hashOf('globalThis.__DSH_BOOT__ = { a: 1 }')}'`), true,
+    'the element directive drops the hash of an inline script')
+  assert.equal(elem.includes(await frameScriptHash()), true, 'the element directive drops the frame script')
+  // script-src-attr may not allow an inline handler; the script policy has no 'unsafe-inline',
+  // so 'none' is what it already implies.
+  assert.deepEqual([...attr], ['\'none\''], 'the attribute directive allows something')
+  // The other directives are untouched.
+  assert.deepEqual(policy.get('style-src'), ['\'self\'', '\'unsafe-inline\''], 'the style directive changed')
+  assert.deepEqual(policy.get('default-src'), ['\'self\''])
+})
+
+test('a page without the finer directives keeps its policy as it was', async () => {
+  const module = await import('../src/csp.mjs')
+  const tap = module.cspTap()
+  const page = [
+    '<!doctype html>',
+    '<html lang="en">',
+    '<head>',
+    '<meta http-equiv="Content-Security-Policy" content="default-src \'self\'; script-src \'self\'; style-src \'self\' \'unsafe-inline\'">',
+    '</head>',
+    '<body>',
+    '<script>globalThis.__DSH_BOOT__ = { a: 1 }</script>',
+    '</body>',
+    '</html>',
+  ].join('\n')
+
+  const policy = policyOf(tap(page))
+  // The tap does not add directives the page does not carry: without them the policy falls
+  // back to script-src, which is exactly the list the tap writes.
+  assert.equal(policy.has('script-src-elem'), false)
+  assert.equal(policy.has('script-src-attr'), false)
+  assert.deepEqual(policy.get('script-src'), ["'self'", `'sha256-${hashOf('globalThis.__DSH_BOOT__ = { a: 1 }')}'`, await frameScriptHash()])
+})
