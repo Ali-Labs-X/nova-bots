@@ -65,12 +65,13 @@ and internals, see [`ds-bot/README.md`](ds-bot/README.md).
 
 Nova Bots also has its own Electron desktop app (`app/`), which carries a
 pinned runtime and never writes to `~/.dsh`. It installs on Windows, macOS
-and Linux. The Working folder menu offers "Choose a folder…" — a native OS
-folder dialog to browse and pick any local folder as a Bot's working folder,
-no typing needed — where the runtime mounts a native picker (macOS and
-Windows, and a Linux desktop that has a chooser installed), and "Browse
-folders…" where it mounts the in-app folder browser instead; "Enter a path…"
-always works. Build, test and packaging details are in
+and Linux. The Working folder menu lives in the app's Settings, the plugin's
+own dialog, and offers "Choose a folder…" — a native OS folder dialog to
+browse and pick any local folder as a Bot's working folder, no typing needed
+— where the runtime mounts a native picker (macOS and Windows, and a Linux
+desktop that has a chooser installed), and "Browse folders…" where it mounts
+the in-app folder browser instead; "Enter a path…" always works. The window
+itself has no Bot details drawer. Build, test and packaging details are in
 [`app/README.md`](app/README.md).
 
 ## Meet the team
