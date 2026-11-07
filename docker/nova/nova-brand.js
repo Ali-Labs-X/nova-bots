@@ -96,12 +96,12 @@
   const mark = () => {
     if (document.title !== 'Nova Bots') document.title = 'Nova Bots'
     const icon = document.querySelector('link[rel="icon"]')
-    if (icon && !icon.href.endsWith('/favicon.svg')) {
+    if (icon && !icon.href.endsWith('/nova-icon.svg')) {
       for (const node of document.querySelectorAll('link[rel="icon"]')) node.remove()
       const link = document.createElement('link')
       link.rel = 'icon'
       link.type = 'image/svg+xml'
-      link.href = './favicon.svg'
+      link.href = './nova-icon.svg'
       document.head.append(link)
     }
   }

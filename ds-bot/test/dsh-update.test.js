@@ -108,12 +108,18 @@ test('a git install asks that repo\'s latest release for its declaration', async
   ])
 })
 
-test('a local checkout without a public repository asks for no declaration', async () => {
+test('a local checkout falls back to the package\'s own repository for its declaration', async () => {
   for (const source of ['link:/work/ds-bot', undefined]) {
     const { rt, fetched } = start({ source, answers: githubLatest('v9.0.0', { dsBot: { verifiedDsh: '8.8.8' } }) })
     assert.equal((await rt.dshUpdateCheck()).verified, null)
-    assert.deepEqual(fetched, [])
+    assert.deepEqual(fetched, ['https://api.github.com/repos/Jahanzaib211/nova-bots/releases/latest'])
   }
+})
+
+test('a git source without a GitHub address falls back to the package\'s own repository', async () => {
+  const { rt, fetched } = start({ source: 'git+https://gitlab.com/example/nova-bots.git#main' })
+  assert.equal((await rt.dshUpdateCheck()).verified, null)
+  assert.deepEqual(fetched, ['https://api.github.com/repos/Jahanzaib211/nova-bots/releases/latest'])
 })
 
 test('a bundled package manager means the app owns the runtime: report only, never install', async () => {

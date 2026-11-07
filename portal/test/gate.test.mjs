@@ -50,11 +50,11 @@ test('an account created by an open sign-up in shared mode is still held out of 
 })
 
 test('sign-up allowlists: exact addresses and domains, case-insensitive', () => {
-  const p = policyFromEnv({ NOVA_TENANCY: 'isolated', NOVA_SIGNUP_MODE: 'open', NOVA_SIGNUP_ALLOWED_EMAILS: 'vip@gmail.com', NOVA_SIGNUP_ALLOWED_DOMAINS: '@Client.com, partner.io' })
-  assert.equal(signupAllowed(p, 3, 'VIP@gmail.com'), true)
+  const p = policyFromEnv({ NOVA_TENANCY: 'isolated', NOVA_SIGNUP_MODE: 'open', NOVA_SIGNUP_ALLOWED_EMAILS: 'vip@example.com', NOVA_SIGNUP_ALLOWED_DOMAINS: '@Client.com, partner.io' })
+  assert.equal(signupAllowed(p, 3, 'VIP@example.com'), true)
   assert.equal(signupAllowed(p, 3, 'someone@client.com'), true)
   assert.equal(signupAllowed(p, 3, 'x@partner.io'), true)
-  assert.equal(signupAllowed(p, 3, 'other@gmail.com'), false)
+  assert.equal(signupAllowed(p, 3, 'other@example.com'), false)
   assert.equal(signupAllowed(p, 3, 'x@evilclient.com'), false)
   assert.equal(signupAllowed(p, 3, 'x@client.com.evil.io'), false)
 })
