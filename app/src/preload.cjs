@@ -214,5 +214,6 @@ function captionColors(mica) {
   send()
 }
 
-// The column lookup, for the test that runs the shipped file.
-module.exports = { captionColumn }
+// The same function is in app/src/caption-column.cjs, which the test reads. The preload
+// cannot require it: it runs in a sandbox, where require only resolves a fixed list of
+// modules. The test checks that the two copies are the same text.
