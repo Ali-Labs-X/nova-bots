@@ -40,10 +40,12 @@ function copyTree(root, out) {
 }
 
 // npm ci needs the network. When there is none the test says so and stops
-// instead of failing a build that was never attempted.
+// instead of failing a build that was never attempted. Only the codes of a
+// network failure count: a word like "network" in the output of a failing
+// install says nothing about the cause.
 function networkFailure(result) {
   const text = `${result.stderr || ''}${result.stdout || ''}`
-  return /ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNREFUSED|EAI_NONAME|ECONNRESET|network|registry/i.test(text)
+  return /ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNREFUSED|ECONNRESET/u.test(text)
 }
 
 // npm test runs every test in this folder, and this one installs packages and
