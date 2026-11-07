@@ -158,6 +158,14 @@ again. A team saved by an older version keeps the model each bot last ran on.
 - Keep API keys out of the repository. Use the runtime's own key storage or
   environment variables.
 
+A provider may mark one of its models as an embedding model. Such a model is
+not offered in the pickers — the model list, the Create Bot form, the default
+model and a bot's own model setting take chat models only — but it stays in the
+model catalog, and the providers page still lists every model the provider
+serves, once each; the host marks the embedding ones in that list. The mark is
+set in the stored provider profile, because the runtime does not carry it on its
+model list.
+
 ## Memory
 
 A bot remembers what should last beyond one conversation: your preferences,
