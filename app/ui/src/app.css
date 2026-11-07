@@ -24,6 +24,13 @@ body[data-ds-dark-theme]{color-scheme:dark}
 
 /* Sidebar; collapsed, a rail of marks under the brand, which expands it again. */
 .dsb-side{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;padding:0 12px 6px;background:var(--bt-sidebar);border-right:1px solid color-mix(in srgb,var(--bt-ink) 12%,transparent);box-sizing:border-box}
+/* Windows 11 with Mica: the sidebar shows the material of the window, all the way to the top
+   (docs/plans/2026-10-16-desktop-app.md). The window's background is transparent only when
+   it has the material, so the surfaces let it through only then; a window without it keeps
+   the theme's own colours. The colour is a translucent variant of the theme's sidebar
+   colour, so the theme still reads and the text on it stays readable. */
+html[data-mica] body{background:transparent}
+html[data-mica] .dsb-side{background:color-mix(in srgb,var(--bt-sidebar) 45%,transparent)}
 .dsb-side-list{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;margin:0 -12px 0 -4px;padding-left:4px}
 .dsb-side .bt-list{overflow-x:hidden}
 .dsb-frame[data-rail] .dsb-side{padding:0 10px 6px}

@@ -104,6 +104,10 @@ function updatesBridge() {
 function frameless(height, mica) {
   const root = document.documentElement
   root.dataset.windowsTitlebar = ''
+  // The window has the material only on Windows 11 22H2 and later, and only then is its
+  // background transparent. The page's own surfaces let the material through only then, so
+  // the page has to know which window it is in.
+  if (mica) root.dataset.mica = ''
   root.style.setProperty('--dsh-windows-titlebar-height', `${height}px`)
   // DSH keeps the dialog mask off the caption band, which then stays bright above a dimmed
   // page; here the band is part of the page, so the mask covers it too.
