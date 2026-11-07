@@ -284,6 +284,81 @@ NOVA_TRUSTED_HOST=localhost,127.0.0.1,10.162.159.121
   its own tables, its own connection, nothing shared with the other
   applications. The copy of the existing accounts happened once, in
   `portal/setup-db.mjs`.
-- **Sign-up is open** on the public address (five accounts per address per
-  hour). For a closed workspace, set the accounts up yourself and forbid the
-  rest from the operator console.
+- **Sign-up** follows `NOVA_SIGNUP_MODE` in `portal/portal.env` (`open` or
+  `closed`, five accounts per address per hour; optional
+  `NOVA_SIGNUP_ALLOWED_EMAILS` / `NOVA_SIGNUP_ALLOWED_DOMAINS`). When closed,
+  the sign-in page offers "Request access" instead. An open sign-up never
+  opens the shared engine: without tenancy a new account is held out, with
+  tenancy it gets its own engine.
+- Sessions are HMAC-signed with `NOVA_JWT_SECRET` (at least 16 characters).
+
+## Per-account workspaces (tenancy)
+
+With `NOVA_TENANCY=isolated` in `portal/portal.env`, every account gets its
+own engine: container `nova-bots-t-<tenant id>`, two volumes
+(`…-data` = the engine home, `…-data-work` = `/workspace`), its own launch
+token and a loopback port from `NOVA_TENANT_PORT_BASE` (14100) on. The admin
+keeps this folder's `nova-bots` engine as its own tenant. Default
+(`shared`, or unset) is the single engine described above.
+
+- **Lazy start**: the first visit creates the container ("Setting up your
+  private workspace…", ~30 s); a stopped one is started on the next visit
+  ("Waking up…", ~15 s).
+- **Idle stop** after `NOVA_TENANT_IDLE_MINUTES` (30) without a request and
+  without an open live feed. Data stays in the volumes.
+- **Hard cap** `NOVA_TENANT_MAX_RUNNING`: at the cap, the least recently
+  active idle tenant is stopped to make room; if every running tenant has an
+  open live feed the visitor sees "All workspaces are busy" (retries itself).
+- **Limits per tenant**: `NOVA_TENANT_CPUS` (1.0), `NOVA_TENANT_MEMORY`
+  (1536m, no swap), `NOVA_TENANT_PIDS` (512); override per tenant through the
+  admin API (`tenants/<id>/limits`). Logs rotate at 3 x 10 MB.
+- **Provider keys**: none by default. The account adds its own in its
+  workspace (Settings -> Models), or the operator assigns one to that tenant
+  only (`tenants/<id>/key`, sealed with `NOVA_TENANT_SECRET_KEY`).
+- **Admin API** (`X-Nova-Bots-Token`): `GET tenants` (state, last active,
+  CPU/memory/pids, capacity), `POST tenants/<id>/start|stop|delete|key|limits`,
+  `POST tenants/backfill`, `POST users/<id>/delete` (with `{"export":true}`
+  the volumes are archived to `NOVA_TENANT_EXPORT_DIR` first). Every action
+  is in the audit log.
+- **Host firewall**: `ops/tenant-firewall.sh` (installed as the system unit
+  `ops/nova-bots-tenant-firewall.service`) keeps tenants away from host
+  services and the LAN. Tenants resolve names through `NOVA_TENANT_DNS`
+  (default `1.1.1.1,1.0.0.1`), never the LAN router (see SECURITY_MODEL.md).
+
+Turning it on, verifying and rolling back: [docs/TENANCY_ROLLOUT.md](docs/TENANCY_ROLLOUT.md).
+
+### Capacity on this host (30 GB RAM, 12 cores, ~240 GB free disk)
+
+Measured on `nova-bots:local`: an idle tenant engine uses ~150 MB RAM and
+11 processes; a fresh tenant is 3.3 MB of volume plus a 0.4 MB container
+layer (the 2.3 GB image is shared). A busy tenant (a Bot turn with tools)
+sits around 300-600 MB; one driving a Chromium browser can reach the 1.5 GB
+cap.
+
+| Resource | Budget for tenants | Per tenant (worst case) | Result |
+|---|---|---|---|
+| RAM | ~16 GB (30 GB minus ~10 GB already used by the Nova stack, Postgres and the shared engine, minus 4 GB headroom) | 1.5 GB cap | **`NOVA_TENANT_MAX_RUNNING=10`** (15 GB if all ten peak at once; typical mix ~3-5 GB) |
+| CPU | 12 cores, shared | 1 core cap | 10 running is safe: engines are mostly waiting on model APIs |
+| Disk | ~240 GB free, keep 50 GB spare | ~1 GB typical after real use (files, chats, browser cache), logs <= 30 MB | **`NOVA_TENANT_MAX_TOTAL=150`** |
+| Ports | 14100-14299 | 1 | 200 tenants max (`NOVA_TENANT_PORT_COUNT`) |
+
+Idle stop is what makes this work: accounts that are not in use cost disk
+only. With 30-minute idle stop, 10 running slots serve far more than 10
+accounts. Watch `GET tenants` (usage) and `docker system df -v`; there is no
+per-volume disk quota on this filesystem.
+
+### Testing tenancy
+
+```sh
+cd portal
+npm test                    # unit tests (gate, bridge routing, provisioner, sessions)
+npm run test:integration    # real docker: two tenants, isolation proofs, idle stop, cleanup
+node test/e2e/staging-e2e.mjs   # headless Chromium against a staging stack, screenshots in test/e2e/.state/
+npm run staging up          # leave a staging stack on 127.0.0.1:13181 to poke at; "npm run staging down" removes it
+```
+
+The integration and e2e tests need the `nova-bots:local` and
+`pgvector/pgvector:pg16` images. They create only `nbt-test-*` containers,
+volumes and networks (own Postgres container, portal on 127.0.0.1:13181,
+tenant ports from 14600) and remove them at the end. They never touch the
+live portal, engine or database.

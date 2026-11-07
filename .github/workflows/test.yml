@@ -53,6 +53,8 @@ jobs:
       - run: node scripts/scan.mjs "$RUNNER_TEMP/tree"
         env:
           SCAN_EXTRA_PATTERNS: ${{ secrets.SCAN_EXTRA_PATTERNS }}
+      # The rules keep their own tests: a rule that no longer bites must fail here.
+      - run: node --test scripts/scan.test.mjs
 
   app:
     name: Desktop app profile

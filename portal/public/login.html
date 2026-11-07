@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#060010" />
     <meta name="description" content="Sign in to Nova Bots — your premium self-hosted AI team on your hardware" />
     <title>Nova Bots — Sign in</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/nova-icon.svg" type="image/svg+xml" />
     <style>
       :root {
         color-scheme: dark;
@@ -165,7 +165,7 @@
       <div class="card">
         <div class="hgroup">
           <h1 id="form-title">Welcome back. <em>Let's ship.</em></h1>
-          <p class="lead" id="form-lead">Sign in to your Nova Bots workspace. Six imported accounts are ready to go.</p>
+          <p class="lead" id="form-lead">Sign in to your private Nova Bots workspace.</p>
         </div>
 
         <form id="account-form" method="post" action="/api/v1/auth/login/local">
@@ -194,7 +194,8 @@
 
         <div class="divider">or</div>
 
-        <p class="switch" id="switch-signup">No account yet? <button type="button" id="to-signup">Create one</button></p>
+        <p class="switch" id="switch-signup" hidden>No account yet? <button type="button" id="to-signup">Create one</button></p>
+        <p class="switch" id="switch-request">No account yet? <a id="request-access" href="mailto:jahanzaib@alilabs.com?subject=Nova%20Bots%20access">Request access</a></p>
         <p class="switch" id="switch-login" hidden>Already have an account? <button type="button" id="to-login">Sign in</button></p>
       </div>
 
@@ -240,18 +241,36 @@
         function setMode(signUp) {
           signingUp = signUp;
           clearError(formError);
-          title.innerHTML = signUp ? 'Create your account. <em>Free, forever.</em>' : 'Welcome back. <em>Let\'s ship.</em>';
+          title.innerHTML = signUp ? 'Create your account. <em>Your own private workspace.</em>' : 'Welcome back. <em>Let\'s ship.</em>';
           lead.textContent = signUp
-            ? "Pick a password and your AI team is one click away."
-            : "Sign in to your Nova Bots workspace. Six imported accounts are ready to go.";
+            ? "Pick a password. Your own private AI team is set up for you on first sign-in."
+            : "Sign in to your private Nova Bots workspace.";
           submit.textContent = signUp ? "Create account" : "Sign in";
           form.setAttribute("action", signUp ? REGISTER_PATH : LOGIN_PATH);
           const autocompleteValue = (signUp ? "new" : "current") + "-password";
           password.setAttribute("autocomplete", autocompleteValue);
           confirmField.hidden = !signUp;
-          switchSignup.hidden = signUp;
+          switchSignup.hidden = signUp || !signupOpen;
+          switchRequest.hidden = signUp || signupOpen;
           switchLogin.hidden = !signUp;
         }
+
+        // The portal says whether sign-up is open; when it is not, the page
+        // offers "Request access" instead of a form that would refuse.
+        var signupOpen = false;
+        var switchRequest = document.getElementById("switch-request");
+        fetch("/api/v1/auth/setup-status", { credentials: "same-origin" })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (status) {
+            if (!status) return;
+            signupOpen = status.signup_open === true;
+            if (status.support_contact) {
+              document.getElementById("request-access").setAttribute("href", "mailto:" + status.support_contact + "?subject=Nova%20Bots%20access");
+            }
+            if (!signingUp) { switchSignup.hidden = !signupOpen; switchRequest.hidden = signupOpen; }
+            if (signupOpen && /[?&]signup=1/.test(window.location.search)) setMode(true);
+          })
+          .catch(function () {});
 
         toSignup.addEventListener("click", function () { setMode(true); email.focus(); });
         toLogin.addEventListener("click", function () { setMode(false); email.focus(); });
@@ -279,6 +298,7 @@
                 password.focus();
               });
             }
+            if (resp.status === 409 || resp.status === 429) { return resp.text().then(function (raw) { var m = raw; try { m = JSON.parse(raw)?.detail?.message ?? raw; } catch (e) {} showError(formError, m); }); }
             if (resp.status === 400) { return resp.text().then(function (raw) { var m = raw; try { m = JSON.parse(raw)?.detail?.message ?? raw; } catch (e) {} showError(formError, m || "Check the details and try again."); }); }
             showError(formError, "Something went wrong. Please try again.");
             return null;

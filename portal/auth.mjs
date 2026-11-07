@@ -31,15 +31,23 @@ export const verifyPassword = (plain, hashed) => {
 // The JWT is a plain HS256 token: header, payload, signature.
 const base64url = (value) => Buffer.from(value).toString('base64url')
 
+// HS256 is an HMAC keyed with the signing secret. (An earlier version hashed
+// the header and payload without the secret, so anyone could forge a session;
+// tokens of that form no longer verify and their holders sign in again.)
+const signature = (input, secret) => createHmac('sha256', secret).update(input).digest('base64url')
+
 const sign = (payload, secret) => {
   const header = base64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
   const body = base64url(JSON.stringify(payload))
-  const signature = createHmac('sha256', String(secret ?? '')).update(`${header}.${body}`).digest('base64url')
-  return `${header}.${body}.${signature}`
+  return `${header}.${body}.${signature(`${header}.${body}`, secret)}`
 }
 
 export class Auth {
   constructor({ databaseUrl, jwtSecret, tokenExpiryDays = 7, rateLimitMax = 5, rateLimitWindowMs = 300000 }) {
+    // A session signed with an empty or guessable key is no session at all.
+    if (typeof jwtSecret !== 'string' || jwtSecret.length < 16) {
+      throw new Error('NOVA_JWT_SECRET must be set (at least 16 characters, 32+ recommended)')
+    }
     this.pool = new Pool({ connectionString: databaseUrl, max: 4 })
     this.jwtSecret = jwtSecret
     this.tokenExpiryDays = tokenExpiryDays
@@ -396,9 +404,14 @@ export class Auth {
     if (typeof token !== 'string') return null
     const parts = token.split('.')
     if (parts.length !== 3) return null
-    const [header, body, signature] = parts
-    const expected = createHmac('sha256', String(this.jwtSecret ?? '')).update(`${header}.${body}`).digest('base64url')
-    if (expected.length !== signature.length || !timingSafeEqual(expected, signature)) return null
+    const [header, body, provided] = parts
+    const expected = signature(`${header}.${body}`, this.jwtSecret)
+    if (expected.length !== provided.length || !timingSafeEqual(expected, provided)) return null
+    try {
+      if (JSON.parse(Buffer.from(header, 'base64url').toString('utf8')).alg !== 'HS256') return null
+    } catch {
+      return null
+    }
     let payload
     try {
       payload = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'))

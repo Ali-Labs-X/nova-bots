@@ -86,7 +86,10 @@ export function install(rt) {
       }
       return null
     }
-    const repo = repoSlug() ?? (source.kind === 'git' ? `${source.owner}/${source.repo}` : null)
+    // The installed source decides: a git install reads the release of the
+    // repository it came from, and the package's own repository is the fallback.
+    const fromSource = source.kind === 'git' && source.owner && source.repo ? `${source.owner}/${source.repo}` : null
+    const repo = fromSource ?? repoSlug()
     if (!repo) return null
     try {
       const release = await fetchJson(`https://api.github.com/repos/${repo}/releases/latest`, { 'user-agent': `${PKG.name}/${PKG.version}` })
