@@ -10,7 +10,16 @@ import { installHooks } from './helpers/register.mjs'
 await installHooks()
 
 const require = createRequire(import.meta.url)
-const { captionColumn } = require('../src/preload.cjs')
+const { captionColumn } = require('../src/caption-column.cjs')
+
+// The function as it stands in the shipped preload and in the module the test reads. The
+// preload cannot require the module (it runs in a sandbox, where require only resolves a
+// fixed list of modules), so it keeps its own copy; these two must stay the same text.
+const functionText = source => {
+  const match = /function captionColumn\(document, mica\) \{[\s\S]*?\n\}/u.exec(source)
+  assert.ok(match !== null, 'captionColumn is not in the file')
+  return match[0]
+}
 
 // A document that answers with the elements a page would have.
 const documentWith = elements => ({
@@ -48,4 +57,12 @@ test('our own page marks the conversation column', () => {
   assert.ok(column !== null, 'the conversation column is not rendered')
   assert.match(column[1], /dsb-main/u)
   assert.match(column[1], /'data-caption-surface'/u)
+})
+
+test('the shipped preload keeps the same function as the module', () => {
+  const preload = readFileSync(new URL('../src/preload.cjs', import.meta.url), 'utf8')
+  const module_ = readFileSync(new URL('../src/caption-column.cjs', import.meta.url), 'utf8')
+  assert.equal(functionText(preload), functionText(module_), 'the preload and the module differ')
+  // The shipped preload exports nothing: it runs in the renderer, not as a module.
+  assert.equal(/module\.exports/u.test(preload), false, 'the shipped preload still exports')
 })
