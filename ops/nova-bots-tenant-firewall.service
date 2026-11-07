@@ -1,0 +1,31 @@
+# Re-applies the Nova Bots tenant firewall (ops/tenant-firewall.sh) at boot,
+# after docker has set up its own chains. A system unit (iptables needs root).
+#
+# Install (not done automatically):
+#   sudo install -m 0755 ~/Desktop/Nova-Bots/ops/tenant-firewall.sh /usr/local/sbin/nova-bots-tenant-firewall
+#   sudo install -m 0644 ~/Desktop/Nova-Bots/ops/nova-bots-tenant-firewall.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now nova-bots-tenant-firewall
+#   sudo /usr/local/sbin/nova-bots-tenant-firewall status
+#
+# Docker re-creates DOCKER-USER when it restarts but leaves our chains alone;
+# PartOf= re-runs this unit whenever docker restarts, so the hook comes back.
+# Keep BRIDGE equal to NOVA_TENANT_BRIDGE_NAME and RESOLVERS equal to
+# NOVA_TENANT_DNS (space separated here) in portal/portal.env.
+
+[Unit]
+Description=Nova Bots tenant firewall (no tenant access to host services or private networks)
+After=docker.service
+Requires=docker.service
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=BRIDGE=nb-tenants
+Environment="RESOLVERS=1.1.1.1 1.0.0.1"
+ExecStart=/usr/local/sbin/nova-bots-tenant-firewall apply
+ExecStop=/usr/local/sbin/nova-bots-tenant-firewall remove
+
+[Install]
+WantedBy=multi-user.target docker.service
