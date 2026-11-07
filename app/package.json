@@ -4,14 +4,14 @@
   "version": "0.2.6",
   "private": true,
   "description": "Nova Bots desktop app: the Nova Bots team on its own pinned runtime.",
-  "author": "alilabsx",
-  "homepage": "https://github.com/alilabsx/Nova-Bots",
+  "author": "Jahanzaib211",
+  "homepage": "https://github.com/Jahanzaib211/nova-bots",
   "bugs": {
-    "url": "https://github.com/alilabsx/Nova-Bots/issues"
+    "url": "https://github.com/Jahanzaib211/nova-bots/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/alilabsx/Nova-Bots.git"
+    "url": "https://github.com/Jahanzaib211/nova-bots.git"
   },
   "desktopName": "novabots.desktop",
   "license": "Apache-2.0",
@@ -45,6 +45,7 @@
     "@deepseek-ai/dsh-experimental-voice-input-bundle": "0.2.1-rc.4",
     "@deepseek-ai/dsh-fs": "0.2.1-rc.4",
     "@deepseek-ai/dsh-hook-protocol": "0.2.1-rc.4",
+    "@deepseek-ai/dsh-host-frontend-static": "0.2.1-rc.4",
     "@deepseek-ai/dsh-jobs": "0.2.1-rc.4",
     "@deepseek-ai/dsh-llm-deepseek": "0.2.1-rc.4",
     "@deepseek-ai/dsh-output-retention": "0.2.1-rc.4",

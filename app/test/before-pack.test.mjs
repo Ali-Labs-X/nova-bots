@@ -10,11 +10,15 @@ test('a build for the architecture of this Node goes on', async () => {
   assert.equal(archProblem({ target: 'arm64', platform: 'darwin', host: 'arm64' }), undefined)
   assert.equal(archProblem({ target: 'x64', platform: 'win32', host: 'x64' }), undefined)
   const asked = []
+  const built = []
   const packager = { projectDir: 'app-dir', appInfo: { version: '0.0.0' } }
-  await beforePack({ arch: Arch[process.arch], electronPlatformName: process.platform, packager }, async (request) => { asked.push(request) })
+  await beforePack({ arch: Arch[process.arch], electronPlatformName: process.platform, packager },
+    async (request) => { asked.push(request) },
+    async () => { built.push(true) })
   assert.equal(asked.length, 1)
   assert.equal(asked[0].target, runtimeTarget(process.platform, process.arch))
   assert.equal(asked[0].output, join('app-dir', 'build', 'runtime'))
+  assert.equal(built.length, 1, 'the UI is built before the files are collected')
 })
 
 test('a build for another architecture stops and says where to build it', async () => {
@@ -37,6 +41,22 @@ test('a requested universal build stops before packing either architecture', asy
 
 test('electron-builder runs the check before it packs', () => {
   assert.match(readFileSync(new URL('../electron-builder.yml', import.meta.url), 'utf8'), /^beforePack: \.\/scripts\/before-pack\.mjs$/m)
+})
+
+test('the package carries the app\'s own UI, in the asar and unpacked beside it', () => {
+  const config = readFileSync(new URL('../electron-builder.yml', import.meta.url), 'utf8')
+  // The Host serves app/ui/dist, so the package must contain the built dist.
+  assert.match(config, /^\s+- ui\/dist\/\*\*$/m, 'the built UI is not in the packaged files')
+  // The Host is a plain Node process and cannot read inside the asar, so the dist must be
+  // unpacked next to it; app/src/main.mjs points at app.asar.unpacked for exactly that.
+  assert.match(config, /^asarUnpack:\r?\n(?:[^\n]*\r?\n)*?\s+- ui\/dist\/\*\*$/m, 'the built UI is not unpacked from the asar')
+})
+
+test('the release builds the UI once, in beforePack', () => {
+  // electron-builder's beforePack hook builds the UI (buildUi), so a separate build step in
+  // the release workflow would build it a second time.
+  const workflow = readFileSync(new URL('../../.github/workflows/release.yml', import.meta.url), 'utf8')
+  assert.equal(/- run: npm run build$/mu.test(workflow), false, 'the workflow builds the UI a second time')
 })
 
 test('the Office payload goes next to the asar for a platform the lock pins', () => {

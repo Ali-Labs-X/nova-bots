@@ -12,6 +12,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:pat
 import { setTimeout as sleep } from 'node:timers/promises'
 import { fileURLToPath } from 'node:url'
 import { hostExecutable } from '../src/host-process.mjs'
+import { APP_UI_PARTS, composerTextExpression, cssRules, pageKindExpression } from './page-rules.mjs'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const [given, shotFile] = process.argv.slice(2)
@@ -216,11 +217,7 @@ function devtools(url, problems) {
 // mica.css styles DSH's own page, which can change with a DSH upgrade; every rule must still
 // find an element, on every platform, so the change shows here and not as a broken window.
 function micaRules() {
-  const css = readFileSync(join(root, 'src', 'mica.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//gu, '')
-  return [...css.matchAll(/([^{}]+)\{/gu)].map(([, selectors]) => selectors.split(',')
-    .map(selector => selector.trim().replace(/::(?:before|after)$/u, ''))
-    .filter(selector => selector !== '' && selector !== 'body'))
-    .filter(rule => rule.length > 0)
+  return cssRules(readFileSync(join(root, 'src', 'mica.css'), 'utf8'))
 }
 
 async function chat(cdp) {
@@ -239,8 +236,18 @@ async function chat(cdp) {
   await cdp.call('Runtime.enable')
   await cdp.call('Log.enable')
   await until("document.querySelector('.bt-tile, .bt-row')", 'the team')
-  const stale = await evaluate(`${JSON.stringify(micaRules())}.filter(rule => !rule.some(selector => document.querySelector(selector) !== null)).map(rule => rule.join(', '))`)
-  if (stale.length > 0) throw new Error(`src/mica.css no longer matches DSH's page: ${stale.join(' | ')}`)
+  // The window shows the app's own UI (the app serves it at the Host's origin) or, when the
+  // app is built without one, the runtime's front end. Each page is checked with the rules
+  // that describe it: the runtime's own mica.css describes the runtime's page and matches
+  // nothing on ours, so it says nothing about our page.
+  const page = await evaluate(pageKindExpression)
+  if (page === 'app') {
+    const missing = await evaluate(`${JSON.stringify(APP_UI_PARTS)}.filter(part => document.querySelector(part) === null)`)
+    if (missing.length > 0) throw new Error(`the app's own UI does not show ${missing.join(', ')}`)
+  } else if (page === 'runtime') {
+    const stale = await evaluate(`${JSON.stringify(micaRules())}.filter(rule => !rule.some(selector => document.querySelector(selector) !== null)).map(rule => rule.join(', '))`)
+    if (stale.length > 0) throw new Error(`src/mica.css no longer matches DSH's page: ${stale.join(' | ')}`)
+  } else throw new Error('the window shows neither the app\'s own UI nor the runtime\'s front end')
   await dismissNotice()
   const main = await evaluate("fetch('api/bot', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ endpoint: 'state', payload: {} }) }).then(r => r.json()).then(r => r.value.mainBotId)")
   await evaluate(`document.querySelector(${JSON.stringify(`[data-bot-id="${main}"]`)}).click()`)
@@ -299,7 +306,9 @@ async function chat(cdp) {
     throw new Error(`timed out waiting for the focused composer; page state: ${state}`)
   }
   await cdp.call('Input.insertText', { text: 'packaged app check' })
-  await until(text('packaged app check'), 'the typed message', 10_000)
+  // The typed text is the value of the composer: a textarea keeps it in its value, so the
+  // text of the page does not hold it and the wait has to ask the composer itself.
+  await until(`${composerTextExpression}.includes('packaged app check')`, 'the typed message', 10_000)
   for (const type of ['keyDown', 'keyUp']) await cdp.call('Input.dispatchKeyEvent', { type, key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
   // The mock model starts its reply with 收到： and the message.
   try {

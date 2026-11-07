@@ -11,7 +11,9 @@ import { createTeam } from './team.js'
 // The team's theme and accent, as the plugin paints them.
 function useTheme(prefs) {
   useEffect(() => {
-    const theme = allThemes()[prefs?.theme] ?? allThemes().deepseek
+    // The theme the team chose; a theme the plugin does not know reads as the default one.
+    const themes = allThemes()
+    const theme = themes[prefs?.theme] ?? themes.nova
     const style = document.createElement('style')
     style.textContent = themeCss(theme, prefs?.accent)
     document.head.append(style)
@@ -68,7 +70,9 @@ export function App() {
       h('div', { className: 'dsb-side-foot' },
         h('button', { type: 'button', className: 'dsb-settings', title: t('Settings'), onClick: () => actions.openSettings() }, h(YouAvatar)))),
     // The details panel makes room by giving the shell's `_centerCol` column a right margin.
-    h('main', { className: 'dsb-main dsb_centerCol' },
+    // The caption buttons stand on this column; the mark tells the preload which surface
+    // they are on, so it can paint them with the colour of that surface.
+    h('main', { className: 'dsb-main dsb_centerCol', 'data-caption-surface': '' },
       h('div', { className: 'dsb-band' }),
       shown ? h(Fragment, { key: shown },
         h('div', { className: 'dsb-head' }, h(HeaderPill, { ...views, sessionId: shown, useSession: team.sessionHook(shown) })),
