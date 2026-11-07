@@ -17,10 +17,12 @@
 // Screenshots and a step log land in test/e2e/.state/ (git-ignored); the
 // tenant containers and volumes are removed at the end.
 //
-// PLAYWRIGHT: path to @playwright/test's index.mjs (defaults to the copy in
-// the Nova frontend's node_modules on this machine).
+// PLAYWRIGHT: path to @playwright/test's index.mjs. It comes from the
+// environment: the browser package is not a dependency of the portal, so the
+// run says where it is instead of carrying one machine's path in the source.
 
 import { execFile } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -28,7 +30,8 @@ import { docker, leftovers, start, stop } from '../integration/stack.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const OUT = process.env.NBT_E2E_OUT ?? join(HERE, '.state')
-const PLAYWRIGHT = process.env.PLAYWRIGHT ?? '/home/jahanzaib/Desktop/nova/frontend/node_modules/.pnpm/@playwright+test@1.59.1/node_modules/@playwright/test/index.mjs'
+const PLAYWRIGHT = process.env.PLAYWRIGHT
+if (!PLAYWRIGHT) throw new Error('PLAYWRIGHT is not set: point it at the @playwright/test entry of a Playwright install')
 const PORTAL_PORT = 13181
 const WEB_PORT = 13180
 const WEB = `http://127.0.0.1:${WEB_PORT}`
@@ -139,8 +142,10 @@ try {
     await Promise.all([page.waitForURL(/\/app\//, { timeout: 20000 }), page.click('#submit')])
   }
 
-  const A = { email: `alpha-${Date.now()}@nbt-test.example`, password: 'Alpha-staging-pass-1' }
-  const B = { email: `bravo-${Date.now()}@nbt-test.example`, password: 'Bravo-staging-pass-1' }
+  // The accounts are created by this run, so their passwords are made for this run:
+  // a value in the source is a value that is in every clone of it.
+  const A = { email: `alpha-${Date.now()}@nbt-test.example`, password: `Alpha-staging-${randomUUID()}` }
+  const B = { email: `bravo-${Date.now()}@nbt-test.example`, password: `Bravo-staging-${randomUUID()}` }
 
   // 1. Closed mode UI: the page offers "Request access" (setup-status says closed).
   await pageA.route('**/api/v1/auth/setup-status', route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({ needs_setup: false, has_users: true, signup_open: false, support_contact: 'jahanzaib@alilabs.com' }) }))
