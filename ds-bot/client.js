@@ -116,7 +116,7 @@ var ZH = {
   Command: "命令",
   "Arguments (one per line)": "参数（每行一个）",
   "Environment (JSON)": "环境变量（JSON）",
-  '{"API_KEY": "$NOVA_SECRET_MY_KEY"}': '{"API_KEY": "$NOVA_SECRET_MY_KEY"}',
+  '{"API_KEY": "$DSH_SECRET_MY_KEY"}': '{"API_KEY": "$DSH_SECRET_MY_KEY"}',
   URL: "URL",
   "Headers (JSON)": "请求头（JSON）",
   "Skill instructions": "技能说明",
@@ -7152,7 +7152,7 @@ function SecretCard({ sessionId, bot, request, roster, actions, inline = false }
       "div",
       { className: "bt-secret-note", id: noteId },
       t("{bot} never sees the value. It reaches {bot}'s shell as ", { bot: bot.name }),
-      (0, import_react14.createElement)("code", null, `$NOVA_SECRET_${request.name}`),
+      (0, import_react14.createElement)("code", null, `$DSH_SECRET_${request.name}`),
       ".",
       filling && value !== "" && !long ? t(" At least {count} characters.", { count: MIN_VALUE }) : ""
     ),
@@ -7378,7 +7378,7 @@ function SecretsPage({ roster, actions, run: run2, Section }) {
       "p",
       { key: "about", className: "bt-secret-about" },
       t("Keys your Bots asked for. Bots never see the values: they use them as "),
-      (0, import_react14.createElement)("code", null, "$NOVA_SECRET_NAME"),
+      (0, import_react14.createElement)("code", null, "$DSH_SECRET_NAME"),
       t(" in their shell, and every value is replaced by "),
       (0, import_react14.createElement)("code", null, "[secret:NAME]"),
       t(" before anything goes to a model.")
@@ -12825,13 +12825,13 @@ function CapabilityForm({ draft, setDraft, items, actions, onClose }) {
       null,
       (0, import_react28.createElement)(Field, { label: "Command", value: draft.command, onChange: (value) => set("command", value) }),
       (0, import_react28.createElement)(Field, { label: "Arguments (one per line)", value: draft.argsText, onChange: (value) => set("argsText", value), multiline: true }),
-      (0, import_react28.createElement)(Field, { label: "Environment (JSON)", value: draft.envText, onChange: (value) => set("envText", value), multiline: true, placeholder: t('{"API_KEY": "$NOVA_SECRET_MY_KEY"}') })
+      (0, import_react28.createElement)(Field, { label: "Environment (JSON)", value: draft.envText, onChange: (value) => set("envText", value), multiline: true, placeholder: t('{"API_KEY": "$DSH_SECRET_MY_KEY"}') })
     ) : null,
     draft.kind === "mcp" && draft.transport === "streamable-http" ? (0, import_react28.createElement)(
       "div",
       null,
       (0, import_react28.createElement)(Field, { label: "URL", value: draft.url, onChange: (value) => set("url", value) }),
-      (0, import_react28.createElement)(Field, { label: "Headers (JSON)", value: draft.headersText, onChange: (value) => set("headersText", value), multiline: true, placeholder: t('{"API_KEY": "$NOVA_SECRET_MY_KEY"}') })
+      (0, import_react28.createElement)(Field, { label: "Headers (JSON)", value: draft.headersText, onChange: (value) => set("headersText", value), multiline: true, placeholder: t('{"API_KEY": "$DSH_SECRET_MY_KEY"}') })
     ) : null,
     draft.kind === "skill" ? (0, import_react28.createElement)(Field, { label: "Skill instructions", value: draft.content, onChange: (value) => set("content", value), multiline: true }) : null,
     draft.kind === "pack" ? (0, import_react28.createElement)(

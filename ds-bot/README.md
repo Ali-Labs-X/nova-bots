@@ -317,9 +317,9 @@ a secret card shows in its own chat. The bot never sees the value.
   it, the card only asks whether to allow it. You can also replace the value
   there.
 - **Use**: the value goes into the bot's shell environment as
-  `$NOVA_SECRET_<NAME>` (`$NOVA_SECRET_NAME` in bash, `$env:NOVA_SECRET_NAME`
+  `$DSH_SECRET_<NAME>` (`$DSH_SECRET_NAME` in bash, `$env:DSH_SECRET_NAME`
   in PowerShell). `list_secrets` lists the names a bot can use. An MCP
-  capability can also take `$NOVA_SECRET_<NAME>` in its env, its headers and
+  capability can also take `$DSH_SECRET_<NAME>` in its env, its headers and
   its URL (path or query); in the URL the value is URL-encoded. Use headers
   when the server accepts them.
 - **Masking**: before a tool result is saved and before each request goes to

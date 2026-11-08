@@ -80,7 +80,7 @@ const ZH = {
   Command: '命令',
   'Arguments (one per line)': '参数（每行一个）',
   'Environment (JSON)': '环境变量（JSON）',
-  '{"API_KEY": "$NOVA_SECRET_MY_KEY"}': '{"API_KEY": "$NOVA_SECRET_MY_KEY"}',
+  '{"API_KEY": "$DSH_SECRET_MY_KEY"}': '{"API_KEY": "$DSH_SECRET_MY_KEY"}',
   URL: 'URL',
   'Headers (JSON)': '请求头（JSON）',
   'Skill instructions': '技能说明',

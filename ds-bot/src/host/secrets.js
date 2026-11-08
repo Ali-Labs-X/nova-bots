@@ -1,5 +1,5 @@
 // Secrets: keys the user types into a card for a Bot. A value lives only in
-// secrets.json (mode 600) and in this process; Bots use it as $NOVA_SECRET_<NAME> in
+// secrets.json (mode 600) and in this process; Bots use it as $DSH_SECRET_<NAME> in
 // their shell, tool results lose it before they are saved, and every model request
 // has it replaced by [secret:<NAME>] before it leaves.
 import { randomUUID } from 'node:crypto'
@@ -11,7 +11,9 @@ import { replaceFile } from './files.js'
 import { output } from './tools.js'
 
 export const SECRET_NAME = /^[A-Z][A-Z0-9_]{0,63}$/
-export const ENV_PREFIX = 'NOVA_SECRET_'
+// The runtime's shell-env registry refuses a contributor whose keys are not under DSH_,
+// so the prefix is the runtime's, not the product's.
+export const ENV_PREFIX = 'DSH_SECRET_'
 // A short value (a PIN, a short password) would also hit ordinary words if it were
 // replaced wherever it appears, so below WHOLE_VALUE it is replaced only where it
 // stands alone: no letter or digit right before or after it.
