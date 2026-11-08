@@ -104,8 +104,9 @@ const HOP_BY_HOP = ['connection', 'keep-alive', 'proxy-connection', 'transfer-en
 // Origin is only believed when it names exactly that authority.
 
 const frontDoorPort = () => {
-  const port = String(process.env.NOVA_PORT ?? '').trim()
-  return /^\d{1,5}$/.test(port) ? port : ''
+  const port = Number(String(process.env.NOVA_PORT ?? '').trim())
+  if (!Number.isInteger(port) || port < 1 || port > 65535) return ''
+  return String(port)
 }
 
 // The host as it came, with the front door's port when it came without one.
