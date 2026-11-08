@@ -9800,6 +9800,7 @@ var bootHint = (status) => {
   const last = status || clientErrors().at(-1)?.text;
   return last === void 0 ? t("The Bot team could not start. The engine’s startup output — its console, or the app’s startup error box — has the cause.") : t("The Bot team could not start. {error}. The engine’s startup output — its console, or the app’s startup error box — has the cause.", { error: last });
 };
+var rosterLine = (uiNow) => uiNow.bootFailed ? (0, import_react19.createElement)("div", { className: "bt-hint bt-error", role: "alert", style: { padding: "14px" } }, bootHint(uiNow.bootFailure)) : (0, import_react19.createElement)("div", { className: "bt-hint" }, t("Setting up your Main Bot…"));
 function TeamSidebar(props) {
   const { wide, useRoster, useUi, useSessions, actions } = props;
   const listRef = (0, import_react19.useRef)(null);
@@ -10045,7 +10046,7 @@ function TeamSidebar(props) {
     { className: "bt-rail-top" },
     (0, import_react19.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
     (0, import_react19.createElement)("button", { type: "button", className: "bt-round bt-side-collapse", "aria-label": t("Collapse sidebar"), title: t("Collapse sidebar"), onClick: onToggle }, (0, import_react19.createElement)(SidebarIcon)),
-    main ? (0, import_react19.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : (0, import_react19.createElement)("div", { className: "bt-hint" }, uiNow.bootFailed ? bootHint(uiNow.bootFailure) : t("Setting up your Main Bot…")),
+    main ? (0, import_react19.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : rosterLine(uiNow),
     (0, import_react19.createElement)("span", { className: "bt-rail-sep", "aria-hidden": true })
   );
   const foot = wideContent ? (0, import_react19.createElement)("div", { className: "bt-leftcol-foot" }, (0, import_react19.createElement)(AccountLauncher, { seat: false, actions })) : (0, import_react19.createElement)(
@@ -10062,7 +10063,7 @@ function TeamSidebar(props) {
     (0, import_react19.createElement)(
       "div",
       { ref: listRef, className: "bt-list", role: "region", "aria-label": t("Bot list") },
-      wideContent ? main ? (0, import_react19.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : (0, import_react19.createElement)("div", { className: "bt-hint" }, uiNow.bootFailed ? bootHint(uiNow.bootFailure) : t("Setting up your Main Bot…")) : null,
+      wideContent ? main ? (0, import_react19.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : rosterLine(uiNow) : null,
       order.map((entry) => entry.kind === "bot" ? (0, import_react19.createElement)(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true }) : entry.kind === "room" ? (0, import_react19.createElement)(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true }) : (0, import_react19.createElement)(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true }))
     ),
     foot

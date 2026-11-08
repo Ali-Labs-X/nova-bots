@@ -52,7 +52,10 @@ function hints(ui) {
   const walk = node => {
     if (Array.isArray(node)) { node.forEach(walk); return }
     if (!node || typeof node !== 'object') return
-    if (node.props?.className === 'bt-hint') found.push(textOf(node.props.children))
+    const className = node.props?.className
+    if (typeof className === 'string' && className.includes('bt-hint')) {
+      found.push({ text: textOf(node.props.children), className, role: node.props?.role })
+    }
     walk(node.props?.children)
   }
   walk(tree)
@@ -134,14 +137,20 @@ test('the roster coming back clears the failure', async () => {
 test('the sidebar shows the failure with its status, not the endless wait', () => {
   const failed = hints({ bootFailed: true, bootFailure: 'HTTP 401' })
   assert.equal(failed.length, 1)
-  assert.match(failed[0], /HTTP 401/)
-  assert.match(failed[0], /could not start/)
+  assert.match(failed[0].text, /HTTP 401/)
+  assert.match(failed[0].text, /could not start/)
   // The endless wait is gone.
-  assert.doesNotMatch(failed[0], /Setting up your Main Bot/)
+  assert.doesNotMatch(failed[0].text, /Setting up your Main Bot/)
+  // Marked like a failed host call on our pages: `.bt-error` with `role="alert"`.
+  assert.match(failed[0].className, /bt-error/)
+  assert.equal(failed[0].role, 'alert')
 })
 
 test('the sidebar keeps the wait while the API is still answering', () => {
   const waiting = hints({ bootFailed: false, bootFailure: '' })
   assert.equal(waiting.length, 1)
-  assert.match(waiting[0], /Setting up your Main Bot/)
+  assert.match(waiting[0].text, /Setting up your Main Bot/)
+  // The wait is a progress note, not an error.
+  assert.doesNotMatch(waiting[0].className, /bt-error/)
+  assert.equal(waiting[0].role, undefined)
 })
