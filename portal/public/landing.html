@@ -4,11 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#060010" />
-    <meta
-      name="description"
-      content="Nova Bots — a premium self-hosted team of long-lived AI bots. They remember everything, collaborate on complex work, and operate exclusively on your hardware."
-    />
-    <title>Nova Bots — Your AI team, on your hardware</title>
+    <meta name="description" content="Build your bot army. Nova Bots lets you spin up bots with their own roles, memory and models that collaborate in squads, hand off work and report to a commander. Self-host it or sign in to the hosted workspace." />
+    <title>Nova Bots — Build your bot army</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Nova Bots" />
+    <meta property="og:title" content="Nova Bots — Build your bot army" />
+    <meta property="og:description" content="Bots with their own roles, memory and models that collaborate in squads, hand off work and report to a commander. On hardware you own." />
+    <meta property="og:url" content="https://bots.alilabsx.com/" />
     <link rel="icon" href="/nova-icon.svg" type="image/svg+xml" />
     <style>
       :root {
@@ -476,36 +478,40 @@
         <span class="logo-text">Nova <span>Bots</span></span>
       </a>
       <nav class="topbar-nav">
+        <a class="nav-link" href="/docs">Docs</a>
         <a class="nav-link" href="/login">Sign in</a>
-        <a class="nav-link cta" href="/login">Start free →</a>
+        <a class="nav-link cta" href="/login">Build your bot army →</a>
       </nav>
     </header>
 
     <main>
       <section class="hero">
-        <div class="hero-eyebrow"><span class="dot"></span> SELF-HOSTED AI TEAM PLATFORM</div>
-        <h1 style="color: #f4f0ff; text-shadow: 0 0 40px rgba(167, 139, 250, 0.3);">Your AI team,<br/>working on <span class="grad-text">your hardware</span></h1>
+        <div class="hero-eyebrow"><span class="dot"></span> YOUR BOTS. YOUR HARDWARE.</div>
+        <h1 style="color: #f4f0ff; text-shadow: 0 0 40px rgba(167, 139, 250, 0.3);">Build your <span class="grad-text">bot army.</span></h1>
         <p class="hero-lead">
-          A self-hosted team of long-lived AI bots that <strong>remember everything</strong>,
-          <strong>hand work to each other</strong>, and operate <strong>exclusively on your machines</strong>.
-          Nothing leaves your perimeter.
+          Spin up a bot for any job, give it a role, and let them collaborate — they <strong>hand off work</strong>,
+          <strong>run in squads</strong> and <strong>report to a commander</strong>. On hardware you own.
+        </p>
+        <p class="hero-lead">
+          Nova Bots lets you build your own bot army: bots with their own roles, memory and models that
+          collaborate in squads, hand off work and report to a commander. Self-host it and all of it runs on your own machine.
         </p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="/login">Start your team <svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9M9 3.5 13 8l-4 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-          <a class="btn btn-ghost" href="/login">See what they can do →</a>
+          <a class="btn btn-primary" href="/login">Build your bot army <svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9M9 3.5 13 8l-4 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <a class="btn btn-ghost" href="https://github.com/Jahanzaib211/nova-bots" target="_blank" rel="noopener">Self-host it →</a>
         </div>
         <div class="hero-meta">
-          <div class="hero-stat"><div class="n">100%</div><div class="l">On your hardware</div></div>
-          <div class="hero-stat"><div class="n">0 data</div><div class="l">Sent to third parties</div></div>
-          <div class="hero-stat"><div class="n">∞ memory</div><div class="l">Long-term context</div></div>
+          <div class="hero-stat"><div class="n">Memory</div><div class="l">Long-lived, one per bot</div></div>
+          <div class="hero-stat"><div class="n">Squads</div><div class="l">Every handoff on the record</div></div>
+          <div class="hero-stat"><div class="n">Your models</div><div class="l">Bring your own provider</div></div>
         </div>
       </section>
 
-      <section class="floor" aria-label="AI team at work">
+      <section class="floor" aria-label="A squad of bots at work">
         <div class="floor-header">
-          <p class="floor-eyebrow">LIVE ON YOUR HARDWARE</p>
-          <h2>Watch your <em>AI team</em> work<br/>in real time</h2>
-          <p>Four persistent agents. One Mission Commander. Every step visible, every file stays yours.</p>
+          <p class="floor-eyebrow">ONE COMMANDER. ONE SQUAD.</p>
+          <h2>Meet <em>Orion</em>,<br/>your Commander</h2>
+          <p>Orion, the Mission Commander, holds the highest rights: it creates, changes and removes bots and keeps every squad in formation. One bot researches, one builds, one reviews — they pass the work along. The squad below is an example; names, roles and instructions are yours to set.</p>
         </div>
 
         <div class="bot-grid" id="botGrid" aria-hidden="true">
@@ -515,9 +521,9 @@
             </div>
             <div class="bot-name">Orion</div>
             <div class="bot-role">Mission Commander</div>
-            <div class="bot-state"><span class="dot busy"></span>orchestrating · drafting</div>
+            <div class="bot-state"><span class="dot busy"></span>leading · launch squad</div>
             <div class="bot-terminal"><span class="t-dim">orion@nova-bots:</span>
-orion → task: review PRs<br/>spawning <span class="t-violet">Researcher</span>...</div>
+@Researcher pull the open issues<br/>handoff → <span class="t-violet">Researcher</span></div>
           </div>
 
           <div class="bot-card">
@@ -525,10 +531,10 @@ orion → task: review PRs<br/>spawning <span class="t-violet">Researcher</span>
               <svg class="spark" viewBox="0 0 24 24" fill="none"><path d="M12 0l2.6 6.8 6.8 2.6-6.8 2.6L12 18.8l-2.6-6.8L2.6 9.4l6.8-2.6L12 0Z" fill="url(#g2)"/><defs><linearGradient id="g2" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#c4b5fd"/><stop offset="0.52" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs></svg>
             </div>
             <div class="bot-name">Researcher</div>
-            <div class="bot-role">Research Lead</div>
-            <div class="bot-state"><span class="dot busy"></span>scanning · 14 files</div>
+            <div class="bot-role">Research</div>
+            <div class="bot-state"><span class="dot busy"></span>reading · working folder</div>
             <div class="bot-terminal"><span class="t-dim">researcher@nova-bots:</span>
-grep -r "API key" src/<br/><span class="t-ok">✓</span> found: 3 matches</div>
+reading docs/plans/<br/><span class="t-ok">✓</span> findings posted to squad</div>
           </div>
 
           <div class="bot-card">
@@ -536,82 +542,86 @@ grep -r "API key" src/<br/><span class="t-ok">✓</span> found: 3 matches</div>
               <svg class="spark" viewBox="0 0 24 24" fill="none"><path d="M12 0l2.6 6.8 6.8 2.6-6.8 2.6L12 18.8l-2.6-6.8L2.6 9.4l6.8-2.6L12 0Z" fill="url(#g3)"/><defs><linearGradient id="g3" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#c4b5fd"/><stop offset="0.52" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs></svg>
             </div>
             <div class="bot-name">Writer</div>
-            <div class="bot-role">Content Strategist</div>
-            <div class="bot-state"><span class="dot"></span>editing · release notes</div>
+            <div class="bot-role">Release Notes</div>
+            <div class="bot-state"><span class="dot"></span>drafting · release notes</div>
             <div class="bot-terminal"><span class="t-dim">writer@nova-bots:</span>
-draft v2_release_notes.md<br/><span class="t-cyan">→</span> 1,840 words, done</div>
+draft release-notes.md<br/><span class="t-cyan">→</span> handed back to Orion</div>
           </div>
 
           <div class="bot-card">
             <div class="bot-orb" style="--delay: 1.8s">
               <svg class="spark" viewBox="0 0 24 24" fill="none"><path d="M12 0l2.6 6.8 6.8 2.6-6.8 2.6L12 18.8l-2.6-6.8L2.6 9.4l6.8-2.6L12 0Z" fill="url(#g4)"/><defs><linearGradient id="g4" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#c4b5fd"/><stop offset="0.52" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/></linearGradient></defs></svg>
             </div>
-            <div class="bot-name">Outreach</div>
-            <div class="bot-role">CRM & Growth</div>
-            <div class="bot-state"><span class="dot"></span>monitoring · pipeline</div>
-            <div class="bot-terminal"><span class="t-dim">outreach@nova-bots:</span>
-sync contacts → linkedin<br/><span class="t-ok">✓</span> 42 new leads enriched</div>
+            <div class="bot-name">Reviewer</div>
+            <div class="bot-role">Quality Check</div>
+            <div class="bot-state"><span class="dot"></span>checking · against the brief</div>
+            <div class="bot-terminal"><span class="t-dim">reviewer@nova-bots:</span>
+compare draft with brief<br/><span class="t-ok">✓</span> report filed to Orion</div>
           </div>
         </div>
       </section>
 
       <div class="metrics" style="margin-top: 0;">
-        <div class="metric"><div class="n">12<span>+</span></div><div class="l">Team capacity per task</div></div>
-        <div class="metric"><div class="n">4<span> bots</span></div><div class="l">Coordinated at all times</div></div>
-        <div class="metric"><div class="n">0<span> sec</span></div><div class="l">Data leaves your network</div></div>
-        <div class="metric"><div class="n">24<span>/7</span></div><div class="l">Always-on AI specialists</div></div>
+        <div class="metric"><div class="n">3<span> ways</span></div><div class="l">Desktop app, browser or container</div></div>
+        <div class="metric"><div class="n">1<span> engine</span></div><div class="l">Per account, isolated from the rest</div></div>
+        <div class="metric"><div class="n">0<span> access</span></div><div class="l">To an engine without a signed-in, entitled session</div></div>
+        <div class="metric"><div class="n">Apache<span> 2.0</span></div><div class="l">Open source. Read every line.</div></div>
       </div>
 
-      <section class="features" aria-label="Capabilities">
+      <section class="features" aria-label="Why Nova Bots">
         <div class="features-head">
-          <p class="eyebrow">CAPABILITIES</p>
-          <h2>Everything an AI team needs,<br/>nothing it doesn't</h2>
-          <p>Built for operators who want intelligence they control.</p>
+          <p class="eyebrow">WHY NOVA BOTS</p>
+          <h2>Hire bots,<br/>not seats.</h2>
+          <p>A bot army you own, running where you can see it.</p>
         </div>
 
         <div class="features-grid">
           <article class="feature-card">
             <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 0 1 4 4v1h3a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-1l-1 3a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2l-1-3H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1h3V7a4 4 0 0 1 4-4Z"/></svg></div>
-            <h3>Bots That Remember</h3>
-            <p>Per-bot long-term memory. Every decision, file, and preference — retained permanently across sessions on your disk.</p>
+            <h3>Memory that lasts</h3>
+            <p>Every bot keeps its own long-lived memory and picks up where it left off. You can read it, correct it and remove entries in its memory panel.</p>
           </article>
 
           <article class="feature-card">
             <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8l-5 3V6a2 2 0 0 1 2-2Z"/><path d="M8 9h8M8 13h5"/></svg></div>
-            <h3>Group Chats with Hand-offs</h3>
-            <p>Admin bot orchestrates. Specialists pick up tasks, share context, and report back — @mention them to hand work instantly.</p>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v12a2 2 0 0 0 2 2h14"/><path d="M7 7V5a2 2 0 0 1 2-2h4l5 5h2a2 2 0 0 1 2 2v7"/></svg></div>
-            <h3>Working Folders</h3>
-            <p>Each bot gets its own isolated folder. Symmetric read/write — no cross-contamination between jobs or teammates.</p>
-          </article>
-
-          <article class="feature-card">
-            <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v4a2 2 0 0 1-2 2H3"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/><path d="M9 21v-4a2 2 0 0 0-2-2H3"/><path d="M15 21v-4a2 2 0 0 1 2-2h4"/><circle cx="12" cy="12" r="3"/></svg></div>
-            <h3>Capabilities Library</h3>
-            <p>MCP servers, skills, and operator packs — pre-vetted, shareable across your whole team, version controlled.</p>
+            <h3>Squads with handoffs</h3>
+            <p>Build your own workflows: put several bots on one problem in a squad. They hand work over with <code>@</code>, post progress, and report back. Every handoff shows up in the squad's panel.</p>
           </article>
 
           <article class="feature-card">
             <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 8l10 6 10-6-10-6Z"/><path d="M2 14l10 6 10-6"/></svg></div>
-            <h3>Secrets, Encrypted</h3>
-            <p>Bots request keys via a card. Values stay in your secrets file — never in memory, never in logs, never seen by models.</p>
+            <h3>A commander with the keys</h3>
+            <p>Orion holds the highest rights: it creates, changes and removes bots. Other bots can't. Run more than one commander when you need it.</p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v12a2 2 0 0 0 2 2h14"/><path d="M7 7V5a2 2 0 0 1 2-2h4l5 5h2a2 2 0 0 1 2 2v7"/></svg></div>
+            <h3>One engine per account</h3>
+            <p>On the hosted workspace, every account gets its own engine, its own volumes and its own network slot. No account can reach another's.</p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v4a2 2 0 0 1-2 2H3"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/><path d="M9 21v-4a2 2 0 0 0-2-2H3"/><path d="M15 21v-4a2 2 0 0 1 2-2h4"/><circle cx="12" cy="12" r="3"/></svg></div>
+            <h3>Sign-in that fails closed</h3>
+            <p>Every request is checked against your portal session. No entitled session, no engine. Engine cookies never reach your browser.</p>
           </article>
 
           <article class="feature-card">
             <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l5-5 4 4 6-6"/></svg></div>
-            <h3>Usage & Analytics</h3>
-            <p>Token consumption per bot, per model, per group chat. No guessing — real numbers, your data, your machine.</p>
+            <h3>Your models, your call</h3>
+            <p>Bring your own provider and key. Pick a model per bot and switch it any time. Run it as a desktop app, in the browser, or in a container.</p>
           </article>
         </div>
       </section>
 
       <section class="cta-final">
-        <h2>Your team. <span>Your hardware.</span><br/>Your data — <em style="-webkit-text-fill-color: #66e4ff;">your call.</em></h2>
-        <p>Install Nova Bots on any Linux machine in 5 minutes. Six imported users can start immediately using the accounts you already registered.</p>
-        <a class="btn btn-primary" href="/login">Launch Nova Bots Now <svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9M9 3.5 13 8l-4 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <h2>I don't rent. <span>I build.</span></h2>
+        <p>“Everyone is renting intelligence by the seat. I build it — and I run it where I can see it. Nova Bots is the team I wanted: teammates that remember, a commander that keeps them in formation, and every handoff on the record. I don't rent, I build.”</p>
+        <p>— Jahanzaib Ali, Founder, AliLabsX</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="/login">Build your bot army <svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9M9 3.5 13 8l-4 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <a class="btn btn-ghost" href="https://github.com/Jahanzaib211/nova-bots" target="_blank" rel="noopener">Self-host it →</a>
+        </div>
       </section>
     </main>
 
@@ -625,7 +635,7 @@ sync contacts → linkedin<br/><span class="t-ok">✓</span> 42 new leads enrich
             </svg>
             <span class="logo-text">Nova <span>Bots</span></span>
           </a>
-          <p class="footer-note">A self-hosted team of long-lived AI bots. Built by Ali Labs alongside Nova. Licensed under Apache 2.0. Your data never leaves your network.</p>
+          <p class="footer-note">Build your bot army: bots that remember, collaborate in squads and report to a commander. Built by Ali Labs alongside Nova. Open source under Apache 2.0. Contact: <a href="mailto:Jahanzaib@alilabsx.com">Jahanzaib@alilabsx.com</a></p>
         </div>
         <div class="footer-col">
           <h4>Product</h4>
@@ -689,10 +699,10 @@ sync contacts → linkedin<br/><span class="t-ok">✓</span> 42 new leads enrich
       (function () {
         const lines = [
           '[bot] replying round 2/4',
-          '[scout] scanning docs/',
+          '[researcher] reading docs/',
           '[writer] draft complete v2.1',
-          '[outreach] sync 42 contacts',
-          '[main] orchestration ready',
+          '[reviewer] report filed',
+          '[orion] squad in formation',
           '[bot] memory committed',
         ];
         const editors = document.querySelectorAll('.bot-terminal');
