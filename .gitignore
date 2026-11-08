@@ -31,6 +31,7 @@ node_modules
 
 # Local Docker deployment data.
 /docker/data/
+/data/
 /docker/cache/
 /docker/workspace/
 /docker/.env

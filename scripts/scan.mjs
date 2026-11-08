@@ -73,6 +73,8 @@ const FORBIDDEN_FILES = [
   { re: /(^|\/)node_modules\//, why: 'installed packages' },
   { re: /\.(env|pem|key|p12|sqlite|db)$/, why: 'secret or data file' },
   { re: /^\.scan-extra$/, why: 'local scan patterns' },
+  { re: /^data\//, why: 'runtime data (DSH_HOME)' },
+  { re: /(^|\/)(\.credentials\.yaml|\.launch-token)$/, why: 'runtime credentials' },
 ]
 
 const args = process.argv.slice(2)
