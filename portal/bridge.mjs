@@ -89,14 +89,66 @@ export const enginePath = (rawUrl) => {
 
 const HOP_BY_HOP = ['connection', 'keep-alive', 'proxy-connection', 'transfer-encoding', 'upgrade', 'te', 'trailer', 'proxy-authorization']
 
-const upstreamHeaders = (req, engineCookie, { upgrade = false } = {}) => {
+// The authority the engine must see.
+//
+// The engine's browser-trust fence compares the Origin authority with the
+// Host authority and refuses the request when they differ. A front door that
+// forwards the host without its port ('localhost' for 'localhost:13080') makes
+// the two differ, and then every API call and every live socket is refused
+// with 403.
+//
+// The authority the engine has to see is the one the browser dialled: the host
+// as it came, with the front door's own port (NOVA_PORT) when the front door
+// stripped it. The port is never taken from the request — a page on another
+// port of the same host must not be able to choose the authority — so the
+// Origin is only believed when it names exactly that authority.
+
+const frontDoorPort = () => {
+  const port = Number(String(process.env.NOVA_PORT ?? '').trim())
+  if (!Number.isInteger(port) || port < 1 || port > 65535) return ''
+  return String(port)
+}
+
+// The host as it came, with the front door's port when it came without one.
+const dialledAuthority = (host) => {
+  const port = frontDoorPort()
+  if (!port) return host
+  try {
+    const url = new URL(`http://${host}`)
+    if (url.port) return host
+    return `${url.host}:${port}`
+  } catch {
+    return host
+  }
+}
+
+// The authority an Origin names, or '' when it names none.
+const originAuthority = (origin) => {
+  try {
+    const url = new URL(origin)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return ''
+    return url.host
+  } catch {
+    return ''
+  }
+}
+
+export const requestAuthority = (req) => {
+  const host = req.headers.host ?? 'localhost'
+  const origin = originAuthority(String(req.headers.origin ?? '').trim())
+  if (!origin) return host
+  const dialled = dialledAuthority(host)
+  return origin === dialled ? dialled : host
+}
+
+const upstreamHeaders = (req, engineCookie, { upgrade = false, authority } = {}) => {
   const headers = { ...req.headers }
   for (const name of HOP_BY_HOP) if (!upgrade || (name !== 'connection' && name !== 'upgrade')) delete headers[name]
   delete headers['accept-encoding']
   // Credentials meant for the portal stay with the portal.
   delete headers.authorization
   delete headers['x-nova-bots-token']
-  headers.host = req.headers.host ?? 'localhost'
+  headers.host = authority ?? requestAuthority(req)
   const cookie = upstreamCookieHeader(req.headers.cookie, engineCookie)
   if (cookie) headers.cookie = cookie
   else delete headers.cookie
@@ -145,7 +197,7 @@ const requestBody = async req => {
 // fresh cookie when it can be replayed; one that cannot be replayed is
 // answered with the status the client can act on.
 export const proxyHttp = async (req, res, target, { retried = false, payload } = {}) => {
-  const host = req.headers.host ?? 'localhost'
+  const host = requestAuthority(req)
   const engineCookie = await target.cookie(host, { fresh: retried })
   if (!engineCookie) return unavailable(res, 503, 'The Nova Bots workspace is not reachable yet. Try again in a moment.', { 'retry-after': '2' })
   const upstream = new URL(enginePath(req.url), target.url)
@@ -155,7 +207,7 @@ export const proxyHttp = async (req, res, target, { retried = false, payload } =
     port: upstream.port || 80,
     path: upstream.pathname + upstream.search,
     method: req.method,
-    headers: upstreamHeaders(req, engineCookie),
+    headers: upstreamHeaders(req, engineCookie, { authority: host }),
   }, upstreamResponse => {
     if (upstreamResponse.statusCode === 401) {
       upstreamResponse.resume()
@@ -182,7 +234,7 @@ export const proxyHttp = async (req, res, target, { retried = false, payload } =
 
 // WebSocket and other upgrades (the live feed). Same cookie rules as HTTP.
 export const proxyUpgrade = async (req, socket, head, target, { onOpen, onClose, retried = false } = {}) => {
-  const host = req.headers.host ?? 'localhost'
+  const host = requestAuthority(req)
   const engineCookie = await target.cookie(host, { fresh: retried })
   if (!engineCookie) return socket.destroy()
   const upstream = new URL(enginePath(req.url), target.url)
@@ -191,7 +243,7 @@ export const proxyUpgrade = async (req, socket, head, target, { onOpen, onClose,
     port: upstream.port || 80,
     path: upstream.pathname + upstream.search,
     method: req.method,
-    headers: upstreamHeaders(req, engineCookie, { upgrade: true }),
+    headers: upstreamHeaders(req, engineCookie, { upgrade: true, authority: host }),
   })
   request.on('upgrade', (upstreamResponse, upstreamSocket, upstreamHead) => {
     const lines = []

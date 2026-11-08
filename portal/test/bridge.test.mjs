@@ -10,6 +10,10 @@ import { createServer, request } from 'node:http'
 import { connect } from 'node:net'
 import { EngineCookieJar, enginePath, proxyHttp, proxyUpgrade } from '../bridge.mjs'
 
+// The port the front door listens on. The bridge takes the port the browser
+// dialled from this setting, never from the request.
+process.env.NOVA_PORT = '13080'
+
 const listen = (server) => new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve(server.address().port)))
 
 const fakeEngine = (name) => {
@@ -18,7 +22,7 @@ const fakeEngine = (name) => {
   const seen = []
   const cookieOk = (req) => String(req.headers.cookie ?? '').split(';').some(p => p.trim() === `dsh-auth-h=${secret}`)
   const server = createServer((req, res) => {
-    seen.push({ url: req.url, cookie: req.headers.cookie ?? '', authorization: req.headers.authorization })
+    seen.push({ url: req.url, cookie: req.headers.cookie ?? '', authorization: req.headers.authorization, host: req.headers.host })
     const url = new URL(req.url, 'http://x')
     if (url.pathname === '/' && url.searchParams.get('token')) {
       if (url.searchParams.get('token') !== token) { res.writeHead(401); return res.end() }
@@ -149,3 +153,115 @@ test("hop-by-hop headers from the engine are not forwarded (a client's Connectio
   assert.equal(res.headers.connection, 'close')
   assert.equal(res.headers['keep-alive'], undefined)
 })
+
+// The real engine refuses a request whose Origin authority differs from its
+// Host authority — the browser-trust fence that also guards the live socket.
+// A front door that forwards the host without its port makes the two differ,
+// and then every API call is answered with 403.
+const fenced = createServer((req, res) => {
+  const origin = String(req.headers.origin ?? '')
+  if (origin) {
+    let originHost
+    try { originHost = new URL(origin).host } catch { originHost = '' }
+    if (originHost && originHost !== req.headers.host) { res.writeHead(403); return res.end('forbidden') }
+  }
+  res.writeHead(200, { 'content-type': 'text/plain' })
+  res.end('engine fenced')
+})
+const fencedPort = await listen(fenced)
+after(() => fenced.close())
+
+const fencedTarget = {
+  key: 'fenced',
+  tenantId: 'fenced',
+  url: `http://127.0.0.1:${fencedPort}`,
+  cookie: async () => 'dsh-auth-h=fenced',
+  invalidate: () => {},
+}
+
+const throughFence = (headers) => new Promise((resolve, reject) => {
+  const req = request({ host: '127.0.0.1', port: fencedPort, path: '/api/bot', method: 'POST', headers: { 'content-type': 'application/json', ...headers } }, res => {
+    let body = ''
+    res.on('data', c => { body += c })
+    res.on('end', () => resolve({ status: res.statusCode, body }))
+  })
+  req.on('error', reject)
+  req.end('{}')
+})
+
+test('the engine sees the authority the browser used, port included', async () => {
+  const before = A.seen.length
+  await get('/app/', { 'x-test-user': 'alice', host: 'localhost', origin: 'http://localhost:13080' })
+  // The last request is the call itself; the one before it is the mint.
+  assert.equal(A.seen.at(-1).host, 'localhost:13080')
+})
+
+test('a foreign Origin never rewrites the authority', async () => {
+  const before = A.seen.length
+  await get('/app/', { 'x-test-user': 'alice', host: 'localhost', origin: 'http://evil.example' })
+  assert.equal(A.seen.at(-1).host, 'localhost')
+})
+
+test('a page on another port of the same host never rewrites the authority', async () => {
+  // The port belongs to the front door, not to the page that asks. A page on
+  // another port of the same host is same-site, so the browser carries the
+  // session cookie, and it must not be able to name its own authority.
+  const before = A.seen.length
+  await get('/app/', { 'x-test-user': 'alice', host: 'localhost', origin: 'http://localhost:3000' })
+  assert.equal(A.seen.at(-1).host, 'localhost')
+})
+
+test('the public host keeps the authority it came with', async () => {
+  const before = A.seen.length
+  await get('/app/', { 'x-test-user': 'alice', host: 'bots.alilabsx.com', origin: 'https://bots.alilabsx.com' })
+  assert.equal(A.seen.at(-1).host, 'bots.alilabsx.com')
+})
+
+test('a request without an Origin keeps the host it came with', async () => {
+  const before = A.seen.length
+  await get('/app/', { 'x-test-user': 'alice', host: 'localhost' })
+  assert.equal(A.seen.at(-1).host, 'localhost')
+})
+
+test('the engine refuses a request whose Origin authority differs from its Host authority', async () => {
+  const direct = await throughFence({ host: 'localhost', origin: 'http://localhost:13080' })
+  assert.equal(direct.status, 403)
+  const matching = await throughFence({ host: 'localhost:13080', origin: 'http://localhost:13080' })
+  assert.equal(matching.status, 200)
+})
+
+test('the portal bridge keeps the Origin and the Host in step for the engine', async () => {
+  const res = await new Promise((resolve, reject) => {
+    const server = createServer((req, r) => proxyHttp(req, r, fencedTarget))
+    server.listen(0, '127.0.0.1', () => {
+      const port = server.address().port
+      const req = request({ host: '127.0.0.1', port, path: '/api/bot', method: 'POST', headers: { 'content-type': 'application/json', host: 'localhost', origin: 'http://localhost:13080' } }, resp => {
+        let body = ''
+        resp.on('data', c => { body += c })
+        resp.on('end', () => { server.close(); resolve({ status: resp.statusCode, body }) })
+      })
+      req.on('error', reject)
+      req.end('{}')
+    })
+  })
+  assert.equal(res.status, 200)
+  assert.equal(res.body, 'engine fenced')
+})
+
+test('the engine refuses a same-host page on another port, through the bridge', async () => {
+  const res = await new Promise((resolve, reject) => {
+    const server = createServer((req, r) => proxyHttp(req, r, fencedTarget))
+    server.listen(0, '127.0.0.1', () => {
+      const port = server.address().port
+      const req = request({ host: '127.0.0.1', port, path: '/api/bot', method: 'POST', headers: { 'content-type': 'application/json', host: 'localhost', origin: 'http://localhost:3000' } }, resp => {
+        let body = ''
+        resp.on('data', c => { body += c })
+        resp.on('end', () => { server.close(); resolve({ status: resp.statusCode, body }) })
+      })
+      req.on('error', reject)
+      req.end('{}')
+    })
+  })
+  assert.equal(res.status, 403)
+})
+
