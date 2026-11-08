@@ -113,7 +113,9 @@ npm run lint
 
 ## 链接
 
-- 产品：https://github.com/Jahanzaib211/nova-bots
+- 产品：https://bots.alilabsx.com/
+- Nova（姊妹应用）：https://nova.alilabsx.com/
+- Ali Labs：https://alilabsx.com/
 - GitHub：https://github.com/Jahanzaib211/nova-bots
 - Nova Ops：https://github.com/Jahanzaib211/nova-ops
 - LinkedIn：https://www.linkedin.com/in/jahanzaib-ali-labsx

@@ -166,7 +166,9 @@ npm run lint
 
 ## Links
 
-- Product: https://github.com/Jahanzaib211/nova-bots
+- Product: https://bots.alilabsx.com/
+- Nova (sister app): https://nova.alilabsx.com/
+- Ali Labs: https://alilabsx.com/
 - GitHub: https://github.com/Jahanzaib211/nova-bots
 - Nova Ops: https://github.com/Jahanzaib211/nova-ops
 - LinkedIn: https://www.linkedin.com/in/jahanzaib-ali-labsx
