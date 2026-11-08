@@ -11,15 +11,15 @@ English | [中文](README.zh.md)
 
 ![version](https://img.shields.io/badge/version-v0.2_preview-7C5CFF) ![license](https://img.shields.io/badge/license-Apache_2.0-22D3EE)
 
-**Your self-hosted AI workforce. Create workers, give them roles, group them —
-they coordinate.**
+**Build your bot army.**
 
-Nova Bots runs a team of AI workers on your own machine. In the app each worker
-is a **Bot**: you give it a name, a role, instructions and a model, and it keeps
-its own chat, memory and working folder. Put workers into groups and they work
-together: they message each other, hand off work with `@`, share group chats and
-report back in one place. A **Main Bot** leads the team: it creates, changes and
-removes the other workers.
+Spin up a bot for any job, give it a role, and let them collaborate: they hand
+off work, run in squads and report to a commander. Each bot has a name, a role,
+instructions and a model, and keeps its own chat, memory and working folder.
+Squads are group chats where bots message each other, hand off work with `@`
+and report back in one place. **Orion**, your commander (a Main Bot), creates,
+changes and removes the other bots. Self-host it, and all of it runs on your own
+machine.
 
 I built it because I would rather own the stack than rent it. Your hardware,
 your data, your models.
@@ -28,13 +28,14 @@ your data, your models.
 
 ## How it works
 
-1. **Create a worker.** Give it a name, a role, instructions and a model.
-2. **Group workers.** A group chat puts several workers on one problem, with an
+1. **Spin up a bot.** Give it a name, a role, instructions and a model.
+2. **Form a squad.** A group chat puts several bots on one problem, with an
    admin that answers first and calls in the others.
-3. **Let them coordinate.** Workers hand work to each other, post progress in
-   the group and report the result back. You can see every handoff and stop one.
-4. **Lead with a Main Bot.** The Main Bot has the highest rights and manages the
-   team for you. There can be more than one.
+3. **Let them collaborate.** One researches, one builds, one reviews: bots hand
+   work along, post progress in the squad and report the result back. You see
+   every handoff and can stop any of them.
+4. **Command with Orion.** Your commander has the highest rights and runs the
+   army for you. There can be more than one commander.
 
 ## Quick start
 
@@ -93,16 +94,16 @@ itself has no Bot details drawer. Build, test and packaging details are in
 
 ## Meet the team
 
-### One worker, one window
+### One bot, one window
 
-Talk to a worker the way you talk to a person. It remembers what you told it,
+Talk to a bot the way you talk to a person. It remembers what you told it,
 keeps its working folder, and picks up where it left off. Its details panel
 shows its model, memory and usage; switch models there whenever you need to.
 
 ### Orion, your Main Bot
 
 Every new team starts with **Orion**, the Mission Commander and team lead.
-Orion has the highest rights: it creates, changes and removes the other workers and keeps the
+Orion has the highest rights: it creates, changes and removes the other bots and keeps the
 group chats in order. It also walks you through setup the first time you open
 the app.
 
@@ -206,7 +207,7 @@ actions yourself.
 ## Work with me
 
 Nova Bots is built by Jahanzaib Ali, Founder & Systems Engineer at AliLabsX. If
-you want a custom AI workforce, a self-hosted deployment or help with platform
+you want your own bot army, a self-hosted deployment or help with platform
 engineering, get in touch. If you would rather not run it yourself, there is a
 hosted version at https://bots.alilabsx.com.
 
