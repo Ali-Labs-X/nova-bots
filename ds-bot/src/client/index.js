@@ -29,6 +29,7 @@ import { SECRET_CSS, SecretDock } from './secret-card.js'
 import { LearningDock, LearningTurnTail, LEARNING_CSS } from './learning-card.js'
 import { MODEL_CSS, ModelChoiceDock, DeepSeekSignIn } from './model-menu.js'
 import { providerActions } from './provider-actions.js'
+import { startRosterPoll } from './roster-poll.js'
 import { installModelsSection, pluginOwnsModels } from './models-section.js'
 import { BOT_SETTINGS_CSS } from './bot-settings.js'
 import { AVATAR_LIBRARY_CSS } from './avatar-library.js'
@@ -62,7 +63,7 @@ export function apply(ctx) {
   let seenAt = seenStore.read()
   // `details` is the panel's subject (a Session id); `view` picks details or the
   // subject Bot's browser inside it.
-  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, side: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, toast: null, signIn: null, renameAgent: null, unread: unreadStore.read(), reactions: reactionStore.read(), visits: {}, panelYield: false, leftDrawer: false, bootFailed: false })
+  const ui = createSource({ details: null, view: 'details', renaming: false, tab: null, side: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, toast: null, signIn: null, renameAgent: null, unread: unreadStore.read(), reactions: reactionStore.read(), visits: {}, panelYield: false, leftDrawer: false, bootFailed: false, bootFailure: '' })
   // The left column's kept preference, and the frame geometry the layout rules
   // in frame-layout.js read: the window and the shell's collapsed track come from
   // installFrameWatch, the open column's width is the user's own.
@@ -204,37 +205,24 @@ export function apply(ctx) {
   }
 
   ctx.effect(() => {
-    let stopped = false
-    let running = false
-    let timer
-    let misses = 0
-    const loop = async () => {
-      clearTimeout(timer)
-      if (running || stopped) return
-      running = true
-      try {
-        await pull()
-        misses = 0
-        // A late-arriving API clears the failure the misses reported.
-        ui.set(state => (state.bootFailed ? { ...state, bootFailed: false } : state))
-      } catch (error) {
-        if (!stopped) {
-          console.warn('[nova] state', error)
-          // Only a missing Bot API counts toward a failed start: while the
-          // host plugin stays unmounted the route answers 404. A network miss
-          // is the host reconnecting, not a start-up failure (#516).
-          if (error?.code === 'HTTP_404') {
-            misses += 1
-            if (misses >= 10 && !roster.getSnapshot().ready) ui.set(state => (state.bootFailed ? state : { ...state, bootFailed: true }))
-          }
-        }
-      } finally { running = false }
-      if (!stopped) timer = setTimeout(loop, document.hidden ? 10000 : 1500)
-    }
-    const wake = () => { if (!document.hidden) void loop() }
-    document.addEventListener('visibilitychange', wake)
-    void loop()
-    return () => { stopped = true; clearTimeout(timer); document.removeEventListener('visibilitychange', wake) }
+    const poll = startRosterPoll({
+      pull,
+      log: error => console.warn('[nova] state', error),
+      // Any status the Bot API answers with counts toward a failed start: a
+      // missing route answers 404, a signed-out portal 401, a workspace that is
+      // not reachable 503. The status is named, so the cause is visible without
+      // the browser's developer tools.
+      onStartFailed: status => {
+        if (roster.getSnapshot().ready) return
+        ui.set(state => (state.bootFailed && state.bootFailure === status ? state : { ...state, bootFailed: true, bootFailure: status }))
+      },
+      // A late-arriving API clears the failure the misses reported.
+      onRecovered: () => ui.set(state => (state.bootFailed || state.bootFailure ? { ...state, bootFailed: false, bootFailure: '' } : state)),
+      isHidden: () => document.hidden,
+    })
+    document.addEventListener('visibilitychange', poll.wake)
+    poll.start()
+    return () => { document.removeEventListener('visibilitychange', poll.wake); poll.stop() }
   }, 'Nova Bots: roster poll')
 
   // Plugin updates: every window that opens asks the host once (the host keeps its

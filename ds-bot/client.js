@@ -9796,8 +9796,8 @@ function TitleToggle({ hidden, onToggle }) {
     onClick: onToggle
   }, (0, import_react19.createElement)(SidebarIcon)), document.body);
 }
-var bootHint = () => {
-  const last = clientErrors().at(-1)?.text;
+var bootHint = (status) => {
+  const last = status || clientErrors().at(-1)?.text;
   return last === void 0 ? t("The Bot team could not start. The engine’s startup output — its console, or the app’s startup error box — has the cause.") : t("The Bot team could not start. {error}. The engine’s startup output — its console, or the app’s startup error box — has the cause.", { error: last });
 };
 function TeamSidebar(props) {
@@ -10045,7 +10045,7 @@ function TeamSidebar(props) {
     { className: "bt-rail-top" },
     (0, import_react19.createElement)(UpdateButton, { useUpdate: props.useUpdate, actions }),
     (0, import_react19.createElement)("button", { type: "button", className: "bt-round bt-side-collapse", "aria-label": t("Collapse sidebar"), title: t("Collapse sidebar"), onClick: onToggle }, (0, import_react19.createElement)(SidebarIcon)),
-    main ? (0, import_react19.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : (0, import_react19.createElement)("div", { className: "bt-hint" }, uiNow.bootFailed ? bootHint() : t("Setting up your Main Bot…")),
+    main ? (0, import_react19.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : (0, import_react19.createElement)("div", { className: "bt-hint" }, uiNow.bootFailed ? bootHint(uiNow.bootFailure) : t("Setting up your Main Bot…")),
     (0, import_react19.createElement)("span", { className: "bt-rail-sep", "aria-hidden": true })
   );
   const foot = wideContent ? (0, import_react19.createElement)("div", { className: "bt-leftcol-foot" }, (0, import_react19.createElement)(AccountLauncher, { seat: false, actions })) : (0, import_react19.createElement)(
@@ -10062,7 +10062,7 @@ function TeamSidebar(props) {
     (0, import_react19.createElement)(
       "div",
       { ref: listRef, className: "bt-list", role: "region", "aria-label": t("Bot list") },
-      wideContent ? main ? (0, import_react19.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : (0, import_react19.createElement)("div", { className: "bt-hint" }, uiNow.bootFailed ? bootHint() : t("Setting up your Main Bot…")) : null,
+      wideContent ? main ? (0, import_react19.createElement)(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : (0, import_react19.createElement)("div", { className: "bt-hint" }, uiNow.bootFailed ? bootHint(uiNow.bootFailure) : t("Setting up your Main Bot…")) : null,
       order.map((entry) => entry.kind === "bot" ? (0, import_react19.createElement)(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true }) : entry.kind === "room" ? (0, import_react19.createElement)(RoomRow, { key: entry.item.id, ...rowProps, room: entry.item, marked: markedUnread[entry.item.id] === true }) : (0, import_react19.createElement)(AgentRow, { key: entry.item.id, ...rowProps, agent: entry.item, marked: markedUnread[entry.item.id] === true }))
     ),
     foot
@@ -20508,6 +20508,55 @@ var providerActions = (call2) => ({
   providerModels: (body) => call2("provider-models", body)
 });
 
+// src/client/roster-poll.js
+var POLL_DELAY = 1500;
+var POLL_DELAY_HIDDEN = 1e4;
+var FAILED_START_MISSES = 10;
+var failureStatus = (error) => {
+  const code = typeof error?.code === "string" ? error.code : "";
+  const match = /^HTTP_(\d{3})$/.exec(code);
+  return match ? `HTTP ${match[1]}` : "";
+};
+var startRosterPoll = ({ pull, onStartFailed, onRecovered, isHidden = () => false, schedule = setTimeout, cancel = clearTimeout, log = () => {
+} }) => {
+  let stopped = false;
+  let running = false;
+  let timer;
+  let misses = 0;
+  const loop = async () => {
+    cancel(timer);
+    if (running || stopped) return;
+    running = true;
+    try {
+      await pull();
+      misses = 0;
+      onRecovered();
+    } catch (error) {
+      if (!stopped) {
+        log(error);
+        const status = failureStatus(error);
+        if (status) {
+          misses += 1;
+          if (misses >= FAILED_START_MISSES) onStartFailed(status);
+        }
+      }
+    } finally {
+      running = false;
+    }
+    if (!stopped) timer = schedule(loop, isHidden() ? POLL_DELAY_HIDDEN : POLL_DELAY);
+  };
+  return {
+    start: () => void loop(),
+    wake: () => {
+      if (!isHidden()) void loop();
+    },
+    stop: () => {
+      stopped = true;
+      cancel(timer);
+    }
+  };
+};
+
 // src/client/models-section.js
 var import_react53 = require("react");
 var pluginOwnsModels = (host) => host?.isLoopback === false;
@@ -20779,7 +20828,7 @@ function apply(ctx) {
   const reactionStore = sharedMap(STORAGE.reactions);
   const seenStore = sharedMap(STORAGE.seen);
   let seenAt = seenStore.read();
-  const ui2 = createSource({ details: null, view: "details", renaming: false, tab: null, side: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, toast: null, signIn: null, renameAgent: null, unread: unreadStore.read(), reactions: reactionStore.read(), visits: {}, panelYield: false, leftDrawer: false, bootFailed: false });
+  const ui2 = createSource({ details: null, view: "details", renaming: false, tab: null, side: null, newChat: null, exchange: null, menu: null, voice: null, palette: null, quote: null, settings: null, memory: null, toast: null, signIn: null, renameAgent: null, unread: unreadStore.read(), reactions: reactionStore.read(), visits: {}, panelYield: false, leftDrawer: false, bootFailed: false, bootFailure: "" });
   let sidebarSaved = readSidebar();
   const sidebarPref = createSource(sidebarSaved.pref);
   const frame = createSource({ viewport: typeof window === "undefined" ? 0 : window.innerWidth, sidebarWidth: sidebarSaved.width, collapsedWidth: 0, collapsed: false });
@@ -20905,40 +20954,26 @@ function apply(ctx) {
     }
   };
   ctx.effect(() => {
-    let stopped = false;
-    let running = false;
-    let timer;
-    let misses = 0;
-    const loop = async () => {
-      clearTimeout(timer);
-      if (running || stopped) return;
-      running = true;
-      try {
-        await pull();
-        misses = 0;
-        ui2.set((state) => state.bootFailed ? { ...state, bootFailed: false } : state);
-      } catch (error) {
-        if (!stopped) {
-          console.warn("[nova] state", error);
-          if (error?.code === "HTTP_404") {
-            misses += 1;
-            if (misses >= 10 && !roster.getSnapshot().ready) ui2.set((state) => state.bootFailed ? state : { ...state, bootFailed: true });
-          }
-        }
-      } finally {
-        running = false;
-      }
-      if (!stopped) timer = setTimeout(loop, document.hidden ? 1e4 : 1500);
-    };
-    const wake = () => {
-      if (!document.hidden) void loop();
-    };
-    document.addEventListener("visibilitychange", wake);
-    void loop();
+    const poll = startRosterPoll({
+      pull,
+      log: (error) => console.warn("[nova] state", error),
+      // Any status the Bot API answers with counts toward a failed start: a
+      // missing route answers 404, a signed-out portal 401, a workspace that is
+      // not reachable 503. The status is named, so the cause is visible without
+      // the browser's developer tools.
+      onStartFailed: (status) => {
+        if (roster.getSnapshot().ready) return;
+        ui2.set((state) => state.bootFailed && state.bootFailure === status ? state : { ...state, bootFailed: true, bootFailure: status });
+      },
+      // A late-arriving API clears the failure the misses reported.
+      onRecovered: () => ui2.set((state) => state.bootFailed || state.bootFailure ? { ...state, bootFailed: false, bootFailure: "" } : state),
+      isHidden: () => document.hidden
+    });
+    document.addEventListener("visibilitychange", poll.wake);
+    poll.start();
     return () => {
-      stopped = true;
-      clearTimeout(timer);
-      document.removeEventListener("visibilitychange", wake);
+      document.removeEventListener("visibilitychange", poll.wake);
+      poll.stop();
     };
   }, "Nova Bots: roster poll");
   const update = createSource({ available: false, phase: "idle" });
