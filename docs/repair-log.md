@@ -139,7 +139,7 @@ When the launch token or a key changed, the portal's session to the engine was i
 - **No patch inside the runtime.** Every change is in this repository, built on the documented plugin APIs.
 - **No secret was ever printed.** The launch token and the session secret stay on disk; the token is read from its file at run time and never displayed.
 - **No weakening of the security fence.** The hostile same-host, other-port case stayed at 403 through every revision, and it was the reason the first version of the fix was rejected.
-- **No merge without the maintainer.** Ten pull requests (#19–#28) were open and green; the order they go in is the maintainer's decision.
+- **No merge without the maintainer.** Ten pull requests (#19–#28) went out open and green, and each one was merged only after the maintainer said so.
 - **No blind find-and-replace.** Renames were done one checked file at a time.
 
 ---
@@ -179,7 +179,7 @@ A change is one branch and one pull request. The reviewer that blocks the first 
 | the 403 fix | `portal/bridge.mjs` | live and confirmed on the running system (PR #28) |
 | the portal session fix | `portal/server.mjs` + `portal/bridge.mjs` | live and confirmed (PR #25) |
 | the models page | the installed client bundle, served from the data volume | live and confirmed (PR #24) |
-| the code itself | branches and pull requests #19–#28 on GitHub | all pushed, none merged yet |
+| the code itself | branches and pull requests #19–#28 on GitHub | all pushed; #19–#27 merged into `dev` on the maintainer's OK, #28 still open |
 
 ---
 
