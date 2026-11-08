@@ -1,6 +1,6 @@
-# DS Bot mobile
+# Nova Bots mobile
 
-The DS Bot app for iOS and Android. It controls the Bot team that runs on your computer; nothing runs on the phone. The design is in [docs/plans/2026-10-24-mobile-app.md](../docs/plans/2026-10-24-mobile-app.md).
+The Nova Bots app for iOS and Android. It controls the Bot team that runs on your computer; nothing runs on the phone. The design is in [docs/plans/2026-10-24-mobile-app.md](../docs/plans/2026-10-24-mobile-app.md).
 
 This is the first skeleton: it opens one screen and does not connect yet.
 
