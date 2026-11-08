@@ -10,6 +10,10 @@ import { createServer, request } from 'node:http'
 import { connect } from 'node:net'
 import { EngineCookieJar, enginePath, proxyHttp, proxyUpgrade } from '../bridge.mjs'
 
+// The port the front door listens on. The bridge takes the port the browser
+// dialled from this setting, never from the request.
+process.env.NOVA_PORT = '13080'
+
 const listen = (server) => new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve(server.address().port)))
 
 const fakeEngine = (name) => {
@@ -198,6 +202,21 @@ test('a foreign Origin never rewrites the authority', async () => {
   assert.equal(A.seen.at(-1).host, 'localhost')
 })
 
+test('a page on another port of the same host never rewrites the authority', async () => {
+  // The port belongs to the front door, not to the page that asks. A page on
+  // another port of the same host is same-site, so the browser carries the
+  // session cookie, and it must not be able to name its own authority.
+  const before = A.seen.length
+  await get('/app/', { 'x-test-user': 'alice', host: 'localhost', origin: 'http://localhost:3000' })
+  assert.equal(A.seen.at(-1).host, 'localhost')
+})
+
+test('the public host keeps the authority it came with', async () => {
+  const before = A.seen.length
+  await get('/app/', { 'x-test-user': 'alice', host: 'bots.alilabsx.com', origin: 'https://bots.alilabsx.com' })
+  assert.equal(A.seen.at(-1).host, 'bots.alilabsx.com')
+})
+
 test('a request without an Origin keeps the host it came with', async () => {
   const before = A.seen.length
   await get('/app/', { 'x-test-user': 'alice', host: 'localhost' })
@@ -227,5 +246,22 @@ test('the portal bridge keeps the Origin and the Host in step for the engine', a
   })
   assert.equal(res.status, 200)
   assert.equal(res.body, 'engine fenced')
+})
+
+test('the engine refuses a same-host page on another port, through the bridge', async () => {
+  const res = await new Promise((resolve, reject) => {
+    const server = createServer((req, r) => proxyHttp(req, r, fencedTarget))
+    server.listen(0, '127.0.0.1', () => {
+      const port = server.address().port
+      const req = request({ host: '127.0.0.1', port, path: '/api/bot', method: 'POST', headers: { 'content-type': 'application/json', host: 'localhost', origin: 'http://localhost:3000' } }, resp => {
+        let body = ''
+        resp.on('data', c => { body += c })
+        resp.on('end', () => { server.close(); resolve({ status: resp.statusCode, body }) })
+      })
+      req.on('error', reject)
+      req.end('{}')
+    })
+  })
+  assert.equal(res.status, 403)
 })
 

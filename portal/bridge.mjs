@@ -95,27 +95,49 @@ const HOP_BY_HOP = ['connection', 'keep-alive', 'proxy-connection', 'transfer-en
 // Host authority and refuses the request when they differ. A front door that
 // forwards the host without its port ('localhost' for 'localhost:13080') makes
 // the two differ, and then every API call and every live socket is refused
-// with 403. The browser's own authority is the one the engine has to see, so
-// it is taken from the Origin when the Origin names the same host; a foreign
-// Origin never rewrites the authority.
+// with 403.
+//
+// The authority the engine has to see is the one the browser dialled: the host
+// as it came, with the front door's own port (NOVA_PORT) when the front door
+// stripped it. The port is never taken from the request — a page on another
+// port of the same host must not be able to choose the authority — so the
+// Origin is only believed when it names exactly that authority.
+
+const frontDoorPort = () => {
+  const port = String(process.env.NOVA_PORT ?? '').trim()
+  return /^\d{1,5}$/.test(port) ? port : ''
+}
+
+// The host as it came, with the front door's port when it came without one.
+const dialledAuthority = (host) => {
+  const port = frontDoorPort()
+  if (!port) return host
+  try {
+    const url = new URL(`http://${host}`)
+    if (url.port) return host
+    return `${url.host}:${port}`
+  } catch {
+    return host
+  }
+}
+
+// The authority an Origin names, or '' when it names none.
+const originAuthority = (origin) => {
+  try {
+    const url = new URL(origin)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return ''
+    return url.host
+  } catch {
+    return ''
+  }
+}
+
 export const requestAuthority = (req) => {
   const host = req.headers.host ?? 'localhost'
-  const origin = String(req.headers.origin ?? '').trim()
+  const origin = originAuthority(String(req.headers.origin ?? '').trim())
   if (!origin) return host
-  let originUrl
-  try {
-    originUrl = new URL(origin)
-  } catch {
-    return host
-  }
-  let hostname
-  try {
-    hostname = new URL(`http://${host}`).hostname
-  } catch {
-    return host
-  }
-  if (originUrl.hostname !== hostname || originUrl.host === host) return host
-  return originUrl.host
+  const dialled = dialledAuthority(host)
+  return origin === dialled ? dialled : host
 }
 
 const upstreamHeaders = (req, engineCookie, { upgrade = false, authority } = {}) => {
