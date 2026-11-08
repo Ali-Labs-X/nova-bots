@@ -28,6 +28,8 @@ import { BROWSER_CSS } from './browser-pane.js'
 import { SECRET_CSS, SecretDock } from './secret-card.js'
 import { LearningDock, LearningTurnTail, LEARNING_CSS } from './learning-card.js'
 import { MODEL_CSS, ModelChoiceDock, DeepSeekSignIn } from './model-menu.js'
+import { providerActions } from './provider-actions.js'
+import { installModelsSection, pluginOwnsModels } from './models-section.js'
 import { BOT_SETTINGS_CSS } from './bot-settings.js'
 import { AVATAR_LIBRARY_CSS } from './avatar-library.js'
 import { GROUP_SETTINGS_CSS } from './group-settings.js'
@@ -47,7 +49,7 @@ import { USER_MESSAGE_CSS, UserMessageCell, canDrawUserMessages } from './user-m
 import { noticeApprovals } from './approval-notices.js'
 import { listedOpener } from './open-listed.js'
 
-export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout']
+export const inject = ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout', 'remote']
 
 export function apply(ctx) {
   ctx.effect(() => installLocale(ctx.get('locale')), 'Nova Bots: interface copy')
@@ -446,6 +448,11 @@ export function apply(ctx) {
       })
     }
   }
+  // The runtime's own Models settings page needs the Host's settings mirror, which a
+  // page that is not the engine's own loopback does not have. Nova Bots' own page
+  // answers through the plugin's channel, so it takes that page's place there.
+  const host = ctx.get('remote')?.$host
+  const ownsModels = pluginOwnsModels(host)
   const actions = {
     ...teamActions({ call, after, partFor, roster, ui, live, cards, heldCards, turnClock, panelFolded }),
     learningAnswer: (id, approve) => after(call('learning-answer', { id, approve })),
@@ -661,6 +668,12 @@ export function apply(ctx) {
   // Nova's own settings: models, providers, keys and its plugins.
   actions.openHarnessSettings = openHarnessSettings
   actions.openHarnessOnboarding = openHarnessOnboarding
+  // The models page of Nova Bots: the providers, their keys and their models. It
+  // goes through the plugin's own channel, so it answers in every window.
+  Object.assign(actions, providerActions(call))
+  actions.ownsModels = ownsModels
+  // Where Nova's own Models page cannot load, this is where the user goes.
+  actions.openModels = ownsModels ? () => actions.openSettings('models') : undefined
   // With the plugin manager mounted, setup is its bundle page (the model's size
   // and download notes live there). Where it is not mounted — the desktop app's
   // profile has no plugin manager — the speech Remote prepares the provider
@@ -717,6 +730,8 @@ export function apply(ctx) {
   const browserTabs = browsers?.tabs ?? createSource({})
   const browserHolds = browsers?.holds ?? createSource({})
   const face = () => ({ actions, hooks: { roster, ui, activity, work, memoryNews, registry, turnClock, live, cards, heldCards, browserPages, browserTabs, browserHolds, surface, update, frame, sidebarPref } })
+  // The Models entry of Nova's settings, where Nova's own page cannot load.
+  ctx.effect(() => installModelsSection(ctx, { host, face }), 'Nova Bots: the models page')
   ctx.effect(() => noticeApprovals({
     work,
     roster,

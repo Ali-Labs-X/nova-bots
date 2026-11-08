@@ -36,6 +36,7 @@ test('client.js registers a factory that exports apply and inject', () => {
   assert.deepEqual(Object.keys(exports), ['apply', 'inject'])
   assert.equal(typeof exports.apply, 'function')
   // No `configForms`: the client never writes the user's DSH settings, such as the
-  // work-details mode it once held at `verbose`.
-  assert.deepEqual(Array.from(exports.inject), ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout'])
+  // work-details mode it once held at `verbose`. `remote` is read for the Host facts
+  // that say whether this page is the engine's own loopback.
+  assert.deepEqual(Array.from(exports.inject), ['sessions', 'uiWorkspace', 'uiConversation', 'slots', 'theme', 'layout', 'remote'])
 })
