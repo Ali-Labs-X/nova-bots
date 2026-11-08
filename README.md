@@ -17,7 +17,7 @@ each other and report back in one place. The interface is a deep-space console:
 violet-to-cyan aurora, a living starfield, glass panels and a soft glow on every
 surface that matters.
 
-![Say one sentence to Orion, and it sets up the bots and the group chat]
+![Nova Bots](docs/images/home.png)
 
 ## Quick start
 
@@ -61,6 +61,19 @@ manager — the same page where you add any other plugin — and enable it.
 The plugin package is built from [`ds-bot/`](ds-bot/). For source builds, tests
 and internals, see [`ds-bot/README.md`](ds-bot/README.md).
 
+### Run it as the desktop app
+
+Nova Bots also has its own Electron desktop app (`app/`), which carries a
+pinned runtime and never writes to `~/.dsh`. It installs on Windows, macOS
+and Linux. The Working folder menu lives in the app's Settings, the plugin's
+own dialog, and offers "Choose a folder…" — a native OS folder dialog to
+browse and pick any local folder as a Bot's working folder, no typing needed
+— where the runtime mounts a native picker (macOS and Windows, and a Linux
+desktop that has a chooser installed), and "Browse folders…" where it mounts
+the in-app folder browser instead; "Enter a path…" always works. The window
+itself has no Bot details drawer. Build, test and packaging details are in
+[`app/README.md`](app/README.md).
+
 ## Meet the team
 
 ### One bot, one window
@@ -68,8 +81,6 @@ and internals, see [`ds-bot/README.md`](ds-bot/README.md).
 Talk to a bot the way you talk to a person. It remembers what you told it,
 keeps its working folder, and picks up where it left off. Its details panel
 shows its model, memory and usage; switch models there whenever you need to.
-
-![Bot details: model, memory, usage]
 
 ### Orion, your Main Bot
 
@@ -94,8 +105,6 @@ group's details panel shows every handoff and can stop one.
 Each group has its own memory. What you say in the group stays there: its
 members use it, and your other chats do not see it.
 
-![Group chat: Orion hands the work to Writer and Coder]
-
 ### Capabilities
 
 **Settings → Capabilities** is a shared library of MCP servers, skills and
@@ -107,8 +116,6 @@ you or a Main Bot can change or delete it.
 ### Usage
 
 **Settings → Usage** breaks token usage down by time, bot and model.
-
-![Usage page]
 
 ### Office files
 
