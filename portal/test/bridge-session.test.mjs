@@ -15,8 +15,8 @@ const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', ()
 
 // An engine that can rotate its cookie key, like an engine that reloads.
 const rotatingEngine = () => {
-  const token = 'token-rotating-1234567890'
-  const state = { secret: 'cookie-one-1234567890', requests: [], bodies: [], mints: 0, generation: 1 }
+  const token = 'test-token-rotating-1234567890'
+  const state = { secret: 'test-cookie-one-1234567890', requests: [], bodies: [], mints: 0, generation: 1 }
   const server = createServer((req, res) => {
     const url = new URL(req.url, 'http://x')
     const cookies = String(req.headers.cookie ?? '')
