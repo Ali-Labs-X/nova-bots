@@ -11,16 +11,27 @@
 
 ![version](https://img.shields.io/badge/version-v0.2_preview-7C5CFF) ![license](https://img.shields.io/badge/license-Apache_2.0-22D3EE)
 
-Nova Bots 是一支自托管、长期在线的 AI 机器人团队。每个机器人都有自己的对话、记忆和工作目录；它们共享群聊、互相交接任务，并在同一个地方汇报结果。界面是一间深空控制舱：紫青极光、流动星场、玻璃面板，以及恰到好处的辉光。
+**自托管的 AI 员工团队。创建员工，分配角色，编成小组——它们会自己协作。**
+
+Nova Bots 在你自己的机器上运行一支 AI 员工（数字员工）团队。在应用里，每个员工就是一个 **Bot**：你给它起名字，设定角色、指令和模型，它有自己的对话、记忆和工作目录。把员工编进群组，它们就会一起工作：互相发消息，用 `@` 交接任务，共享群聊，并在同一个地方汇报结果。**主 Bot**（Main Bot）负责带队：创建、修改和移除其他员工。
+
+我做这个项目，是因为我宁愿自己搭，也不想租。硬件是你的，数据是你的，模型也由你选。
 
 ![Nova Bots](docs/images/home.png)
+
+## 工作方式
+
+1. **创建员工。** 设定名字、角色、指令和模型。
+2. **编成群组。** 群聊把多个员工放到同一个问题上，由管理员先回复，再按需叫来其他成员。
+3. **让它们协作。** 员工之间互相交接任务，在群里汇报进度，最后把结果交回来。每次交接你都看得到，也能随时停止。
+4. **由主 Bot 带队。** 主 Bot 拥有最高权限，替你管理团队。主 Bot 可以不止一个。
 
 ## 快速开始
 
 最省事的方式是 Docker。它把运行时、插件、浏览器环境和 Nova 界面打包进一个容器。
 
 ```sh
-git clone <your-nova-bots-repository> Nova-Bots
+git clone https://github.com/Jahanzaib211/nova-bots.git Nova-Bots
 cd Nova-Bots
 cp docker/.env.example docker/.env
 ./nova-bots.sh start
@@ -52,13 +63,13 @@ Nova Bots 也有自己的 Electron 桌面应用（`app/`），自带锁定的运
 
 ## 认识团队
 
-### 一个机器人，一个窗口
+### 一个员工，一个窗口
 
-像和人说话一样和机器人交流。它会记住你告诉它的事，保留自己的工作目录，并在下次接着做。详情面板展示模型、记忆和用量；需要时可以随时切换模型。
+像和人说话一样和 AI 员工交流。它会记住你告诉它的事，保留自己的工作目录，并在下次接着做。详情面板展示模型、记忆和用量；需要时可以随时切换模型。
 
 ### Orion，你的主机器人
 
-每个新团队都从 **Orion**（任务指挥官）开始。Orion 拥有最高权限：创建、修改和移除其他机器人，维护群聊秩序，并在你第一次打开时带你完成设置。
+每个新团队都从 **Orion**（任务指挥官、团队负责人）开始。Orion 拥有最高权限：创建、修改和移除其他员工，维护群聊秩序，并在你第一次打开时带你完成设置。
 
 有问题？问 Orion。
 
@@ -109,6 +120,7 @@ npm run lint
 
 - [esbuild](https://esbuild.github.io/) 打包界面代码。
 - 机器人记忆格式、群聊轮次、聊天搜索和交接笔记参考了 AgentMemoryRepo、OpenAI Codex、OpenMausBot、Hermes Agent、OpenCode、goose、pi、Gemini CLI 和 obelisk 公开发布的设计思路；不包含这些项目的代码。
+- Nova Bots 源自 Fei2411 和 DS Bot 贡献者的 [DS Bot](https://github.com/Fei2411/DS-Bot)，采用 Apache 2.0 许可证；其声明保留在 [NOTICE](NOTICE) 中。
 - 每一位运行 Nova Bots、提出问题并报告缺陷的人。
 
 ## 链接
@@ -117,7 +129,6 @@ npm run lint
 - Nova（姊妹应用）：https://nova.alilabsx.com/
 - Ali Labs：https://alilabsx.com/
 - GitHub：https://github.com/Jahanzaib211/nova-bots
-- Nova Ops：https://github.com/Jahanzaib211/nova-ops
 - LinkedIn：https://www.linkedin.com/in/jahanzaib-ali-labsx
 
 ## 许可证
@@ -127,3 +138,11 @@ npm run lint
 ## 免责声明
 
 Nova Bots 是一个独立项目。机器人使用你自己的模型额度；当你要求时，它们会读写文件并运行命令。重要操作请自己复核。
+
+## 合作
+
+Nova Bots 由 Jahanzaib Ali 开发，他是 AliLabsX 的创始人兼系统工程师。如果你需要定制的 AI 员工团队、自托管部署，或平台工程方面的帮助，欢迎联系。如果不想自己运行，也可以用托管版：https://bots.alilabsx.com。
+
+- 邮箱：Jahanzaib@alilabsx.com
+- 网站：https://alilabsx.com
+- LinkedIn：https://www.linkedin.com/in/jahanzaib-ali-labsx
