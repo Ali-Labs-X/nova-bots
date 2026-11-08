@@ -292,13 +292,21 @@ function TitleToggle({ hidden, onToggle }) {
 // The Bot-API-down hint cannot send the user to Settings → Feedback: its
 // diagnostics request needs the same API. What still works in this state is
 // the last error this window recorded, and the engine's own startup output —
-// its console, or the app's startup error box (#516).
-const bootHint = () => {
-  const last = clientErrors().at(-1)?.text
+// its console, or the app's startup error box (#516). The status the poll was
+// refused with is named when the window knows it.
+const bootHint = (status) => {
+  const last = status || clientErrors().at(-1)?.text
   return last === undefined
     ? t('The Bot team could not start. The engine’s startup output — its console, or the app’s startup error box — has the cause.')
     : t('The Bot team could not start. {error}. The engine’s startup output — its console, or the app’s startup error box — has the cause.', { error: last })
 }
+
+// A failed start is an error, not a progress note: it is marked like the
+// failed host call on our pages (`.bt-error`, `role="alert"`), so a screen
+// reader reads it out and it keeps the danger colour.
+const rosterLine = (uiNow) => uiNow.bootFailed
+  ? h('div', { className: 'bt-hint bt-error', role: 'alert', style: { padding: '14px' } }, bootHint(uiNow.bootFailure))
+  : h('div', { className: 'bt-hint' }, t('Setting up your Main Bot…'))
 
 export function TeamSidebar(props) {
   const { wide, useRoster, useUi, useSessions, actions } = props
@@ -562,7 +570,7 @@ export function TeamSidebar(props) {
     : h('div', { className: 'bt-rail-top' },
         h(UpdateButton, { useUpdate: props.useUpdate, actions }),
         h('button', { type: 'button', className: 'bt-round bt-side-collapse', 'aria-label': t('Collapse sidebar'), title: t('Collapse sidebar'), onClick: onToggle }, h(SidebarIcon)),
-        main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, uiNow.bootFailed ? bootHint() : t('Setting up your Main Bot…')),
+        main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : rosterLine(uiNow),
         h('span', { className: 'bt-rail-sep', 'aria-hidden': true }))
   // The foot stands in for the shell's hidden footer: the account avatar, and on
   // the rail the new-chat button above it.
@@ -575,7 +583,7 @@ export function TeamSidebar(props) {
     top,
     wideContent && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
     h('div', { ref: listRef, className: 'bt-list', role: 'region', 'aria-label': t('Bot list') },
-      wideContent ? (main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : h('div', { className: 'bt-hint' }, uiNow.bootFailed ? bootHint() : t('Setting up your Main Bot…'))) : null,
+      wideContent ? (main ? h(BotRow, { ...rowProps, bot: main, marked: markedUnread[main.id] === true }) : roster.ready ? null : rosterLine(uiNow)) : null,
       order.map(entry => (entry.kind === 'bot'
         ? h(BotRow, { key: entry.item.id, ...rowProps, bot: entry.item, marked: markedUnread[entry.item.id] === true })
         : entry.kind === 'room'

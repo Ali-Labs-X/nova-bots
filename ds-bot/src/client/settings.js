@@ -19,6 +19,7 @@ import { SchedulesPage } from './schedules.js'
 import { FeedbackIcon, FeedbackPage } from './feedback.js'
 import { AboutPage } from './about.js'
 import { ProvidersPage } from './providers-page.js'
+import { SetRow, SetSection } from './set-section.js'
 import { FolderMenu } from './folder-menu.js'
 import { t } from './i18n.js'
 
@@ -26,18 +27,10 @@ const capitalize = word => word[0].toUpperCase() + word.slice(1)
 
 // Settings dialog: a 198px page list beside the page. Bots and group chats each list
 // their members, and one opens on its own settings form. Usage widens the dialog.
-// Models is there only in a window without Nova's own settings, which carry the providers.
+// Models is there where Nova's own settings cannot carry the providers: a window that
+// is not the engine's own loopback has no settings mirror for Nova's page to read.
 const SETTINGS_PAGES = [['general', 'General'], ['models', 'Models'], ['bots', 'Bots'], ['groups', 'Group chats'], ['connectors', 'Connectors'], ['capabilities', 'Capabilities'], ['browser', 'Browser'], ['schedules', 'Scheduled tasks'], ['usage', 'Usage'], ['secrets', 'Secrets'], ['feedback', 'Feedback'], ['about', 'About Nova Bots']]
 const PAGE_ICONS = { ...SETTINGS_ICONS, models: SlidersIcon, connectors: ConnectorIcon, capabilities: PlugIcon, browser: ConnectorIcon, schedules: ClockIcon, secrets: KeyIcon, feedback: FeedbackIcon, about: InfoIcon }
-
-function SetSection({ title, className = '', children }) {
-  return h('section', { className: `bt-set-section ${className}`.trim() }, h('h3', null, title), h('div', { className: 'bt-set-card' }, children))
-}
-function SetRow({ label, hint, children, className = '' }) {
-  return h('div', { className: `bt-set-row ${className}`.trim() },
-    h('div', { className: 'bt-set-copy' }, h('span', null, label), hint ? h('span', { className: 'bt-set-hint' }, hint) : null),
-    children ? h('div', { className: 'bt-set-control' }, children) : null)
-}
 
 const LAYOUTS = [['bubble', 'Bubble'], ['flat', 'Flat']]
 
@@ -239,7 +232,7 @@ export function SettingsDialog({ page, id, roster, actions, useUpdate, leaving =
   // A Bot or group deleted while its form is open leaves its page on the list.
   const bot = page === 'bots' && id ? roster.byId[id] : undefined
   const room = page === 'groups' && id ? roster.roomsById[id] : undefined
-  const pages = SETTINGS_PAGES.filter(([key]) => key !== 'models' || actions.providers !== undefined)
+  const pages = SETTINGS_PAGES.filter(([key]) => key !== 'models' || actions.ownsModels === true)
   const shown = pages.some(([key]) => key === page) ? page : 'general'
   const usageFocus = shown === 'usage' && id ? id : null
   const label = t(pages.find(([key]) => key === shown)[1])
