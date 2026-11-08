@@ -1,4 +1,6 @@
-node_modules/
+# Without the trailing slash the pattern matches a symlink to a directory as well, so a
+# worktree's node_modules link cannot be staged by accident.
+node_modules
 *.tgz
 # The desktop app's window build (npm run build in app/), its packages (npm run pack, npm run dist)
 # and the next version that checks its update (see app/README.md). The Office runtime payload
@@ -29,6 +31,7 @@ node_modules/
 
 # Local Docker deployment data.
 /docker/data/
+/data/
 /docker/cache/
 /docker/workspace/
 /docker/.env

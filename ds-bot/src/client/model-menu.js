@@ -285,10 +285,11 @@ const manageModels = actions => actions.openModels ?? actions.openHarnessSetting
 // its account plugin (the Desktop); the API key and custom models use the shell's
 // own editors.
 function setupChoices(actions) {
+  const manage = actions.openModels ?? actions.openHarnessSettings
   return [
     actions.canSignIn?.() ? [t('Sign in to Nova'), () => actions.signIn()] : null,
     actions.openHarnessOnboarding ? [t('Enter a Nova API key'), () => actions.openHarnessOnboarding('deepseek-official')] : null,
-    actions.openHarnessSettings ? [t('Open settings to set up a custom model'), actions.openHarnessSettings] : null,
+    manage ? [t('Open settings to set up a custom model'), manage] : null,
   ].filter(Boolean)
 }
 

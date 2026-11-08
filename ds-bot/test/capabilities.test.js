@@ -164,9 +164,9 @@ test('capability tool descriptions and attach results explain approval', async t
       transport: 'How to reach an MCP server: a local command or an HTTP URL',
       command: 'Program that starts a local MCP server',
       args: 'Arguments for command',
-      env: 'Environment variables for command; write $NOVA_SECRET_<NAME> to insert a saved secret instead of the value',
-      url: 'MCP server URL; write $NOVA_SECRET_<NAME> in the path or query to insert a saved secret, URL-encoded. Prefer headers for keys',
-      headers: 'HTTP headers; write $NOVA_SECRET_<NAME> to insert a saved secret instead of the value',
+      env: 'Environment variables for command; write $DSH_SECRET_<NAME> to insert a saved secret instead of the value',
+      url: 'MCP server URL; write $DSH_SECRET_<NAME> in the path or query to insert a saved secret, URL-encoded. Prefer headers for keys',
+      headers: 'HTTP headers; write $DSH_SECRET_<NAME> to insert a saved secret instead of the value',
       content: 'Skill instructions',
     },
   )

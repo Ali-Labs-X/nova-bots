@@ -11,13 +11,31 @@ English | [中文](README.zh.md)
 
 ![version](https://img.shields.io/badge/version-v0.2_preview-7C5CFF) ![license](https://img.shields.io/badge/license-Apache_2.0-22D3EE)
 
-Nova Bots is a self-hosted team of long-lived AI bots. Each bot keeps its own
-chat, memory and working folder; together they share group chats, hand work to
-each other and report back in one place. The interface is a deep-space console:
-violet-to-cyan aurora, a living starfield, glass panels and a soft glow on every
-surface that matters.
+**Build your bot army.**
 
-![Say one sentence to Orion, and it sets up the bots and the group chat]
+Spin up a bot for any job, give it a role, and let them collaborate: they hand
+off work, run in squads and report to a commander. Each bot has a name, a role,
+instructions and a model, and keeps its own chat, memory and working folder.
+Squads are group chats where bots message each other, hand off work with `@`
+and report back in one place. **Orion**, your commander (a Main Bot), creates,
+changes and removes the other bots. Self-host it, and all of it runs on your own
+machine.
+
+I built it because I would rather own the stack than rent it. Your hardware,
+your data, your models.
+
+![Nova Bots](docs/images/home.png)
+
+## How it works
+
+1. **Spin up a bot.** Give it a name, a role, instructions and a model.
+2. **Form a squad.** A group chat puts several bots on one problem, with an
+   admin that answers first and calls in the others.
+3. **Let them collaborate.** One researches, one builds, one reviews: bots hand
+   work along, post progress in the squad and report the result back. You see
+   every handoff and can stop any of them.
+4. **Command with Orion.** Your commander has the highest rights and runs the
+   army for you. There can be more than one commander.
 
 ## Quick start
 
@@ -25,7 +43,7 @@ The fastest way to run Nova Bots is Docker. It builds the whole stack — engine
 plugin, browser runtime and the Nova interface — into one container.
 
 ```sh
-git clone <your-nova-bots-repository> Nova-Bots
+git clone https://github.com/Jahanzaib211/nova-bots.git Nova-Bots
 cd Nova-Bots
 cp docker/.env.example docker/.env
 ./nova-bots.sh start
@@ -61,6 +79,19 @@ manager — the same page where you add any other plugin — and enable it.
 The plugin package is built from [`ds-bot/`](ds-bot/). For source builds, tests
 and internals, see [`ds-bot/README.md`](ds-bot/README.md).
 
+### Run it as the desktop app
+
+Nova Bots also has its own Electron desktop app (`app/`), which carries a
+pinned runtime and never writes to `~/.dsh`. It installs on Windows, macOS
+and Linux. The Working folder menu lives in the app's Settings, the plugin's
+own dialog, and offers "Choose a folder…" — a native OS folder dialog to
+browse and pick any local folder as a Bot's working folder, no typing needed
+— where the runtime mounts a native picker (macOS and Windows, and a Linux
+desktop that has a chooser installed), and "Browse folders…" where it mounts
+the in-app folder browser instead; "Enter a path…" always works. The window
+itself has no Bot details drawer. Build, test and packaging details are in
+[`app/README.md`](app/README.md).
+
 ## Meet the team
 
 ### One bot, one window
@@ -69,12 +100,10 @@ Talk to a bot the way you talk to a person. It remembers what you told it,
 keeps its working folder, and picks up where it left off. Its details panel
 shows its model, memory and usage; switch models there whenever you need to.
 
-![Bot details: model, memory, usage]
-
 ### Orion, your Main Bot
 
-Every new team starts with **Orion**, the Mission Commander. Orion has the
-highest rights: it creates, changes and removes the other bots and keeps the
+Every new team starts with **Orion**, the Mission Commander and team lead.
+Orion has the highest rights: it creates, changes and removes the other bots and keeps the
 group chats in order. It also walks you through setup the first time you open
 the app.
 
@@ -94,8 +123,6 @@ group's details panel shows every handoff and can stop one.
 Each group has its own memory. What you say in the group stays there: its
 members use it, and your other chats do not see it.
 
-![Group chat: Orion hands the work to Writer and Coder]
-
 ### Capabilities
 
 **Settings → Capabilities** is a shared library of MCP servers, skills and
@@ -107,8 +134,6 @@ you or a Main Bot can change or delete it.
 ### Usage
 
 **Settings → Usage** breaks token usage down by time, bot and model.
-
-![Usage page]
 
 ### Office files
 
@@ -155,6 +180,9 @@ npm run lint
   informed by ideas published by AgentMemoryRepo, OpenAI Codex, OpenMausBot,
   Hermes Agent, OpenCode, goose, pi, Gemini CLI and obelisk. No code from those
   projects is included.
+- Nova Bots is derived from [DS Bot](https://github.com/Fei2411/DS-Bot) by
+  Fei2411 and the DS Bot contributors, licensed under Apache 2.0. Its notice is
+  kept in [NOTICE](NOTICE).
 - Everyone who runs Nova Bots, asks questions and reports bugs.
 
 ## Links
@@ -163,7 +191,6 @@ npm run lint
 - Nova (sister app): https://nova.alilabsx.com/
 - Ali Labs: https://alilabsx.com/
 - GitHub: https://github.com/Jahanzaib211/nova-bots
-- Nova Ops: https://github.com/Jahanzaib211/nova-ops
 - LinkedIn: https://www.linkedin.com/in/jahanzaib-ali-labsx
 
 ## License
@@ -176,3 +203,14 @@ Third-party code and its license are listed in [NOTICE](NOTICE).
 Nova Bots is an independent project. Bots use your own model quota, and they
 read and write files and run commands when you ask them to. Check important
 actions yourself.
+
+## Work with me
+
+Nova Bots is built by Jahanzaib Ali, Founder & Systems Engineer at AliLabsX. If
+you want your own bot army, a self-hosted deployment or help with platform
+engineering, get in touch. If you would rather not run it yourself, there is a
+hosted version at https://bots.alilabsx.com.
+
+- Email: Jahanzaib@alilabsx.com
+- Web: https://alilabsx.com
+- LinkedIn: https://www.linkedin.com/in/jahanzaib-ali-labsx

@@ -375,7 +375,7 @@ export class CapacityError extends Error {
 }
 
 export class Tenants {
-  constructor({ pool, config = tenancyConfigFromEnv(), docker, jar, audit = async () => {}, legacyToken, log = console }) {
+  constructor({ pool, config = tenancyConfigFromEnv(), docker, jar, audit = async () => {}, legacyToken, legacyMint, log = console }) {
     this.config = config
     this.store = new TenantStore(pool)
     this.pool = pool
@@ -383,6 +383,7 @@ export class Tenants {
     this.jar = jar
     this.audit = audit
     this.legacyToken = legacyToken
+    this.legacyMint = legacyMint
     this.log = log
     this.box = secretBox(config.secretKey)
     this.inflight = new Map()
@@ -583,7 +584,15 @@ export class Tenants {
       key: tenant.id,
       tenantId: tenant.id,
       url,
-      cookie: (host, { fresh = false } = {}) => this.jar.get({ key: tenant.id, url, host, fresh, token: () => this.tokenFor(tenant, { fresh }) }),
+      cookie: (host, { fresh = false } = {}) => this.jar.get({
+        key: tenant.id,
+        url,
+        host,
+        fresh,
+        token: () => this.tokenFor(tenant, { fresh }),
+        // The shared engine has more than one token to try.
+        mint: tenant.kind === 'legacy' && this.legacyMint ? engineUrl => this.legacyMint(engineUrl, host) : undefined,
+      }),
       invalidate: () => this.forget(tenant.id),
     }
   }

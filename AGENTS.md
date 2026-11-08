@@ -4,6 +4,11 @@ Instructions for AI coding agents that work on this repository. Human
 contributors: see [CONTRIBUTING.md](CONTRIBUTING.md), which has the same rules
 with more detail.
 
+## Agent coordination
+
+- Delegate only the work that is actually needed and keep updates concise to avoid wasting tokens.
+- When coordinating multiple agents, check every agent's status before reporting completion.
+
 ## What this project is
 
 Nova Bots is a team of long-lived bots built on a plugin-based agent runtime. It

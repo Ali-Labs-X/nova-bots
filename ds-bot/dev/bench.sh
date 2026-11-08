@@ -30,6 +30,12 @@ if [ -z "${DSH_HARNESS:-}" ]; then
   fi
   [ -d "$DSH_HARNESS" ] || DSH_HARNESS="$(dirname "$(git -C "$ROOT" rev-parse --path-format=absolute --git-common-dir)")/deepseek-harness"
 fi
+# A runtime checkout that is not there cannot start the web; say so here instead
+# of letting the web subshell fail on a missing directory.
+if [ ! -d "$DSH_HARNESS" ]; then
+  echo "no runtime checkout at $DSH_HARNESS; set DSH_HARNESS to a deepseek-harness checkout" >&2
+  exit 1
+fi
 
 alive() { [ -f "$HOME_DIR/$1.pid" ] && kill -0 "-$(cat "$HOME_DIR/$1.pid")" 2>/dev/null; }
 
@@ -107,7 +113,9 @@ start() {
     i=0
     while [ ! -f "$HOME_DIR/web.pid" ] && [ $i -lt 50 ]; do i=$((i + 1)); sleep 0.1; done
     i=0
-    until grep -q "dsh web: http" "$log" 2>/dev/null; do
+    # The runtime prints its banner under its own name: the older ones say
+    # "dsh web: http", the rebranded ones "Nova Bots: http".
+    until grep -Eq "dsh web: http|Nova Bots: http" "$log" 2>/dev/null; do
       i=$((i + 1))
       if [ $i -gt 120 ] || ! alive web; then echo "dsh web did not start; see $log" >&2; tail -20 "$log" | grep -v 'token=' >&2; exit 1; fi
       sleep 1

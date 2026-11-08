@@ -224,3 +224,8 @@ export const dialog = {
 export const shell = {
   openExternal: async (url) => { state.opened = (state.opened ?? []).concat(url) },
 }
+
+export const protocol = {
+  registerBufferProtocol: (scheme, handler) => { state.protocols = state.protocols ?? {}; state.protocols[scheme] = handler },
+  registerFileProtocol: (scheme, handler) => { state.protocols = state.protocols ?? {}; state.protocols[scheme] = handler },
+}

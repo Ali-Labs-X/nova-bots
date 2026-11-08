@@ -61,3 +61,18 @@ test('the scan still refuses the retired package name, and asks for the current 
   assert.equal(findings[0].file, 'ds-bot/package.json')
   assert.equal(findings[0].text, `name is "ds-bot", expected "${currentName}"`)
 })
+
+// The rebrand once committed a runtime home (data/, with .credentials.yaml and
+// .launch-token) and the scan did not notice.
+test('the scan refuses a committed runtime home and its credentials', () => {
+  const root = treeWith(currentName)
+  mkdirSync(join(root, 'data', 'bot'), { recursive: true })
+  writeFileSync(join(root, 'data', 'bot', 'state.json'), '{}')
+  mkdirSync(join(root, 'docker', 'nova'), { recursive: true })
+  writeFileSync(join(root, 'docker', 'nova', '.launch-token'), 'x')
+  writeFileSync(join(root, 'docker', 'nova', '.credentials.yaml'), 'x')
+  const out = join(mkdtempSync(join(tmpdir(), 'scan-report-')), 'findings.json')
+  try { execFileSync(process.execPath, [scan, root, '--json', out]) } catch (error) { if (error.status !== 1) throw error }
+  const files = JSON.parse(readFileSync(out, 'utf8')).filter(f => f.id === 'forbidden-file').map(f => f.file).sort()
+  assert.deepEqual(files, ['data/bot/state.json', 'docker/nova/.credentials.yaml', 'docker/nova/.launch-token'])
+})
