@@ -18,9 +18,10 @@ export default defineConfig({
   root: fileURLToPath(new URL('./ui', import.meta.url)),
   base: './',
   plugins: [ownPrimitives],
-  // The Bot views come from the plugin's interface code in ../ds-bot, which has no React
-  // of its own.
-  resolve: { dedupe: ['react', 'react-dom'] },
+  // The Bot views come from the plugin's interface code in ../ds-bot, which has no packages
+  // of its own in a clean checkout, so React and the deep-view package resolve from the
+  // app's own node_modules.
+  resolve: { dedupe: ['react', 'react-dom', 'deep-view'] },
   // One bundle: the window loads it from disk, not over a network.
   build: { outDir: 'dist', emptyOutDir: true, chunkSizeWarningLimit: 2048 },
 })

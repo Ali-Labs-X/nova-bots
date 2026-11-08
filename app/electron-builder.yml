@@ -8,6 +8,7 @@ files:
   - package.json
   - src/**
   - assets/**
+  - ui/dist/**
 # The Host runs pnpm as a separate Node process to install plugins, and the Office payload's
 # plain Node runs the LibreOffice Kit CLI: both must be plain files outside the asar.
 asarUnpack:
@@ -17,6 +18,9 @@ asarUnpack:
   - node_modules/nova-bots/office.js
   # Automatic unpacking misses versioned Linux libraries such as libvips-cpp.so.8.18.7.
   - node_modules/@img/sharp*/**
+  # The Host serves the app's own UI from a plain Node process, which cannot read
+  # the dist through the asar archive.
+  - ui/dist/**
 # The Office payload that scripts/prepare-runtime.mjs writes in beforePack (see package.json's
 # `runtime` script). build/ is not in `files`, so nothing of it lands inside the asar.
 extraResources:
@@ -84,5 +88,5 @@ deb:
 # so the build itself never publishes (--publish never).
 publish:
   provider: github
-  owner: alilabsx
-  repo: Nova-Bots
+  owner: Jahanzaib211
+  repo: nova-bots

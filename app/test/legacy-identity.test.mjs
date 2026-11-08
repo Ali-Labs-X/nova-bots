@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process'
 import { test } from 'node:test'
 import { parse } from 'yaml'
 import { UUID } from 'builder-util-runtime'
-import { APP_ID, configureIdentity, LEGACY_ARTIFACT_PREFIXES, LEGACY_PRODUCT_NAME, LEGACY_PRODUCT_NAMES, PRODUCT_NAME } from '../src/legacy.mjs'
+import { APP_ID, configureIdentity, LEGACY_ARTIFACT_PREFIXES, LEGACY_ENGINE, LEGACY_PRODUCT_NAME, LEGACY_PRODUCT_NAMES, PRODUCT_NAME } from '../src/legacy.mjs'
 
 function fixture({ saved = [], packaged = true, legacyName = LEGACY_PRODUCT_NAME } = {}) {
   const app = new EventEmitter()
@@ -109,4 +109,24 @@ test('renaming the Windows application preserves the published installer GUID', 
   const published = UUID.v5('io.github.fei2411.deepseekbot', UUID.parse('50e065bc-3134-11e6-9bab-38c9862bdaf3'))
   assert.equal(config.appId, APP_ID)
   assert.equal(config.nsis.guid, published)
+})
+
+test('the published application id and installer GUID are the ones that shipped', () => {
+  const config = parse(readFileSync(new URL('../electron-builder.yml', import.meta.url), 'utf8'))
+  assert.equal(config.appId, 'io.github.alilabsx.novabots')
+  assert.equal(config.nsis.guid, '32c46dfc-ed78-5d41-85a4-a3c7f083f2e0')
+})
+
+test('the names of the releases before this one are known', () => {
+  assert.deepEqual(LEGACY_PRODUCT_NAMES, ['DS Bot', 'DeepSeek Bot'])
+  assert.equal(LEGACY_PRODUCT_NAME, 'DS Bot')
+  assert.deepEqual(LEGACY_ARTIFACT_PREFIXES, ['DS-Bot', 'DeepSeek-Bot'])
+  assert.equal(LEGACY_ENGINE, 'deepseek-bot-engine')
+})
+
+test('the Linux packages replace the packages of the releases before this one', () => {
+  const config = parse(readFileSync(new URL('../electron-builder.yml', import.meta.url), 'utf8'))
+  const fpm = config.deb.fpm.join(' ')
+  assert.ok(fpm.includes('deepseek-bot'), 'the deepseek-bot package is replaced')
+  assert.ok(fpm.includes('dsbot'), 'the dsbot package is replaced')
 })

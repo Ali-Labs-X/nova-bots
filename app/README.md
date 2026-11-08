@@ -1,18 +1,27 @@
 # Nova Bots desktop app
 
-The Electron app for Windows, macOS and Linux. It installs a pinned agent runtime (`0.2.1-rc.4`) and the `nova-bots` plugin of this repository, boots its own runtime profile `ds-bot` through `@deepseek-ai/dsh/profile-boot`, and keeps its data in its own `DSH_HOME`. It never writes to `~/.dsh`. Its window shows the runtime's Web front end with the plugin, as the runtime's own desktop app does. The design is in [docs/plans/2026-10-16-desktop-app.md](../docs/plans/2026-10-16-desktop-app.md).
+The Electron app for Windows, macOS and Linux. It installs a pinned agent runtime (`0.2.1-rc.4`) and the `nova-bots` plugin of this repository, boots its own runtime profile `ds-bot` through `@deepseek-ai/dsh/profile-boot`, and keeps its data in its own `DSH_HOME`. It never writes to `~/.dsh`. Its window shows the app's own UI — the plugin's client code, built into `ui/dist` — which the Host serves at its own origin, as the runtime's own desktop app serves its front end. The design is in [docs/plans/2026-10-16-desktop-app.md](../docs/plans/2026-10-16-desktop-app.md).
 
 ## Run
 
 ```sh
 npm ci
 node node_modules/electron/install.js   # when npm did not download Electron (no node_modules/electron/dist)
+npm run build                           # builds the app's own UI into ui/dist
 npm start                               # starts the app
 ```
+
+Without the built UI the Host answers the window with the runtime's own front end, so the app runs but is not the branded window.
 
 When GitHub downloads are slow, set `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/` before the Electron download. Unset `ELECTRON_RUN_AS_NODE` before `npm start` if your terminal has it (terminals inside some Electron-based editors do): with it, Electron runs as plain Node and the app does not start.
 
 `npm run runtime` downloads the runtime payload (Python with the document libraries, a standalone Node, the Office skill assets) into `build/runtime`. On Linux, run it before `npm start`: the Host uses this plain Node to keep sharp's libvips out of Electron's process. On macOS and Windows the payload is optional for source runs; without it only the Office skills are unavailable. `beforePack` prepares the payload for every package.
+
+### Working folder: the runtime's folder picker
+
+The Working folder menu (in a Bot's details and in group settings) offers **"Choose a folder…"** when the runtime mounts a native directory picker, and **"Browse folders…"** when it mounts the in-app browser instead: the runtime's own `@deepseek-ai/dsh-host-directory-picker-auto` picks the backend at boot (the OS chooser on macOS, Windows and a Linux desktop with a chooser; the in-app browser everywhere else), and the app adds no picker of its own. "Enter a path…" always works.
+
+The folder must already exist, must be absolute, and must not be inside Nova Bots' own data or the team's data root. Picking a folder outside the team workspace asks the user's approval once, just like typing a path does.
 
 npm installs `nova-bots` from `../ds-bot` as a copy of its package files (`install-links` in `.npmrc`), so the app runs the plugin of this checkout. Run `npm ci` again after you change the plugin or merge a branch that changes it: while the version stays the same, `npm install` keeps the old copy. `overrides` in `package.json` pins the four peer dependencies of the plugin to the runtime version: they are declared as `*`, and npm does not choose a pre-release to satisfy `*`.
 

@@ -1,5 +1,6 @@
 // The window talks only to ds-bot's own channel in the engine: POST api/bot for reads and
 // actions (the Bot views' own `call`), and the live feed api/bot/feed for what changes.
+// The Host serves the window at its own origin, so these calls are document-relative.
 const RETRY_MS = [500, 1000, 2000, 5000]
 
 function parseEvent(block) {

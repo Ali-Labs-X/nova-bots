@@ -1,9 +1,14 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self'">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- The Host serves this page and injects its own boot scripts into it (the boot payload, the
+     module loader, the theme script, the connection recovery). Their text follows the user's
+     state, so their hashes cannot be frozen at build time; the Host hashes the blocks it
+     injected into this page's own policy for every response it serves (app/src/csp.mjs). The
+     policy therefore allows exactly those hashes and never 'unsafe-inline'. -->
 <title>Nova Bots</title>
 </head>
 <body>
