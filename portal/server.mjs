@@ -27,11 +27,10 @@
 // page and the static assets; it forwards the API and the app here.
 
 import { createServer } from 'node:http'
-import { execFile } from 'node:child_process'
-import { readFile } from 'node:fs/promises'
 import { Auth } from './auth.mjs'
 import { handleAdmin } from './admin.mjs'
-import { EngineCookieJar, proxyHttp, proxyUpgrade } from './bridge.mjs'
+import { EngineCookieJar, mintEngineCookie, proxyHttp, proxyUpgrade, redirectToApp } from './bridge.mjs'
+import { LaunchTokenPool } from './launch-token.mjs'
 import { clearEngineCookies, policyFromEnv, routeFor, signupAllowed } from './gate.mjs'
 import { capacityPage, failedPage, heldPage, provisioningPage } from './pages.mjs'
 import { Tenants, tenancyConfigFromEnv } from './tenants.mjs'
@@ -247,35 +246,11 @@ const changePassword = async (req, res) => {
 // ---- the engine bridge --------------------------------------------------
 
 // The shared engine's launch token. The engine writes it to a file when it
-// starts; the file is read per request and cached for a few seconds, so a
-// restarted engine is picked up without a restart of this process. When the
-// file is not there (an engine that predates the patch), the token is taken
-// from the container log instead.
-let launchToken = null
-let launchTokenAt = 0
-
-const sharedToken = async () => {
-  if (launchToken && Date.now() - launchTokenAt < 5000) return launchToken
-  try {
-    const value = (await readFile(TOKEN_FILE, 'utf8')).trim()
-    if (value) {
-      launchToken = value
-      launchTokenAt = Date.now()
-      return launchToken
-    }
-  } catch { /* the file is not there; try the log */ }
-  launchToken = await tokenFromLog()
-  if (launchToken) launchTokenAt = Date.now()
-  return launchToken
-}
-
-const tokenFromLog = () => new Promise(resolve => {
-  execFile('docker', ['logs', '--tail', '40', CONTAINER], { timeout: 8000 }, (error, stdout, stderr) => {
-    if (error && !stdout && !stderr) return resolve(null)
-    const match = `${stdout}${stderr}`.match(/token=([A-Za-z0-9._-]{16,})/)
-    resolve(match ? match[1] : null)
-  })
-})
+// starts, but it re-mints it when the profile reloads, and the file keeps the
+// old value until the next start; the container log has the token the engine
+// serves with. The pool tries the file token first, then the log's tokens,
+// newest first, and keeps the one the engine accepted.
+const launchTokens = new LaunchTokenPool({ file: TOKEN_FILE, container: CONTAINER })
 
 // Engine cookies live here, per engine and per Host; never in the browser.
 const jar = new EngineCookieJar()
@@ -283,9 +258,15 @@ const jar = new EngineCookieJar()
 const sharedTarget = {
   key: 'shared',
   url: ENGINE,
-  cookie: (host, { fresh = false } = {}) => jar.get({ key: 'shared', url: ENGINE, host, fresh, token: sharedToken }),
+  cookie: (host, { fresh = false } = {}) => jar.get({
+    key: 'shared',
+    url: ENGINE,
+    host,
+    fresh,
+    mint: url => launchTokens.mint(url, host, mintEngineCookie),
+  }),
   invalidate: () => {
-    launchToken = null
+    launchTokens.invalidate()
     jar.invalidate('shared')
   },
 }
@@ -296,7 +277,8 @@ const tenants = POLICY.tenancy === 'isolated'
     pool: auth.pool,
     config: tenancyConfigFromEnv(),
     jar,
-    legacyToken: sharedToken,
+    legacyToken: () => launchTokens.current(),
+    legacyMint: (url, host) => launchTokens.mint(url, host, mintEngineCookie),
     audit: (entry) => auth.audit(entry),
   })
   : null
@@ -422,6 +404,9 @@ const server = createServer(async (req, res) => {
       return handleAdmin(req, res, path, { auth, clientIp, tenants, closeUserSockets, policy: POLICY })
     }
 
+    // The engine's page needs the trailing slash: /app answers with a
+    // redirect to /app/, and /app/… is bridged as it is.
+    if (path === '/app' && (req.method === 'GET' || req.method === 'HEAD')) return redirectToApp(req, res)
     if (path === '/app' || path.startsWith('/app/')) return bridge(req, res)
 
     if (path === '/health') return send(res, 200, 'ok', { 'content-type': 'text/plain; charset=utf-8' })

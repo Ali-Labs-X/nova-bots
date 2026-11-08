@@ -55,16 +55,20 @@ export const mintEngineCookie = (engineUrl, token, host, { timeoutMs = 8000 } = 
 // A small cache of minted cookies, per engine and per Host. Nothing in it
 // ever leaves the portal.
 export class EngineCookieJar {
-  constructor({ mint = mintEngineCookie } = {}) {
+  constructor({ mint = mintEngineCookie, maxAgeMs = 60000 } = {}) {
     this.mint = mint
+    this.maxAgeMs = maxAgeMs
     this.cookies = new Map()
   }
 
-  async get({ key, url, host, token, fresh = false }) {
+  // `mint` hands back a cookie for the engine, trying its own candidates;
+  // `token` is the single-token way, kept for the engines that have one.
+  async get({ key, url, host, token, mint, fresh = false, now = () => Date.now() }) {
     const id = `${key}\u0000${host}`
-    if (!fresh && this.cookies.has(id)) return this.cookies.get(id)
-    const value = await this.mint(url, await token(), host)
-    if (value) this.cookies.set(id, value)
+    const cached = this.cookies.get(id)
+    if (!fresh && cached && (this.maxAgeMs <= 0 || now() - cached.at <= this.maxAgeMs)) return cached.value
+    const value = mint ? await mint(url, host) : token ? await this.mint(url, await token(), host) : null
+    if (value) this.cookies.set(id, { value, at: now() })
     else this.cookies.delete(id)
     return value
   }
@@ -106,21 +110,46 @@ const responseCookies = (req, upstreamSetCookie) => {
   return presentedEngineCookie(req) ? kept.concat(clearEngineCookies(req.headers.cookie)) : kept
 }
 
-const unavailable = (res, status, message) => {
+const unavailable = (res, status, message, extra = {}) => {
   if (res.headersSent) return res.destroy()
-  res.writeHead(status, { 'cache-control': 'no-store', 'content-type': 'text/plain; charset=utf-8' })
+  res.writeHead(status, { 'cache-control': 'no-store', 'content-type': 'text/plain; charset=utf-8', ...extra })
   res.end(message)
 }
 
+// The engine's page starts with <base href="./">: without the trailing slash
+// the browser resolves its scripts to the portal's root and the app stays
+// blank. /app answers with a redirect to /app/ instead.
+export const redirectToApp = (req, res) => {
+  const url = new URL(req.url ?? '/', 'http://portal.local')
+  const location = url.search ? `/app/?${url.search}` : '/app/'
+  res.writeHead(302, { location, 'cache-control': 'no-store' })
+  res.end()
+}
+
+// A request with a body can be sent again with a fresh cookie only if its
+// body was kept. A body that is too large, or one that comes without a
+// length, is streamed as it is and cannot be replayed.
+const REPLAY_LIMIT = 1 << 20
+
+const requestBody = async req => {
+  if (req.method === 'GET' || req.method === 'HEAD') return { body: null, replayable: true }
+  const length = Number(req.headers['content-length'] ?? NaN)
+  if (!Number.isFinite(length) || length < 0 || length > REPLAY_LIMIT) return { body: null, replayable: false }
+  const chunks = []
+  for await (const chunk of req) chunks.push(chunk)
+  return { body: Buffer.concat(chunks), replayable: true }
+}
+
 // HTTP. A 401 from the engine means the minted cookie is no longer accepted
-// (an engine whose cookie key changed): a GET/HEAD is retried once with a
-// fresh cookie; a request with a body cannot be replayed, so it fails.
-export const proxyHttp = async (req, res, target, { retried = false } = {}) => {
+// (an engine whose cookie key changed): the request is sent again with a
+// fresh cookie when it can be replayed; one that cannot be replayed is
+// answered with the status the client can act on.
+export const proxyHttp = async (req, res, target, { retried = false, payload } = {}) => {
   const host = req.headers.host ?? 'localhost'
   const engineCookie = await target.cookie(host, { fresh: retried })
-  if (!engineCookie) return unavailable(res, 503, 'The Nova Bots workspace is not reachable yet. Try again in a moment.')
+  if (!engineCookie) return unavailable(res, 503, 'The Nova Bots workspace is not reachable yet. Try again in a moment.', { 'retry-after': '2' })
   const upstream = new URL(enginePath(req.url), target.url)
-  const replayable = req.method === 'GET' || req.method === 'HEAD'
+  const { body, replayable } = payload ?? await requestBody(req)
   const request = httpRequest({
     hostname: upstream.hostname,
     port: upstream.port || 80,
@@ -131,8 +160,8 @@ export const proxyHttp = async (req, res, target, { retried = false } = {}) => {
     if (upstreamResponse.statusCode === 401) {
       upstreamResponse.resume()
       target.invalidate?.()
-      if (!retried && replayable) return proxyHttp(req, res, target, { retried: true })
-      return unavailable(res, 503, 'The Nova Bots workspace did not accept the session. Reload the page.')
+      if (!retried && replayable) return proxyHttp(req, res, target, { retried: true, payload: { body, replayable } })
+      return unavailable(res, 401, 'The Nova Bots workspace refused the session. Reload the page and sign in again.')
     }
     const headers = { ...upstreamResponse.headers }
     // Hop-by-hop headers describe the engine's connection to the portal, not
@@ -147,7 +176,7 @@ export const proxyHttp = async (req, res, target, { retried = false } = {}) => {
     upstreamResponse.pipe(res)
   })
   request.on('error', () => unavailable(res, 502, 'The Nova Bots engine is not reachable.'))
-  if (replayable) request.end()
+  if (replayable) request.end(body ?? undefined)
   else req.pipe(request)
 }
 
