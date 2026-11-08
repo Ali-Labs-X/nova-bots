@@ -4,8 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#060010" />
-    <meta name="description" content="Sign in to Nova Bots — your premium self-hosted AI team on your hardware" />
+    <meta name="description" content="Sign in to Nova Bots and build your bot army: bots that remember, collaborate in squads and report to a commander." />
     <title>Nova Bots — Sign in</title>
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Nova Bots" />
+    <meta property="og:title" content="Nova Bots — Sign in" />
+    <meta property="og:description" content="Sign in and build your bot army." />
+    <meta property="og:url" content="https://bots.alilabsx.com/login" />
     <link rel="icon" href="/nova-icon.svg" type="image/svg+xml" />
     <style>
       :root {
@@ -164,8 +169,8 @@
 
       <div class="card">
         <div class="hgroup">
-          <h1 id="form-title">Welcome back. <em>Let's ship.</em></h1>
-          <p class="lead" id="form-lead">Sign in to your private Nova Bots workspace.</p>
+          <h1 id="form-title">Build your bot army. <em>Sign in to command it.</em></h1>
+          <p class="lead" id="form-lead">Your bots, their memory and their squads are waiting in your own workspace.</p>
         </div>
 
         <form id="account-form" method="post" action="/api/v1/auth/login/local">
@@ -241,10 +246,10 @@
         function setMode(signUp) {
           signingUp = signUp;
           clearError(formError);
-          title.innerHTML = signUp ? 'Create your account. <em>Your own private workspace.</em>' : 'Welcome back. <em>Let\'s ship.</em>';
+          title.innerHTML = signUp ? 'Build your bot army. <em>Start with Orion, your commander.</em>' : 'Build your bot army. <em>Sign in to command it.</em>';
           lead.textContent = signUp
-            ? "Pick a password. Your own private AI team is set up for you on first sign-in."
-            : "Sign in to your private Nova Bots workspace.";
+            ? "Pick a password. Your own workspace and Orion, your commander, are set up on first sign-in."
+            : "Your bots, their memory and their squads are waiting in your own workspace.";
           submit.textContent = signUp ? "Create account" : "Sign in";
           form.setAttribute("action", signUp ? REGISTER_PATH : LOGIN_PATH);
           const autocompleteValue = (signUp ? "new" : "current") + "-password";
