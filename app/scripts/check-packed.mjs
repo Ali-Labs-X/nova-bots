@@ -309,7 +309,15 @@ async function chat(cdp) {
   // The typed text is the value of the composer: a textarea keeps it in its value, so the
   // text of the page does not hold it and the wait has to ask the composer itself.
   await until(`${composerTextExpression}.includes('packaged app check')`, 'the typed message', 10_000)
-  for (const type of ['keyDown', 'keyUp']) await cdp.call('Input.dispatchKeyEvent', { type, key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
+  // An Enter that lands while the greeting's turn is still settling can be dropped: the text
+  // stays in the composer and no reply ever comes. A sent message leaves the composer, so
+  // press Enter again until it does.
+  const sent = `!${composerTextExpression}.includes('packaged app check')`
+  for (let attempt = 0; attempt < 5 && !(await evaluate(`Boolean(${sent})`)); attempt++) {
+    for (const type of ['keyDown', 'keyUp']) await cdp.call('Input.dispatchKeyEvent', { type, key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
+    await until(sent, 'the sent message', 5_000).catch(() => {})
+  }
+  await until(sent, 'the sent message', 1_000)
   // The mock model starts its reply with 收到： and the message.
   try {
     await until(text('收到：packaged app check'), 'the reply')
