@@ -11,6 +11,7 @@ export function install(rt) {
 
   let modelsSynced = null
   let catalogCache = { at: 0, value: [] }
+  const dropCache = () => { catalogCache = { at: 0, value: [] } }
   // Routes Nova serves that cannot answer a request at all — a hosted loop engine
   // publishes one so its Sessions can be prompted. Once one refuses with
   // HOSTED_ENGINE_ROUTE it is remembered with the models its provider served then,
@@ -33,8 +34,8 @@ export function install(rt) {
   // A model's thinking levels, resolved once and kept for a short while: they change
   // only with the provider, which also drops the catalog cache.
   const reasoningCache = new Map()
-  ctx.on?.('llm/adapters-updated', () => { catalogCache = { at: 0, value: [] }; reasoningCache.clear(); return forgetChangedRefusals() })
-  for (const name of ['credentials/reference-updated', 'settings/document-updated']) ctx.on?.(name, () => { catalogCache = { at: 0, value: [] } })
+  ctx.on?.('llm/adapters-updated', () => { dropCache(); reasoningCache.clear(); return forgetChangedRefusals() })
+  for (const name of ['credentials/reference-updated', 'settings/document-updated']) ctx.on?.(name, () => { dropCache() })
 
   // The thinking levels a model serves: `{efforts: [{id, name, description?}],
   // defaultEffort?}`, or undefined when it has none or the provider cannot say.
@@ -57,9 +58,15 @@ export function install(rt) {
   async function catalog({ fresh = false } = {}) {
     if (!fresh && Date.now() - catalogCache.at < CATALOG_TTL_MS && catalogCache.value.length > 0) return answerable(catalogCache.value)
     const entries = []
+    // A model a provider marks as an embedding model is no picker's choice, but it is
+    // still a model the provider serves: it stays in the catalog, tagged, so the
+    // serving path still sees it. The mark is the provider's own, in the profile where
+    // the route is set up; the runtime's model list does not carry it.
+    const marked = rt.embeddingModels?.() ?? new Map()
     for (const provider of ctx.llm.listProviders()) {
       let models = []
       try { models = await ctx.llm.listModels(provider.id) } catch { continue }
+      const marks = marked.get(provider.id) ?? []
       for (const model of models) {
         entries.push({
           ref: `${provider.id}/${model.id}`,
@@ -68,6 +75,7 @@ export function install(rt) {
           id: model.id,
           name: model.name ?? model.id,
           ...(model.inputModalities ? { input: [...model.inputModalities] } : {}),
+          ...(marks.some(entry => entry.id === model.id) ? { embedding: true } : {}),
         })
       }
     }
@@ -84,6 +92,11 @@ export function install(rt) {
     return answerable(entries)
   }
 
+  // The models a Bot may run on: the catalog without the embedding models, which no
+  // picker offers.
+  const chatModels = async ({ fresh = false } = {}) => (await catalog({ fresh })).filter(entry => entry.embedding !== true)
+  const cachedChatModels = () => answerable(catalogCache.value).filter(entry => entry.embedding !== true)
+
   // The profile default model of Nova as set, served or not, and able to answer.
   const defaultRef = () => {
     const selection = ctx.get?.('agentDefaultModel')?.currentSelection?.()
@@ -92,26 +105,33 @@ export function install(rt) {
     return refused.has(ref) ? undefined : ref
   }
   // The profile default model of Nova, when it is served; else the first served model.
+  // An embedding model is never the default: it cannot answer a chat.
   function pickDefault(entries) {
     const ref = defaultRef()
-    const list = answerable(entries)
+    const list = answerable(entries).filter(entry => entry.embedding !== true)
     return list.find(entry => entry.ref === ref)?.ref ?? list[0]?.ref
   }
   const defaultModel = async () => pickDefault(await catalog())
 
   // A full `provider/model` ref, or a model id or name that only one provider serves.
+  // An embedding model is not a chat model, so it is not chosen for a Bot.
   async function resolveModel(text) {
     const entries = await catalog({ fresh: true })
     const wanted = String(text ?? '').trim()
     const exact = entries.find(entry => entry.ref === wanted)
-    if (exact) return exact.ref
+    if (exact) return chatRef(exact)
     const key = normalize(wanted)
     const named = entries.filter(entry => normalize(entry.id) === key || normalize(entry.name) === key)
-    if (named.length === 1) return named[0].ref
-    const known = entries.map(entry => entry.ref).join(', ') || 'none'
+    if (named.length === 1) return chatRef(named[0])
+    const known = entries.filter(entry => entry.embedding !== true).map(entry => entry.ref).join(', ') || 'none'
     throw new Error(named.length > 1
       ? `Model ${wanted} is served by more than one provider; use one of ${named.map(entry => entry.ref).join(', ')}`
       : `Model ${wanted} is not available. Available models: ${known}`)
+  }
+
+  const chatRef = entry => {
+    if (entry.embedding === true) throw new Error(`Model ${entry.ref} is an embedding model, not a chat model`)
+    return entry.ref
   }
 
   // A Bot with no model yet waits for the user to pick one and changes nothing. A
@@ -212,7 +232,7 @@ export function install(rt) {
     const deadline = Date.now() + ms
     for (;;) {
       if (!bot.model) return undefined
-      catalogCache = { at: 0, value: [] }
+      dropCache()
       const served = new Set((await catalog()).map(entry => entry.ref))
       if (served.has(bot.model) || Date.now() >= deadline) return desiredModel(bot)
       await new Promise((resolve) => {
@@ -261,9 +281,9 @@ export function install(rt) {
   }
 
   Object.assign(rt, {
-    catalog, cachedCatalog: () => answerable(catalogCache.value), cachedDefault: () => pickDefault(catalogCache.value),
+    catalog, cachedCatalog: () => answerable(catalogCache.value), cachedChatModels, chatModels, cachedDefault: () => pickDefault(catalogCache.value),
     defaultRef, defaultModel, defaultEffort, resolveModel, desiredModel, reasoningOf, resolveEffort, desiredEffort,
     selectSessionModel, applyModel, waitForModel, syncModels, routeRefused,
-    dropCatalog: () => { catalogCache = { at: 0, value: [] } },
+    dropCatalog: () => { dropCache() },
   })
 }

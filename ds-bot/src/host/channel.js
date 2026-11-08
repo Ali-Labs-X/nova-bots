@@ -33,7 +33,7 @@ export function install(rt) {
   const fail = (message, code = 'bot/error') => ({ ok: false, error: { code, message, details: {} } })
   // Models come from Nova, not state.json, so a provider added in Nova settings
   // changes the view without a new revision.
-  const modelsKey = () => `${rt.cachedCatalog().map(entry => `${entry.ref}${entry.needsKey ? '!' : ''}${entry.reasoning ? `:${JSON.stringify(entry.reasoning)}` : ''}`).join(',')}|${rt.cachedDefault() ?? ''}`
+  const modelsKey = () => `${rt.cachedChatModels().map(entry => `${entry.ref}${entry.needsKey ? '!' : ''}${entry.reasoning ? `:${JSON.stringify(entry.reasoning)}` : ''}`).join(',')}|${rt.cachedDefault() ?? ''}`
   const view = () => ({
     revision: state.revision,
     workspaceId: state.workspaceId ?? null,
@@ -71,7 +71,7 @@ export function install(rt) {
     capabilities: rt.capabilityLibraryView(),
     secretRequests: state.secretRequests ?? {},
     colors: [...COLORS, ...EXTRA_COLORS],
-    models: rt.cachedCatalog(),
+    models: rt.cachedChatModels(),
     defaultModel: rt.cachedDefault() ?? null,
     permissions: rt.permissionCatalog?.() ?? null,
     modelsKey: modelsKey(),
