@@ -53,11 +53,13 @@ export const mintEngineCookie = (engineUrl, token, host, { timeoutMs = 8000 } = 
 })
 
 // A small cache of minted cookies, per engine and per Host. Nothing in it
-// ever leaves the portal.
+// ever leaves the portal. The Host is chosen by the caller, so the cache is
+// bounded: the least recently used entry goes first (#29).
 export class EngineCookieJar {
-  constructor({ mint = mintEngineCookie, maxAgeMs = 60000 } = {}) {
+  constructor({ mint = mintEngineCookie, maxAgeMs = 60000, maxEntries = 256 } = {}) {
     this.mint = mint
     this.maxAgeMs = maxAgeMs
+    this.maxEntries = maxEntries
     this.cookies = new Map()
   }
 
@@ -66,11 +68,23 @@ export class EngineCookieJar {
   async get({ key, url, host, token, mint, fresh = false, now = () => Date.now() }) {
     const id = `${key}\u0000${host}`
     const cached = this.cookies.get(id)
-    if (!fresh && cached && (this.maxAgeMs <= 0 || now() - cached.at <= this.maxAgeMs)) return cached.value
+    if (!fresh && cached && (this.maxAgeMs <= 0 || now() - cached.at <= this.maxAgeMs)) {
+      this.cookies.delete(id)
+      this.cookies.set(id, cached)
+      return cached.value
+    }
     const value = mint ? await mint(url, host) : token ? await this.mint(url, await token(), host) : null
-    if (value) this.cookies.set(id, { value, at: now() })
-    else this.cookies.delete(id)
+    this.cookies.delete(id)
+    if (value) this.remember(id, { value, at: now() })
     return value
+  }
+
+  remember(id, entry) {
+    this.cookies.set(id, entry)
+    for (const oldest of this.cookies.keys()) {
+      if (this.cookies.size <= this.maxEntries) break
+      this.cookies.delete(oldest)
+    }
   }
 
   invalidate(key) {
