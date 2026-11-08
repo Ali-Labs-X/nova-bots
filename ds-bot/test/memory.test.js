@@ -335,6 +335,19 @@ test('keys, long entries, and full files are refused with what to do instead', a
   await assert.rejects(tool('forget', { entry: 'Fact 1' }, 'b2'), /matches \d+ entries in your memory; quote more of the one you mean:\n- Fact 1 y+ \(MEMORY\.md\)\n- Fact 10/)
 })
 
+test('a Bot is told the entry limit before it writes, and told how to split when it writes too much', async (t) => {
+  const { tool, stop } = start()
+  t.after(() => stop())
+  // When it writes too much, the refusal says what to do, not only what went wrong.
+  await assert.rejects(tool('remember', { text: 'x'.repeat(MEMORY_LIMITS.entry + 1) }, 'b2'),
+    /at most 300 characters; this one has 301\. Split it into several entries of at most 300 characters, one fact each, so each can change on its own, or keep one short entry here and save the details as several entries in a topic \(remember with topic\)\./)
+  // The tool description names the limit and the way out, so the Bot rarely hits it.
+  const remember = rt.teamTools.find(d => d.name === 'remember')
+  assert.match(remember.description, new RegExp(`at most ${MEMORY_LIMITS.entry} characters`))
+  assert.match(remember.description, /several entries of one fact each/)
+  assert.match(remember.parameters.properties.text.description, new RegExp(`at most ${MEMORY_LIMITS.entry} characters`))
+})
+
 test('a write that changed nothing fails the call with a code, and a saved one keeps its answer', async (t) => {
   const { tool, stop } = start()
   t.after(() => stop())
