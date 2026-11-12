@@ -228,7 +228,7 @@ Every statement below is testable, and each one names the test file it lives in.
 
 **Four. How the tests run (no real service is contacted)**
 
-21. The identity probe uses a `node:http` stub in `ds-bot/test/fixtures/connector-stub/` on `127.0.0.1`; the MCP mount uses the existing fake loader (`ds-bot/test/connectors.test.js:57-66`), so no real MCP server is needed. The shared helper is `ds-bot/test/connector-harness.js`.
+21. The identity probe uses a `node:http` stub in `ds-bot/test/fixtures/connector-stub/` on `127.0.0.1`; the MCP mount uses the existing fake loader (`ds-bot/test/connectors.test.js:43-51`, the loader object at `:48-51`), so no real MCP server is needed. The shared helper is `ds-bot/test/connector-harness.js`.
 22. The two current-code fixes each have a test file, written by QA and measured:
     - `ds-bot/src/host/capabilities.js:114-121` — a streamable-http capability is no longer `approved: true` by default and does not mount before it is approved; a non-https address is refused outright. When the url or the headers change, it goes back to `needs-approval` and the user must approve it again before it mounts again. Test: `ds-bot/test/capability-remote-mcp.test.js` (4 cases).
     - `ds-bot/src/host/connectors.js:116` — the account name a probe returns is filtered before it is shown (character set `/^[A-Za-z0-9._-]+$/`, at most 64 characters, no angle brackets, no control characters) and it comes only from that connector's own probe. When the account name is invalid as a whole, the connection is refused with an error naming that service: no secret stored, nothing mounted, no empty account shown. Test: `ds-bot/test/connector-account-sanitised.test.js` (5 cases).
