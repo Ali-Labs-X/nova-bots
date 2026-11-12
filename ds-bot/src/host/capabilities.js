@@ -112,12 +112,17 @@ export function install(rt) {
           || previous.command !== command || !same(previous.args ?? [], args) || !same(previous.env ?? {}, env)
         Object.assign(item, { transport, command, args, env, approved: ui ? true : changed ? false : previous.approved === true })
       } else {
+        // A remote server gets the credential on every call, so it needs https and the
+        // same approval a local server needs: the user says yes before it is mounted.
         const url = String(body.url ?? '').trim()
         try {
           const parsed = new URL(url)
-          if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') throw new Error()
-        } catch { throw new Error('Enter a valid HTTP or HTTPS URL.') }
-        Object.assign(item, { transport, url, headers: stringMap(body.headers, 'Headers'), approved: true })
+          if (parsed.protocol !== 'https:') throw new Error()
+        } catch { throw new Error('Enter a valid HTTPS URL.') }
+        const headers = stringMap(body.headers, 'Headers')
+        const changed = !previous || previous.kind !== 'mcp' || previous.transport !== 'streamable-http'
+          || previous.url !== url || !same(previous.headers ?? {}, headers)
+        Object.assign(item, { transport, url, headers, approved: ui ? true : changed ? false : previous.approved === true })
       }
     } else if (kind === 'skill') {
       item.content = String(body.content ?? '').trim()
@@ -153,7 +158,7 @@ export function install(rt) {
     return true
   }
   // Called with the Bot being deleted, after it left the team. The shared list belongs to
-  // the user, so only a local MCP this Bot added, nobody approved and no other Bot or pack
+  // the user, so only an MCP this Bot added, nobody approved and no other Bot or pack
   // uses goes: no one is left to ask for it, and approving it would start a server for no one.
   // Anything a pack lists stays.
   const dropOrphanCapabilities = (bot) => {
@@ -161,7 +166,7 @@ export function install(rt) {
     const packed = name => Object.values(items).some(item => item.kind === 'pack' && (item.items ?? []).includes(name))
     for (const name of bot.capabilities ?? []) {
       const item = own(items, name)
-      if (item === undefined || item.kind !== 'mcp' || item.transport !== 'stdio' || item.approved === true) continue
+      if (item === undefined || item.kind !== 'mcp' || item.approved === true) continue
       if (item.createdBy !== bot.id || usedByOthers(name, bot.id) || packed(name)) continue
       delete items[item.name]
     }
@@ -293,7 +298,7 @@ export function install(rt) {
       await disposeMount(agentMounts.get(name))
       agentMounts.delete(name)
     }
-    if (item.kind === 'mcp' && item.transport === 'stdio' && item.approved !== true) {
+    if (item.kind === 'mcp' && item.approved !== true) {
       await drop()
       statusSet(bot.id, name, sessionId, { state: 'needs-approval' })
       return
@@ -475,7 +480,7 @@ export function install(rt) {
       await rt.load()
       writeCheck()
       const item = own(library(), String(body.name ?? ''))
-      if (!item || item.kind !== 'mcp' || item.transport !== 'stdio') throw new Error(`No unapproved stdio MCP named ${body.name}.`)
+      if (!item || item.kind !== 'mcp') throw new Error(`No unapproved MCP named ${body.name}.`)
       item.approved = true
       item.updatedAt = Date.now()
       await rt.save()

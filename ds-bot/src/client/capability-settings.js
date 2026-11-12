@@ -103,7 +103,7 @@ function CapabilityRow({ item, onEdit, onDelete, onApprove, confirming }) {
         h('span', { className: 'bt-connector-name' }, item.name),
         h('span', { className: 'bt-connector-status' }, secondary)),
       h('span', { className: 'bt-connector-actions' },
-        item.kind === 'mcp' && item.transport === 'stdio' && !item.approved
+        item.kind === 'mcp' && !item.approved
           ? h('button', { type: 'button', className: 'bt-soft bt-soft-sm', onClick: onApprove }, t('Allow')) : null,
         h('button', { type: 'button', className: 'bt-soft bt-soft-sm', onClick: onEdit }, t('Edit')),
         h('button', { type: 'button', className: 'bt-soft bt-soft-sm', onClick: onDelete }, confirming ? t('Click again to delete.') : t('Delete')))))

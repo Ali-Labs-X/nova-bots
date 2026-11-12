@@ -951,7 +951,7 @@ export function install(rt) {
       const statuses = rt.capabilityStatusesView()[bot.id] ?? {}
       const lines = items.map(item => {
         const extra = item.kind === 'pack' ? `; includes ${(item.items ?? []).join(', ') || 'nothing'}`
-          : item.kind === 'mcp' && item.transport === 'stdio' ? `; ${item.approved ? 'allowed' : 'needs user approval'}` : ''
+          : item.kind === 'mcp' ? `; ${item.approved ? 'allowed' : 'needs user approval'}` : ''
         const itemStatus = statuses[item.name]
         const state = itemStatus ? ` (${itemStatus.state}${itemStatus.error ? `: ${itemStatus.error}` : ''})` : ''
         const status = bot.capabilities?.includes(item.name) ? `; attached to you${state}` : ''
@@ -983,7 +983,7 @@ export function install(rt) {
       if (!rt.botOf(self)) return 'Only Bots on the team can use save_capability.'
       try {
         const item = await rt.capabilitySave(args, { botId: self })
-        const approval = item.kind === 'mcp' && item.transport === 'stdio' && !item.approved
+        const approval = item.kind === 'mcp' && !item.approved
           ? ' The user must allow this MCP server in Nova Bots settings before it can work.'
           : ''
         return `Saved ${item.name}. Bots with it attached use the change from their next message.${approval}`
@@ -1025,7 +1025,7 @@ export function install(rt) {
             ? (attached.items ?? []).map(child => rt.own(state.capabilities.items, child)).filter(Boolean)
             : attached ? [attached] : []
           const approvals = members
-            .filter(item => item.kind === 'mcp' && item.transport === 'stdio' && item.approved !== true)
+            .filter(item => item.kind === 'mcp' && item.approved !== true)
             .map(item => ` The user must allow ${item.name} in Nova Bots settings before it can work.`)
             .join('')
           return `${verb} ${args.name} ${args.bot ? `to ${result.bot}` : 'to yourself'}. Changes apply from ${result.bot}'s next message.${endpoint === 'attach' ? approvals : ''}`

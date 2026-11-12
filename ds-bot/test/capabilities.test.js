@@ -429,6 +429,8 @@ test('mounts agent-only MCP and skills, remounts changed config, resolves scoped
   t.after(() => env.dispose())
   const { ctx, rt, mounts, skills, mcpPlugin } = env
   await rt.capabilitySave({ ...mcp('echo'), transport: 'streamable-http', url: 'https://example.test/mcp', headers: { Authorization: 'Bearer $DSH_SECRET_TOKEN' } }, { botId: 'chief' })
+  // A remote MCP needs the user's approval before it mounts.
+  await rt.capabilityEndpoint('capability-approve', { name: 'echo' })
   await rt.capabilitySave({ name: 'guide', kind: 'skill', description: 'How to work', content: 'Capability marker.' }, { botId: 'chief' })
   await rt.capabilitySave({ name: 'team', kind: 'pack', items: ['echo', 'guide'] }, { botId: 'chief' })
   await rt.changeCapabilityAttachment('attach', { name: 'team' }, 'chief')
@@ -459,6 +461,8 @@ test('mounts agent-only MCP and skills, remounts changed config, resolves scoped
   const first = mounts.find(mount => mount.config?.serverName === 'echo')
   const firstSkill = mounts.find(mount => mount.sessionId === 'chief' && mount.plugin.inject?.includes('skills'))
   await rt.capabilitySave({ ...mcp('echo'), transport: 'streamable-http', url: 'https://example.test/mcp', headers: { Authorization: 'Bearer changed' } }, { botId: 'chief' })
+  // Changed headers are a changed destination: the user allows it again.
+  await rt.capabilityEndpoint('capability-approve', { name: 'echo' })
   await rt.capabilitySave({ name: 'guide', kind: 'skill', description: 'How to work', content: 'Changed capability marker.' }, { botId: 'chief' })
   await rt.scheduleCapabilitiesReconcile()
   assert.equal(first.disposed, true)
@@ -467,6 +471,7 @@ test('mounts agent-only MCP and skills, remounts changed config, resolves scoped
   assert.equal(mounts.filter(mount => mount.plugin === mcpPlugin && mount.config.serverName === 'echo').length, 5)
   assert.equal(rt.capabilityStatusesView().worker.team.state, 'ready')
   await rt.capabilitySave({ ...mcp('missing-secret'), transport: 'streamable-http', url: 'https://example.test/mcp', headers: { Authorization: '$DSH_SECRET_TOKEN' } }, { botId: 'worker' })
+  await rt.capabilityEndpoint('capability-approve', { name: 'missing-secret' })
   await rt.changeCapabilityAttachment('attach', { name: 'missing-secret' }, 'worker')
   await rt.scheduleCapabilitiesReconcile()
   assert.equal(rt.capabilityStatusesView().worker['missing-secret'].state, 'error')
@@ -484,6 +489,8 @@ async function mountUrlCapability(t, { value, url, bots = ['chief'], awaitMount 
   t.after(() => env.dispose())
   const { ctx, rt, mounts, skills } = env
   await rt.capabilitySave({ name: 'exa', kind: 'mcp', description: '', transport: 'streamable-http', url, headers: {} }, { botId: 'chief' })
+  // A remote MCP needs the user's approval before it mounts.
+  await rt.capabilityEndpoint('capability-approve', { name: 'exa' })
   for (const bot of bots) await rt.changeCapabilityAttachment('attach', { name: 'exa', bot: rt.state.bots[bot].name }, 'chief')
   for (const bot of bots) ctx.emit('agent/created', { agent: testAgent(bot, mounts, skills, { awaitMount }) })
   await rt.scheduleCapabilitiesReconcile()
