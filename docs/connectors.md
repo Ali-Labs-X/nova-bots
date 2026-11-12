@@ -44,9 +44,15 @@ last read.
 5. A package whose name does not describe what it is is flagged in the row itself.
 6. "Self-hostable" always names a shape — one binary, one container, a file, or a cluster — never
    a bare yes.
-7. A service whose licence is 未核实 is listed for reference and must not enter the registry
-   until the licence has been read.
-8. Nothing that was not read is written. No credentials, no sign-ups, no accounts.
+7. A service whose licence or publisher is 未核实 may appear here only as a **comparison row**: it
+   carries 许可证 = 未核实 (and 未核实 in every other field we could not read) **and** the line
+   *reference only, not offered as a connector until verified* (参考信息，未作为连接器提供). Such a
+   row never enters the registry, never gets a connector definition, and never appears in the
+   app's Connectors page.
+8. Every other row is verified and must be installable-by-catalogue: licence, publisher,
+   version/date, self-hosted or hosted, the exact credential it asks for, and the date it was
+   last verified.
+9. Nothing that was not read is written. No credentials, no sign-ups, no accounts.
 
 ## Mail and messaging
 
@@ -63,7 +69,7 @@ last read.
 | Service | Category | What it does | Credential | Self-hostable | Free tier | Paid | Licence | Version / date |
 |---|---|---|---|---|---|---|---|---|
 | [GitHub REST / GraphQL](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api) | Code and forges | Repos, issues, PRs, Actions, Apps | fine-grained PAT, or OAuth app | no | Actions free for public repos; unauthenticated REST 60 req/h — 未核实 | github.com/pricing — 未核实 | GitHub service terms | REST API 2026-03-10, read 2026-11-12 |
-| [GitLab](https://about.gitlab.com/pricing/) | Code and forges | Repos, CI, issues, registry | PAT or OAuth app | yes — CE | Free tier exists, figures 未核实 | pricing page read 2026-11-12, figures 未核实 | **未核实** (CE and hosted differ) | no version published, read 2026-11-12 |
+| [GitLab](https://about.gitlab.com/pricing/) — *reference only, not offered as a connector until verified* (参考信息，未作为连接器提供) | Code and forges | Repos, CI, issues, registry | PAT or OAuth app | yes — CE | Free tier exists, figures 未核实 | pricing page read 2026-11-12, figures 未核实 | **未核实** (CE and hosted differ) | no version published, read 2026-11-12 |
 | [Forgejo](https://codeberg.org/forgejo/forgejo) | Code and forges | Git forge, single binary, REST API, Actions, packages | token | yes — one binary | Free, no paid tier | none | MIT | v17.0.1, released 2026-10-26 |
 | [Gitea](https://gitea.com/) | Code and forges | Git forge, single binary, REST API | token | yes — one binary | Free, no paid tier | none | MIT | version **未核实**, read 2026-11-12 |
 
@@ -92,7 +98,7 @@ last read.
 | [Woodpecker CI](https://woodpecker-ci.org/) | Workflow, automation and DevOps | Container-per-step CI, small footprint | repo token | yes — one binary and a database | Apache-2.0, free | — | Apache-2.0 | version **未核实**, read 2026-11-12 |
 | [Drone](https://www.drone.io/) | Workflow, automation and DevOps | Container-native CI | repo token | yes — a server and runners | Apache-2.0, free | — | Apache-2.0 | version **未核实**, read 2026-11-12 |
 | [GitHub Actions](https://github.com/pricing) | Workflow, automation and DevOps | CI/CD tied to the repository | repo token | yes — a self-hosted runner | free for public repos; minutes and price 未核实 | github.com/pricing | GitHub service terms | read 2026-11-12 |
-| [GitLab CI](https://about.gitlab.com/pricing/) | Workflow, automation and DevOps | CI/CD in GitLab | project token | yes — a self-managed runner | included in the free tier, figures 未核实 | — | **未核实** | read 2026-11-12 |
+| [GitLab CI](https://about.gitlab.com/pricing/) — *reference only, not offered as a connector until verified* (参考信息，未作为连接器提供) | Workflow, automation and DevOps | CI/CD in GitLab | project token | yes — a self-managed runner | included in the free tier, figures 未核实 | — | **未核实** | read 2026-11-12 |
 
 ## Office and documents
 
@@ -157,6 +163,9 @@ Bot does not connect to them; they are listed so the choice is on the record.
 - **Redis (RSALv2/SSPL), MongoDB server (SSPL), n8n (fair-code), Temporal Cloud** are listed
   above as things you can run. They may not be vendored into this repository (AGENTS.md rule 3).
 - **`@modelcontextprotocol/server-sqlite`** is not published under that name (registry 404).
+- **GitLab and GitLab CI** appear above as comparison rows only: their licences were not read, so
+  they get no connector definition, no entry in the registry, and no row on the Connectors page
+  until the licences are verified.
 - **Gmail send-quota numbers, GitHub and GitLab free-tier figures, Prefect Cloud pricing, and
   the versions of Gitea, Stalwart, mailcow, Pandoc, Airflow, Argo, Woodpecker and Drone** were
   not re-read; the rows say 未核实 rather than an estimate.
