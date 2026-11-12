@@ -152,7 +152,7 @@ Rulings taken after the data-model draft was written; each one is binding.
   and self-hostable come first in every category.
 - An entry that was not verified may appear on the reference page **only as a comparison row**: it
   must carry `licence = unverified` (and `unverified` in every other field we could not read)
-  **and** a line saying *reference information, not offered as a connector*. Such a row gets no
+  **and** a line saying *reference information, not offered as a connector until verified*. Such a row gets no
   connector definition, is not in the registry, and does not appear on the app's Connectors page.
   Every other row is verified — licence, publisher, version/date, self-hosted or hosted, the exact
   credential it asks for, and the date it was last verified — and is a real catalogue entry.
@@ -221,7 +221,7 @@ Every statement below is testable, and each one names the test file it lives in.
 
 **Three. The lines QA will not sign off**
 
-18. An unverified entry is **not** a connector. A service whose licence or publisher we have not verified may appear on the reference page (`docs/connectors.md`) only as a comparison row, carrying both markers — `licence = unverified` (and every other unverified field likewise) **and** a line saying it is reference information, not offered as a connector. It takes no connector definition, gets no registry entry and never appears on the Connectors page. Every other row is verified and is a real catalogue entry. **Testable:** every row on the reference page is either a verified catalogue entry or a comparison row; a comparison row carries both markers and appears in no connector definition and on no Connectors page; the registry holds no comparison row. The red line is unchanged — an unverified entry never becomes a connector.
+18. An unverified entry is **not** a connector. A service whose licence or publisher we have not verified may appear on the reference page (`docs/connectors.md`) only as a comparison row, carrying both markers — `licence = unverified` (and every other unverified field likewise) **and** a line saying it is reference information, not offered as a connector until verified. It takes no connector definition, gets no registry entry and never appears on the Connectors page. Every other row is verified and is a real catalogue entry. **Testable:** every row on the reference page is either a verified catalogue entry or a comparison row; a comparison row carries both markers and appears in no connector definition and on no Connectors page; the registry holds no comparison row. The red line is unchanged — an unverified entry never becomes a connector.
 
 19. A write operation from the catalogue (send mail, delete a repository, drop a table) is not allowed unless it goes through the approval path.
 20. A suite whose totals moved without the pull request saying so is not signed off.

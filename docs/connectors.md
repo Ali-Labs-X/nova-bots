@@ -46,7 +46,7 @@ last read.
    a bare yes.
 7. A service whose licence or publisher is unverified may appear here only as a **comparison row**: it
    carries `licence = unverified` (and unverified in every other field we could not read) **and** the line
-   *reference information, not offered as a connector*. Such a
+   *reference information, not offered as a connector until verified*. Such a
    row never enters the registry, never gets a connector definition, and never appears in the
    app's Connectors page.
 8. Every other row is verified and must be installable-by-catalogue: licence, publisher,
@@ -69,7 +69,7 @@ last read.
 | Service | Category | What it does | Credential | Self-hostable | Free tier | Paid | Licence | Version / date |
 |---|---|---|---|---|---|---|---|---|
 | [GitHub REST / GraphQL](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api) | Code and forges | Repos, issues, PRs, Actions, Apps | fine-grained PAT, or OAuth app | no | Actions free for public repos; unauthenticated REST 60 req/h — unverified | github.com/pricing — unverified | GitHub service terms | REST API 2026-03-10, read 2026-11-12 |
-| [GitLab](https://about.gitlab.com/pricing/) — *reference information, not offered as a connector* | Code and forges | Repos, CI, issues, registry | PAT or OAuth app | yes — CE | Free tier exists, figures unverified | pricing page read 2026-11-12, figures unverified | **unverified** (CE and hosted differ) | no version published, read 2026-11-12 |
+| [GitLab](https://about.gitlab.com/pricing/) — *reference information, not offered as a connector until verified* | Code and forges | Repos, CI, issues, registry | PAT or OAuth app | yes — CE | Free tier exists, figures unverified | pricing page read 2026-11-12, figures unverified | **unverified** (CE and hosted differ) | no version published, read 2026-11-12 |
 | [Forgejo](https://codeberg.org/forgejo/forgejo) | Code and forges | Git forge, single binary, REST API, Actions, packages | token | yes — one binary | Free, no paid tier | none | MIT | v17.0.1, released 2026-10-26 |
 | [Gitea](https://gitea.com/) | Code and forges | Git forge, single binary, REST API | token | yes — one binary | Free, no paid tier | none | MIT | version **unverified**, read 2026-11-12 |
 
@@ -98,7 +98,7 @@ last read.
 | [Woodpecker CI](https://woodpecker-ci.org/) | Workflow, automation and DevOps | Container-per-step CI, small footprint | repo token | yes — one binary and a database | Apache-2.0, free | — | Apache-2.0 | version **unverified**, read 2026-11-12 |
 | [Drone](https://www.drone.io/) | Workflow, automation and DevOps | Container-native CI | repo token | yes — a server and runners | Apache-2.0, free | — | Apache-2.0 | version **unverified**, read 2026-11-12 |
 | [GitHub Actions](https://github.com/pricing) | Workflow, automation and DevOps | CI/CD tied to the repository | repo token | yes — a self-hosted runner | free for public repos; minutes and price unverified | github.com/pricing | GitHub service terms | read 2026-11-12 |
-| [GitLab CI](https://about.gitlab.com/pricing/) — *reference information, not offered as a connector* | Workflow, automation and DevOps | CI/CD in GitLab | project token | yes — a self-managed runner | included in the free tier, figures unverified | — | **unverified** | read 2026-11-12 |
+| [GitLab CI](https://about.gitlab.com/pricing/) — *reference information, not offered as a connector until verified* | Workflow, automation and DevOps | CI/CD in GitLab | project token | yes — a self-managed runner | included in the free tier, figures unverified | — | **unverified** | read 2026-11-12 |
 
 ## Office and documents
 
