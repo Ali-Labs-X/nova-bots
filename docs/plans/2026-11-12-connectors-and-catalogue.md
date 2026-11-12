@@ -137,7 +137,7 @@
 
 **三、不签核的红线**
 
-18. 凭据出现在任何产物里、凭据发给了非本服务的主机、密钥进了 Bot 的 shell、挂载失败留下半个挂载或残留密钥、端点缺 `https://` 检查、目录里出现没核实过的条目（许可证、发布方、版本/日期、自托管还是托管、到底要哪种凭据）——`markitdown` 这种抢名字的要在上架前就拦下来。
+18.（改写） 没核实过的条目**不当连接器**。许可证或发布方没核实的服务，只能作为「对照行」出现在目录参考页（`docs/connectors.md`），并且同时带两个标记：`许可证 = 未核实`（其他没核实的字段同样标 `未核实`）**和**一行「参考信息，未作为连接器提供」；它不拿连接器定义、不进注册表、不出现在应用的 Connectors 页。除此之外每一行都核实过，才是真正的目录条目。**可测**：目录参考页里每一行要么是「已核实的目录条目」，要么是「对照行」；对照行带那两个标记，并且不出现在任何连接器定义和 Connectors 页里；注册表里没有对照行。红线不变——没核实的条目永远不变成连接器。
 19. 目录里的写操作（发邮件、删仓库、删表）没有走审批就不放行。
 20. 测试总数变了但 PR 里没说清楚差异，不签核。
 
@@ -145,13 +145,13 @@
 
 21. 身份探测用 `ds-bot/test/fixtures/connector-stub/` 里的 `node:http` 桩，监听 `127.0.0.1`；MCP 挂载用现成的假 loader（`ds-bot/test/connectors.test.js:57-66`），不需要真的 MCP 服务器。共用助手：`ds-bot/test/connector-harness.js`。
 22. 两条先行修的当前代码，各自有测试文件，QA 已写好并量过（红的，等 Security 的修复）：
-   - `ds-bot/src/host/capabilities.js:114-121` —— streamable-http 的能力不再默认 `approved: true`，没批准不挂载；`http:` 地址一律拒绝。测试：`ds-bot/test/capability-remote-mcp.test.js`（3 条）。
-   - `ds-bot/src/host/connectors.js:116` —— 探测回来的账号名显示前过滤（字符集 + 长度），只取自该连接器自己的探测。测试：`ds-bot/test/connector-account-sanitised.test.js`（3 条）。
+   - `ds-bot/src/host/capabilities.js:114-121` —— streamable-http 的能力不再默认 `approved: true`，没批准不挂载；`http:` 地址一律拒绝；改了 URL 的远程 MCP 必须重新批准才能再挂载。测试：`ds-bot/test/capability-remote-mcp.test.js`（4 条）。
+   - `ds-bot/src/host/connectors.js:116` —— 探测回来的账号名显示前过滤（字符集 + 长度），只取自该连接器自己的探测；账号名整体不合法就拒绝这次连接，报错点名该服务，不存密钥、不挂载。测试：`ds-bot/test/connector-account-sanitised.test.js`（5 条）。
 
 两点说明：
 
 1. 第 20 条要写进 PR 里的数字就是这个基线（1439 / 1437 / 0 / 2）。QA 测的时候是在共享 clone 的 `fix/app-window-origin`（`13a2a407`）上跑的，不是工作区里的改动。
-2. 第 22 条那两处修好之后，现有的 `ds-bot/test/capabilities.test.js` 里有 **4 条**测试会红（它们今天假设远程 MCP 保存即批准）：`capabilities.test.js` 里的 `mounts agent-only MCP and skills…`、以及用 `mountUrlCapability` 助手的三条 HTTP MCP 测试。这四条要在同一个 PR 里改成「先批准再挂载」。QA 已实测：模拟修复后 `tests 20 / pass 16 / fail 4`，失败的正是这四条；模拟账号过滤后 `tests 10 / pass 10 / fail 0`。
+2. 第 22 条那两处修好之后，现有的 `ds-bot/test/capabilities.test.js` 里有 **4 条**测试会红（它们今天假设远程 MCP 保存即批准）：`capabilities.test.js` 里的 `mounts agent-only MCP and skills…`、以及用 `mountUrlCapability` 助手的三条 HTTP MCP 测试。这四条要在同一个 PR 里改成「先批准再挂载」。QA 实测（按最新两个测试文件）：当前代码 `tests 9 | pass 2 | fail 7 | exit 1`；模拟修复后 `tests 36 | pass 32 | fail 4 | exit 1`，失败的正是这四条；`connectors.test.js` 原有 7 条断言全绿。
 
 ## 不做什么
 
