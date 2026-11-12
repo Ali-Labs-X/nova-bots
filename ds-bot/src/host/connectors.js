@@ -19,6 +19,15 @@ const DEFAULTS = {
 }
 const CHECK_TIMEOUT_MS = 15_000
 const INSECURE = 'GitHub addresses must start with https://'
+// The account label comes from the service's own answer, so it is treated as data: only a
+// plain account name is kept, and it comes from this connector's probe alone.
+const ACCOUNT_UNSAFE = /[^A-Za-z0-9._-]/g
+const ACCOUNT_MAX = 64
+
+export function sanitizeAccount(value) {
+  if (typeof value !== 'string') return ''
+  return value.replace(ACCOUNT_UNSAFE, '').slice(0, ACCOUNT_MAX)
+}
 
 // Asks GitHub who the token belongs to. Any token GitHub accepts passes.
 export async function signIn(token, { api = DEFAULTS.api, fetch: request = fetch } = {}) {
@@ -35,7 +44,9 @@ export async function signIn(token, { api = DEFAULTS.api, fetch: request = fetch
   if (!response.ok) throw new Error(`GitHub answered ${response.status}`)
   const user = await response.json().catch(() => ({}))
   if (typeof user?.login !== 'string') throw new Error('GitHub did not say who this token belongs to')
-  return { login: user.login }
+  const login = sanitizeAccount(user.login)
+  if (login === '') throw new Error('GitHub answered with an account name we cannot trust')
+  return { login }
 }
 
 export function install(rt) {
@@ -113,7 +124,9 @@ export function install(rt) {
     name: 'GitHub',
     state: status.state,
     ...(status.error !== undefined ? { error: status.error } : {}),
-    account: rt.secretValue(GITHUB_SECRET) !== undefined ? state.connectors?.[GITHUB]?.login ?? null : null,
+    // Shown only when it is still a plain account name: the stored value is sanitised
+    // again here, so a tampered profile cannot put anything else on the page.
+    account: rt.secretValue(GITHUB_SECRET) !== undefined ? sanitizeAccount(state.connectors?.[GITHUB]?.login) || null : null,
   }]
 
   const known = id => {
