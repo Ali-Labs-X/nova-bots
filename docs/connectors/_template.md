@@ -8,7 +8,7 @@ Delete the comments in the finished page.
 
 - Catalogue row: [`docs/connectors.md`](../connectors.md)
 - This page exists only for a service that is a real catalogue entry. A service whose licence or
-  publisher is 未核实 is a comparison row on that page and gets no page, no connector definition,
+  publisher is unverified is a comparison row on that page and gets no page, no connector definition,
   and no row on the Connectors page.
 - Registry id: `<id>`
 - Credential: `none` · `token` · `OAuth app` · `account` — secret name: `<SECRET_NAME>`

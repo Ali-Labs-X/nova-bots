@@ -1,179 +1,385 @@
-# 连接器与连接器目录
+# Connectors and the connector catalogue
 
-- 日期：2026-11-12
-- 相关：本功能尚未开 Issue；[浏览器、联网搜索、密钥和连接器](2026-10-08-browser-and-secrets.md)（连接器一节要改写，待 Jahanzaib 确认）、[Bot 运行配置](2026-10-10-bot-runtime.md)
+- Date: 2026-11-12
+- Related: no tracker issue yet for this feature; [Browser, web search, secrets and connectors](2026-10-08-browser-and-secrets.md) — its connector section will be rewritten, after Jahanzaib's OK
 
-## 为什么
+## Why
 
-- 现在 Connectors 页只有 GitHub 一行，因为连接器在代码里就是一块写死的 GitHub：`ds-bot/src/host/connectors.js` 里的 id 是 `github`、密钥是 `GITHUB_TOKEN`、地址是 `https://api.githubcopilot.com/mcp/`、身份探针打 `api.github.com/user`、挂载带 `Authorization` 和 `X-MCP-Toolsets`、`known(id)` 对别的 id 直接抛错、`connectorsView()` 只回一个元素的数组。客户端同样是 GitHub 专用：`ds-bot/src/client/connectors.js` 只有一枚图标、一句说明、一个 PAT 链接、一个 `t('GitHub token')` 输入框。
-- 用户要的不是「多接一个服务」，是**看得见的库**：能连什么、要不要账号、要不要卡、免费额度到哪、能不能自托管。写死一个服务的时候，这个库不存在。
-- 所以定两件事：连接器变成**数据驱动的定义**，按 Bot 授权，像能力一样；库里放一份**诚实的目录**，每行写清楚凭据、费用、许可证和版本。
+- The Connectors page shows one row, GitHub, because the connector is a hardcoded GitHub block in
+  the code: `ds-bot/src/host/connectors.js` carries the id `github`, the secret `GITHUB_TOKEN`, the
+  endpoint `https://api.githubcopilot.com/mcp/`, an identity probe against `api.github.com/user`,
+  a mount that sends `Authorization` and `X-MCP-Toolsets`, a `known(id)` guard that throws for
+  anything else, and a `connectorsView()` that returns a one-element array. The client is GitHub
+  too: `ds-bot/src/client/connectors.js` has one icon, one `ABOUT` line, one PAT link, one
+  `t('GitHub token')` field.
+- What the user asked for is not "one more service" but a **visible library**: what a Bot can
+  reach, whether it needs an account, whether it needs a card, what the free tier really gives,
+  and whether it can be self-hosted. With one hardcoded service, that library does not exist.
+- So two decisions: a connector becomes a **data-driven definition**, granted per Bot like a
+  capability; and the library gets an **honest catalogue** where every row states the credential,
+  the cost, the licence and the version.
 
-## 已定的行为
+## Decided behaviour
 
-### 连接器定义（数据模型）
+### The connector definition (data model)
 
-一个服务 = 一条定义，放在我们仓库里审核过的目录中（不放在用户的数据里）。字段：
+A service = one definition, held in a catalogue reviewed in our own repository (not in the user's
+data). Fields:
 
-- `id`：小写加连字符，唯一，最多 32 字符，不能和能力同名（工具名空间 `mcp__<id>__` 会撞）。
-- `name`：显示名。`about`：一行说明。`icon`：图标，取不到时用首字母。
-- `secretName`：这个连接器用的密钥名，按 `SECRET_NAME` 校验（`secrets.js:13`），命名规则 `<SERVICE>_<THING>`（如 `GITLAB_TOKEN`、`SLACK_TOKEN`、`PG_PASSWORD`）。**一个连接器一个密钥。**
-- `url`：MCP 端点。`headers`：请求头，值写 `$NOVA_SECRET_<名字>` 这样的**引用**，不写值。`extraHeaders`：服务自己的额外请求头。
-- `probe`：可选的连通性/身份探测 `{ url, headers, accountPath }`。没有 `probe` 就只看挂载本身的结果。
-- `fields`：连接表单要问的字段 `[{ key, label, secret }]`，`secret: true` 的字段用遮罩输入。
-- `authKind`：`none | token | oauth | account`。`category`：目录里的类别。
-- `licence`、`selfHostable`、`freeTier`、`paid`、`version`、`verifiedOn`：目录那一页要用的字段；`docsUrl`、`docsLabel`：去哪儿拿凭据。
+- `id`: lower case with hyphens, unique, at most 32 characters, and not the same as a capability's name (the tool namespace `mcp__<id>__` would collide).
+- `name`: the display name. `about`: one line of description. `icon`: the icon; the first letter is used when none can be fetched.
+- `secretName`: the secret this connector uses, validated against `SECRET_NAME` (`secrets.js:13`), named `<SERVICE>_<THING>` (for example `GITLAB_TOKEN`, `SLACK_TOKEN`, `PG_PASSWORD`). **One secret per connector.**
+- `url`: the MCP endpoint. `headers`: request headers whose values are **references** such as `$NOVA_SECRET_<name>`, never values. `extraHeaders`: the service's own extra headers.
+- `probe`: an optional connectivity/identity probe `{ url, headers, accountPath }`. Without a `probe`, only the mount result itself is looked at.
+- `fields`: the fields the connect form asks for, `[{ key, label, secret }]`; a field with `secret: true` uses a masked input.
+- `authKind`: `none | token | oauth | account`. `category`: the catalogue category.
+- `licence`, `selfHostable`, `freeTier`, `paid`, `version`, `verifiedOn`: the fields the catalogue page shows; `docsUrl`, `docsLabel`: where to get the credential.
 
-### 挂载：按 Bot 授权
+### Mounting: granted per Bot
 
-- 连接器像能力一样**按 Bot 挂载**：密钥按 Bot 解析（和 `capabilities.js:267-284` 同一套），密钥保持 `scope: []`，**没有授权的 Bot 看不到这些工具**。
-- 这**改变今天 GitHub 的行为**（今天是全团队可见），需要维护者明确同意后才算生效。
-- 每个连接器的工具名是 `mcp__<id>__<工具>`；每个 Bot 各自挂载，互不影响。
-- 挂载有 15 秒上限和 stalled 集合（照 `capabilities.js:352`、`:404-419`），并限制每个 Bot 的服务器数量。
-- 远程 MCP 的地址或请求头变了以后要**重新批准**才能再挂载，语义和改了配置的 stdio 服务一样，用现有的配置哈希机制（`capabilities.js:309-310`）加批准状态实现，不另造机制。用户改过地址的远程 MCP 会退回「待批准」。
+- A connector is mounted **per Bot**, exactly like a capability: **a Bot without the grant does not see the tools**. The credential itself is never granted to a Bot — it keeps an empty scope (`scope: []`), and the host injects it into that connector's own request headers at mount time (`capabilities.js:283-284`, the `env` and `headers` maps built from the secret references).
+- This **changes today's GitHub behaviour** (today it is mounted for the whole team and the token is read with `rt.secretValue`, `secrets.js:581`, without a scope check) and takes effect only with the maintainer's explicit OK.
+- Each connector's tools are named `mcp__<id>__<tool>`; every Bot mounts its own, and they do not affect each other.
 
-### 密钥
+### Secrets
 
-- 值只由用户输入，存在 `bot/secrets.json`，只出现在发往该服务的 MCP 请求头里，请求头在内存里生成，不写进运行时的 profile。
-- 连接器**不把密钥加进任何 Bot 的 shell**；用户可以在 Secrets 页面上自己放开。
-- 连接器不新增、不删除、不改别人的密钥名；密钥名来自定义。
-- 每个连接器的凭据只存在于一个地方——团队密钥库——只用于一个地方：该连接器自己端点的请求头，挂在内存里现构造。它不进 Nova profile，不进任何 Bot 的 shell，不出现在工具结果或模型请求里，也不到别的连接器的端点。
+- The value comes only from the user's input, is stored in `bot/secrets.json`, and appears only in the MCP request headers sent to that service; the headers are built in memory and are never written into the runtime profile.
+- A connector **does not put its secret into any Bot's shell**; the user can open that up themselves on the Secrets page.
+- A connector adds, deletes and renames nobody else's secret; the secret name comes from the definition.
+- Each connector's credential exists in exactly one place — the team secret store — and is used in exactly one place: the request headers of that connector's own endpoint, built in memory at mount time. It never reaches the Nova profile, never reaches any Bot's shell, never appears in a tool result or a model request, and never reaches another connector's endpoint.
 
-### 连接流程
+### The connect flow
 
-- 表单按 `fields` 渲染，通用代码一套；没有字段的服务不需要表单。
-- 连接时先跑 `probe`（如果有）：拿凭据问一次服务，取 `accountPath` 指到的字段作为账号名。账号名**显示前过滤**：限制长度、去掉控制字符，不允许它伪装成别的账号。
-- 账号名的合法形态：`/^[A-Za-z0-9._-]+$/`，最多 64 个字符，没有尖括号，没有控制字符。**整体不合法（全是符号，或过滤后为空）时拒绝这次连接**，错误信息点名是哪个服务；不显示空账号，也不挂载。
-- 探测定不下服务不是通过的判据——最终以挂载成功为准；探测失败但服务能用时，报连接失败并说明探测这一步。
-- 删除密钥 = 断开。
+- The form is rendered from `fields`, with one generic implementation; a service without fields needs no form.
+- On connect the `probe` runs first (if there is one): the credential asks the service once, and the field named by `accountPath` becomes the account name. The account name is **filtered before it is shown**: the length is capped, control characters and look-alike control characters are removed, and it may not impersonate another account.
+- The account name's legal shape is `/^[A-Za-z0-9._-]+$/`, at most 64 characters, no angle brackets, no control characters. **If it is invalid as a whole (all symbols, or empty after filtering) the connection is rejected**, the error names the service, nothing is stored and nothing is mounted.
+- The probe is not the criterion for a successful connection — the mount decides. When the probe fails but the service works, the connection is reported as failed and the probe step is named.
+- Deleting the secret = disconnecting.
 
-### 设置 → 连接器这一页
+### The page Settings → Connectors
 
-- **列出目录里的每一条**，连没连都列；状态是「未连接 / 连接中 / 已连接 / 连接失败」四种。
-- 页面不重复许可证、价格和安装步骤——那些在 `docs/connectors.md` 里。
-- **加一个服务不需要改客户端**：定义在服务端，图标取不到就用首字母，表单按 `fields` 渲染。
+- **Every catalogue entry is listed**, connected or not; the state is one of "not connected / connecting / connected / failed".
+- The page does not repeat the licence, the price and the install steps — those live in `docs/connectors.md`.
+- **Adding a service does not change the client**: the definition lives on the host, the icon falls back to the first letter, and the form is rendered from `fields`.
 
-### 配置
+### Configuration
 
-- `rt.config.connectors` 是按 id 的**映射**（`{ github: false }` 继续有效）；`false` 表示这个连接器不装。
+- `rt.config.connectors` is a **map keyed by id** (`{ github: false }` keeps working); `false` means that connector is not installed.
 
-### 目录文档
+### The catalogue documents
 
-- `docs/connectors.md`（英文）+ `docs/connectors/<服务>.md`：表格的列直接映射到上面定义的字段，**表和代码不会各走各的**。
-- 表格九列：服务、类别、用途、凭据、可自托管、免费额度、付费、许可证、版本/日期。价格必带来源和日期，读不到就写 `unverified`。
-- 需要卡或有付费账号的服务标 `needs a card`，且**不排在同类第一行**。
-- 类别内顺序：免密钥本地 → 自托管 → 免费托管 → 付费。
+- `docs/connectors.md` (English) + `docs/connectors/<service>.md`: the table columns map straight onto the fields of the definition above, so **the table and the code cannot drift apart**.
+- The table has nine columns: service, category, what it is for, credential, self-hostable, free tier, paid, licence, version/date. Every price carries its source and its date; when it cannot be read, it says `unverified`.
+- A service that needs a card or a paid account is marked `needs a card`, and **is not sorted first among its category**.
+- Order within a category: keyless local → self-hosted → free hosted → paid.
 
-### 目录的表头与字段的对应
+### Tranches
 
-表格列固定为九列，中英文表头一一对应，目录页和每行的详情页分开：
+- **Tranche 1**: token connectors only (`authKind: token` or `account`), plus the keyless
+  remote servers that need no credential at all (`authKind: none`). OAuth (Gmail, Notion, a
+  Slack app) needs a browser consent page and waits for tranche 3.
+- **The five keyless remote servers**, measured to complete the MCP handshake from the
+  engine container with no credential: DeepWiki (`https://mcp.deepwiki.com/mcp`, 3 tools),
+  Context7 (`https://mcp.context7.com/mcp`, 2 tools, a real keyless tool call was measured
+  working), Exa (`https://mcp.exa.ai/mcp`, 2 tools), Firecrawl (`https://mcp.firecrawl.dev/mcp`,
+  3 tools) and Hugging Face (`https://hf.co/mcp`, 4 tools). They are the first rows of
+  tranche 1 because they need no account and no card.
+- **Tranche 2**: local stdio connectors, **approved like a local capability and never started automatically**; only pure JS / pure Python services, because the engine image has no `sqlite3`, `psql`, `soffice`, `pandoc` or `tesseract`.
+- **Tranche 3**: OAuth connectors.
+- A stdio connector's credential arrives only through the explicit `env` / `headers` map as a secret reference, never ambient and never on the command line where `ps` would show it (rule R12). A service that takes its DSN as `process.argv[0]` — `@modelcontextprotocol/server-postgres` — is therefore not mounted as a stdio server with a real credential.
 
-| 目录列 | 中文表头 | 定义字段 | 详情页 |
+### Credential-free services are still an approval
+
+- **A credential-free service is still an approval.** A remote MCP needs the user's approval
+  whatever its credential situation; "no credential" describes the credential, not the trust
+  decision (rule R7). The address must be https and is vetted like every other endpoint (rule
+  R5). The user picks the service, sees exactly which host it will talk to, approves it once, and
+  only then does it mount; the approval is revocable and the mount gate refuses an unapproved
+  server.
+- **A catalogue row says who receives the traffic.** For a hosted service the row states the host
+  the Bot's requests go to, so the user can see where their content leaves the machine before
+  approving. This is the same fact R5 needs — the probe address and the MCP address share one
+  registrable domain, one vendor — and the row is where a human reads it.
+- **The five keyless servers are not self-hosted and not free of consequence.** They are hosted
+  third-party endpoints, measured to complete the MCP handshake from the engine container with no
+  credential (one real keyless tool call works on Context7). A row for one is verified as
+  *reachable and credential-free*; it is not a claim about licence, privacy or data handling, so
+  any unverified field stays `unverified` — the same rule the GitLab rows follow.
+
+### The two fixes that come first
+
+- A streamable-http capability: an address that is not `https:` is refused outright; `approved: true` is no longer the default (fix `a99dbea4`).
+- The account name a probe returns is filtered before it is shown (see above) (fix `b498b2bd`).
+
+### Credential handling per service
+
+- R12 states the rule; the wiring it means is `env: { GITHUB_PERSONAL_ACCESS_TOKEN:
+  "$NOVA_SECRET_GITHUB_TOKEN" }` — the value is a reference, resolved per Bot at mount time, and
+  the value never leaves the secret store.
+- A credential on the command line is refused: `@modelcontextprotocol/server-postgres` takes its
+  DSN as `process.argv` and a DSN carries the password, so it is not mounted with a real
+  credential until the DSN travels by env, or we use a remote Postgres MCP.
+
+### Decisions added after that draft
+
+Rulings taken after the data-model draft was written; each one is binding.
+
+- Mounting has a 15-second ceiling and a stalled set (copied from `capabilities.js:352` and `:404-419`), and the number of servers per Bot is capped — N bots × M connectors would be N×M live MCP sessions.
+- A remote MCP whose url or headers changed must be **approved again** before it mounts, with the same semantics as a changed stdio server, implemented with the existing config-hash mechanism (`capabilities.js:309-310`) plus the approval state — not a new mechanism. A remote MCP whose url the user edited falls back to "needs approval".
+- The catalogue columns map onto the definition's fields, so the reference page and the code cannot drift:
+
+| Column | Definition field | Detail page |
+|---|---|---|
+| Service | name | url, icon |
+| Category | category | — |
+| What it does | about | — |
+| Credential | authKind, secretName | fields, how the secret is stored |
+| Self-hostable | selfHostable | how it runs |
+| Free tier | freeTier | — |
+| Paid | paid | price source and the date it was read |
+| Licence | licence | — |
+| Version / date | version, verifiedOn | — |
+
+  The detail page adds: how it runs (built-in skill / local process stdio / remote endpoint
+  streamable-http), install steps, the tools it exposes, how the credential is handled, flags, the
+  price source, and the date the row was checked. The catalogue reference page is English
+  (`docs/local-models.md` is the precedent); the Chinese lives in `README.md` / `README.zh.md` and
+  in the interface strings (`ds-bot/src/client/i18n.js`, the `ZH` map).
+- Catalogue writing rules: every row carries a licence and a version/date, and a cell that could
+  not be read says `unverified`; a price is never stated without a source and a date; a package
+  whose name does not describe what it is is flagged in the row itself; a service that needs a
+  card or a paid account is marked `needs a card` and is not the first row of its category; free
+  and self-hostable come first in every category.
+- An entry that was not verified may appear on the reference page **only as a comparison row**: it
+  must carry `licence = unverified` (and `unverified` in every other field we could not read)
+  **and** a line saying *reference information, not offered as a connector*. Such a row gets no
+  connector definition, is not in the registry, and does not appear on the app's Connectors page.
+  Every other row is verified — licence, publisher, version/date, self-hosted or hosted, the exact
+  credential it asks for, and the date it was last verified — and is a real catalogue entry.
+- Licence rules: Redis (RSALv2/SSPL), MongoDB server (SSPL), n8n (fair-code) and Temporal Cloud may
+  be **listed as things the user runs**; they may not be vendored into this repository (AGENTS.md
+  rule 3). The npm package `markitdown` 0.0.4 is not Microsoft's tool — it converts GFL to HTML; a
+  name trap like that is flagged in the row itself.
+- Open, from the research below: the definition may need a **host-capability flag**, so a row can
+  say "this service can ship an interactive UI; our host returns text and JSON today" without the
+  catalogue promising something the runtime cannot draw. The field name is not fixed yet and
+  belongs to the maintainer's decision.
+
+### Security rules (R1–R12)
+
+Invariant (for N connectors): each connector's credential exists in exactly one place — the team secret store — and is used in exactly one place: the request headers of that service's own endpoint, built in memory at mount time. It never reaches the Nova profile, never reaches any Bot's shell, never appears in a tool result or a model request, and never reaches another service's endpoint. "Per Bot" means which Bots see the tools; the credential itself is granted to no Bot (`scope: []`) and the host injects it into that connector's own request headers at mount time.
+
+Each rule states where it is enforced and which test proves it. Line numbers are against `dev` (`61179955`); the two rules marked with a commit are the two current-code fixes.
+
+| # | Rule | Enforced at | Test |
 |---|---|---|---|
-| Service | 服务 | name | url、icon |
-| Category | 类别 | category | — |
-| What it does | 用途 | about | — |
-| Credential | 凭据 | authKind、secretName | fields、secretName 的存放方式 |
-| Self-hostable | 可自托管 | selfHostable | 运行方式 |
-| Free tier | 免费额度 | freeTier | — |
-| Paid | 付费 | paid | 价格来源和读到的日期 |
-| Licence | 许可证 | licence | — |
-| Version / date | 版本 / 日期 | version、verifiedOn | — |
+| R1 | The endpoint and the secret name come from the connector definition; the request body may not specify either | New registry + the `connector-connect` handler (`ds-bot/src/host/connectors.js:124-137`) | PLANNED `ds-bot/test/connectors-generic.test.js` — "the endpoint and the secret name come from the definition, not from the request" (to be written with the registry; the file does not exist yet) |
+| R2 | A connector's secret is granted to no Bot (`scope: []`) | `ds-bot/src/host/connectors.js:132` (per connector) | TODAY `ds-bot/test/connectors.test.js:78` "connecting saves the token, kept out of every Bot shell, and mounts GitHub MCP; disconnecting undoes both" + `ds-bot/test/secrets.test.js:29` "scope is every Bot or a list" |
+| R3 | A connector's secret never appears in any Bot's shell environment | `ds-bot/src/host/secrets.js:518-528` (`resolveEnv`) + `canUse` (`secrets.js:27-28`) | TODAY `ds-bot/test/connectors.test.js:78` "connecting saves the token, kept out of every Bot shell, and mounts GitHub MCP; disconnecting undoes both" + `ds-bot/test/secrets.test.js:144` "a card saves a key the Bot never sees, and the shell gets it" |
+| R4 | The secret reaches no profile, no tool result and no log line | `ds-bot/src/host/connectors.js:132-133` (stored as a secret, never in the profile) and `connectors.js:58-60` (`redactSecrets` on every error text) | TODAY `ds-bot/test/connectors.test.js:124` "a failed MCP connection shows the error without the token, and Try again mounts again" + `ds-bot/test/secrets.test.js:307` "tool results and model requests lose the values" |
+| R5 | An endpoint must be https and vetted; a definition's probe address and MCP address must share one registrable domain (one vendor) — enforced when the registry loads | `ds-bot/src/host/connectors.js:21, 44` (today, the https check) + the registry load | TODAY `ds-bot/test/connectors.test.js:162` "a GitHub address without https refuses to send the token"; PLANNED: the "probe address on another domain is refused" case lands in `ds-bot/test/connectors-generic.test.js` with the registry |
+| R6 | Connectors are mounted **per Bot**, exactly like a capability — a Bot without the grant does not see the tools. The credential itself is never granted to a Bot: it keeps an empty scope, and the host injects it into that connector's own request headers at mount time | Copy `ds-bot/src/host/capabilities.js:267-285` (`secretFor` / `resolveValues` / `configFor`) — the per-Bot mount, and the in-memory injection into the `env` (`:283`) and `headers` (`:284`) maps | PLANNED `ds-bot/test/connectors-generic.test.js` — "a Bot without the grant does not see the connector's tools" (to be written with the registry) |
+| R7 | A catalogue entry is a definition, not an automatic install; a remote MCP needs an explicit approval, like a local stdio one | `ds-bot/src/host/capabilities.js:114-121` (today: `approved: true` hardcoded at `:120`, `http:` accepted at `:117`) → fix `a99dbea4` | TODAY `ds-bot/test/capability-remote-mcp.test.js:90` "a remote MCP is not approved just because it was saved, and it does not mount before approval" + `:100` "a remote MCP on a plain http address is refused and nothing is saved" + `:112` "a remote MCP can be approved and then mounts" + `:125` "a remote MCP whose URL changed must be approved again before it mounts again" |
+| R8 | No connector exposes a tool that would send our credential to an arbitrary address | Checked when the catalogue is built (registry build) | PLANNED catalogue lint — "no entry carries such a generic call tool" (written with the registry build) |
+| R9 | An account name is filtered (character set and length) before it is shown, and it comes only from that connector's own probe | `ds-bot/src/host/connectors.js:116` + `ds-bot/src/client/connectors.js:17` → fix `b498b2bd` | TODAY `ds-bot/test/connector-account-sanitised.test.js:63` "the account name from the probe is sanitised before it is stored or shown" + `:99` "an account name that is entirely invalid is refused: no empty account, no secret, no mount" + `:116` "the account name comes from the probe, not from the request" + `:129` "a normal GitHub connection is unchanged: same row, same account label, same mounted server" |
+| R10 | One connector that cannot connect does not block the others, and N connectors do not queue one Agent's startup | `ds-bot/src/host/capabilities.js:352` (mount per Agent) and `:404-419` (the 15 s limit and the stalled set) | TODAY `ds-bot/test/capabilities.test.js:337` "a hung mount releases the message after the limit and does not hold up other Bots"; PLANNED: the "one connector that cannot connect does not block the others" case lands in `ds-bot/test/connectors-generic.test.js` with the registry |
+| R11 | The "get your token" link on the Connectors page comes from the vetted definition and stays on the vendor's own domain | `ds-bot/src/client/connectors.js:6, 53` (today: a hardcoded GitHub link) | PLANNED `ds-bot/test/connectors-client.test.js` — "the connect link comes from the vetted definition" (to be written with the Connectors page) |
+| R12 | A stdio connector's credential arrives only through the explicit `env` / `headers` map, as a secret reference — never ambient (the runtime scrubs every `*KEY*`, `*PASSWORD*`, `*SECRET*`, `*TOKEN*` name and every `DSH_*` name before the child starts), and never on the command line, where `ps` would show it | `ds-bot/src/host/capabilities.js:7` (`SECRET_REFERENCE`), `:272-278` (`resolveValues`), `:283-284` (the stdio `env` map and the streamable-http `headers` map); the scrub lives in the runtime: `@deepseek-ai/dsh-subprocess` **0.2.1-rc.4** `lib/index.js:32, 50-52` and `@deepseek-ai/dsh-mcp-client` **0.2.1-rc.4** `lib/index.js:26-28` | PLANNED catalogue lint — "no entry puts a credential on argv" (written with the registry build) |
 
-- 详情页另有：运行方式（内置技能 / 本地进程 stdio / 远端端点 streamable-http）、安装步骤、提供的工具、凭据怎么管、标注、价格来源、核对日期。
-- 目录参考页是英文的（`docs/local-models.md` 是先例）；中文在 `README.md` / `README.zh.md` 和界面文案（`ds-bot/src/client/i18n.js` 的 `ZH`）里。
+Three notes (decided behaviour, not new rules):
 
-### 目录的写法规则
+- **R2 and R6 carry the whole invariant.** The secret is created with `scope: []`, so no Bot can hold it (R2); the connector is mounted per Bot like a capability, so a Bot without the grant cannot even see the tools (R6). Today a connector is mounted for the whole team and its token is read with `rt.secretValue` (`ds-bot/src/host/secrets.js:581`, **without a scope check**) — that is how the code behaves today, not the design goal; the new framework must grant per Bot, and that needs the maintainer's explicit OK.
+- **R7's approval semantics (fixed in the current-code fix):** when a remote MCP's url or headers change it goes back to `needs-approval` and the user must approve again; a non-https remote address is refused outright; a remote MCP the user saves by hand in the settings page is approved by that save.
+- **R9's refusal semantics (fixed in the current-code fix):** an entirely invalid account name (all symbols, or empty after filtering) **refuses that connection**, with an error naming the service: no secret stored, no mount, no empty account shown. The filtered form is `/^[A-Za-z0-9._-]+$/`, at most 64 characters.
 
-- 每行都要有许可证和版本 / 日期；没有就写「未核实」（unverified）。
-- 价格没有出处和日期就不写；读不到写「未核实」，不估、不写「大约」。
-- 名字和实际不符的要在行里标出来（名字陷阱）。
-- 需要卡或有付费账号的标 `needs a card`，不排在同类第一行。
-- 每一类里免费、能自托管的排在前面。
-- 没核实过的条目可以作为「对照行」出现在目录参考页，但必须同时标「未核实」和一行「参考信息，未作为连接器提供」；它不拿连接器定义、不进注册表、不出现在应用的 Connectors 页。除此之外的每一行都核实过（许可证、发布者、版本 / 日期、本地还是托管、要哪种凭据、上次核对的日期都齐），才是真正的目录条目。
+### Acceptance criteria
 
-### 许可证规则
+Every statement below is testable, and each one names the test file it lives in. Baseline (`dev` = `61179955`): `npm test` → 1462 tests / 1460 pass / 0 fail / 2 skipped; `ds-bot/test/connectors.test.js` → 7 assertions. Any later pull request states how the totals moved.
 
-- Redis（RSALv2/SSPL）、MongoDB server（SSPL）、n8n（fair-code）、Temporal Cloud 可以列成「用户自己跑的东西」，不能进本仓库（AGENTS.md 规则 3）。
-- npm 上的 `markitdown` 0.0.4 不是微软的工具，它把 GFL 转成 HTML。这类名字陷阱要在行里标出来。
+**One. Generic — true for every connector id (`ds-bot/test/connectors-generic.test.js`)**
 
-### 分期
+1. The list shows every enabled connector in configuration order, one row per id, with no duplicate and none missing.
+2. A connector configured as `false` does not appear; a removed connector disappears from the list **and** is unmounted.
+3. A connector stores only its own single secret (the name comes from the definition and is validated against `SECRET_NAME`), and mounts with its own url and headers.
+4. The credential appears only in the request headers sent to that connector's own service: a request to another service never carries it.
+5. The credential appears in no roster, no `state.json`, no client bundle, no log line and no error message; one occurrence fails the criterion.
+6. The credential is not offered to any Bot's shell (the scope stays `[]`).
+7. The probe is per connector: its own identity address and its own account field; when the probe cannot answer, that row is in the failed state, names that service, and there is no credential, no secret and no mount.
+8. The probe host and the MCP host share one registrable domain; a definition that breaks this is refused when the registry loads.
+9. An unknown id is refused exactly as it is today (compare `ds-bot/test/connectors.test.js`).
+10. Disconnect and retry touch only the connector that was named.
+11. A failed mount leaves no half-mounted fiber and no secret behind.
+12. Every endpoint is checked for `https:` before any credential is sent.
 
-- **第一期**：只做令牌型连接器（`authKind: token` 或 `account`）。OAuth（Gmail、Notion、Slack 应用）要浏览器同意页，等第三期。
-- **第二期**：本地 stdio 连接器，**像本地能力一样需要批准，永不自动启动**；只做纯 JS / 纯 Python 的服务——引擎镜像里没有 `sqlite3`、`psql`、`soffice`、`pandoc`、`tesseract`。
-- **第三期**：OAuth 连接器。
+**Two. The client page (`ds-bot/test/connectors-client.test.js`)**
 
-### 先行修的两处
+13. One row per connector, in configuration order; the state is one of not connected / connecting / connected / failed.
+14. The form is rendered from the definition's `fields`: field, label and masked input all come from the definition, not from hard-coded copy.
+15. The "get your token" link comes from the definition and stays on the vendor's own domain; a Gmail row must not point at GitHub.
+16. A failed row carries `role="alert"`; a connecting row is only the waiting hint, with no `.bt-error` and no `role="alert"`.
+17. A missing icon falls back to the first letter; adding a service needs no new client bundle.
 
-- streamable-http 的能力：地址不是 `https:` 一律拒绝；不再默认 `approved: true`。
-- 探测回来的账号名显示前过滤（见上）。
+**Three. The lines QA will not sign off**
 
-### 验收标准
+18. An unverified entry is **not** a connector. A service whose licence or publisher we have not verified may appear on the reference page (`docs/connectors.md`) only as a comparison row, carrying both markers — `licence = unverified` (and every other unverified field likewise) **and** a line saying it is reference information, not offered as a connector. It takes no connector definition, gets no registry entry and never appears on the Connectors page. Every other row is verified and is a real catalogue entry. **Testable:** every row on the reference page is either a verified catalogue entry or a comparison row; a comparison row carries both markers and appears in no connector definition and on no Connectors page; the registry holds no comparison row. The red line is unchanged — an unverified entry never becomes a connector.
 
-下面每一条都是可测的判定，每条写明落在哪个测试文件里。基线（`fix/app-window-origin`，`13a2a407` 实测）：`npm test` = 1439 个用例 / 1437 通过 / 0 失败 / 2 跳过；`ds-bot/test/connectors.test.js` = 7 条断言。以后每个 PR 的总数变化都要在 PR 里说清楚。
+19. A write operation from the catalogue (send mail, delete a repository, drop a table) is not allowed unless it goes through the approval path.
+20. A suite whose totals moved without the pull request saying so is not signed off.
 
-**一、通用：每个连接器 id 都成立（`ds-bot/test/connectors-generic.test.js`）**
+**Four. How the tests run (no real service is contacted)**
 
-1. 列表按配置顺序列出每一条启用的连接器，一个 id 一行，不重复、不漏项。
-2. 配置为 `false` 的连接器不出现；被移除的连接器从列表消失，并且它的挂载被解除。
-3. 一个连接器只存自己那一个密钥（名字来自定义，按 `SECRET_NAME` 校验），挂载时用它自己的 url 和请求头。
-4. 密钥只出现在该连接器自己服务的请求头里：发给别的服务的请求中没有它。
-5. 密钥不出现在 roster、`state.json`、客户端 bundle、日志行和错误信息里；出现一次就判不通过。
-6. 密钥不进任何 Bot 的 shell（scope 保持 `[]`）。
-7. 探测按连接器自己定义来：自己的身份地址和自己的账号字段；探测不通时该行是失败状态、点名是哪个服务，且没有密钥、没有挂载。
-8. 探针主机和 MCP 主机必须同一个可注册域，在加载时就拒绝。
-9. 未知 id 照今天的样子被拒绝（对照 `ds-bot/test/connectors.test.js`）。
-10. 断开和重试只动被点名的那一个连接器。
-11. 挂载失败不留半个挂载，也不留密钥。
-12. 任一端点缺 `https://` 检查就在发密钥之前拒绝。
+21. The identity probe uses a `node:http` stub in `ds-bot/test/fixtures/connector-stub/` on `127.0.0.1`; the MCP mount uses the existing fake loader (`ds-bot/test/connectors.test.js:57-66`), so no real MCP server is needed. The shared helper is `ds-bot/test/connector-harness.js`.
+22. The two current-code fixes each have a test file, written by QA and measured:
+    - `ds-bot/src/host/capabilities.js:114-121` — a streamable-http capability is no longer `approved: true` by default and does not mount before it is approved; a non-https address is refused outright. When the url or the headers change, it goes back to `needs-approval` and the user must approve it again before it mounts again. Test: `ds-bot/test/capability-remote-mcp.test.js` (4 cases).
+    - `ds-bot/src/host/connectors.js:116` — the account name a probe returns is filtered before it is shown (character set `/^[A-Za-z0-9._-]+$/`, at most 64 characters, no angle brackets, no control characters) and it comes only from that connector's own probe. When the account name is invalid as a whole, the connection is refused with an error naming that service: no secret stored, nothing mounted, no empty account shown. Test: `ds-bot/test/connector-account-sanitised.test.js` (5 cases).
 
-**二、客户端页面（`ds-bot/test/connectors-client.test.js`）**
+**Five. What "per Bot" means in a test**
 
-13. 每条连接器一行，顺序同配置；状态只有未连接 / 连接中 / 已连接 / 连接失败四种。
-14. 表单按定义里的 `fields` 渲染：字段、标签、遮罩输入都来自定义，不是写死的。
-15. 「去拿令牌」的链接来自定义，并停在厂商自己的域名上；一条 Gmail 的行不能指向 GitHub。
-16. 失败行带 `role="alert"`；连接中的行只是等待提示，没有 `.bt-error`、没有 `role="alert"`。
-17. 图标取不到时用首字母；加一个服务不需要重新生成客户端 bundle。
+23. A Bot that has a connector attached has that connector's tools, and that connector's own request carries the credential; the same Bot's scope and its shell still show no secret. The Bot without the grant does not see the tools at all. Test: `ds-bot/test/connectors-generic.test.js` ("a Bot with the grant has the tools and the request carries the credential, and the Bot's scope and shell show no secret").
 
-**三、不签核的红线**
+### Research findings: ACP, MCP Apps, plugin manifests, and the MCP Registry
 
-18.（改写） 没核实过的条目**不当连接器**。许可证或发布方没核实的服务，只能作为「对照行」出现在目录参考页（`docs/connectors.md`），并且同时带两个标记：`许可证 = 未核实`（其他没核实的字段同样标 `未核实`）**和**一行「参考信息，未作为连接器提供」；它不拿连接器定义、不进注册表、不出现在应用的 Connectors 页。除此之外每一行都核实过，才是真正的目录条目。**可测**：目录参考页里每一行要么是「已核实的目录条目」，要么是「对照行」；对照行带那两个标记，并且不出现在任何连接器定义和 Connectors 页里；注册表里没有对照行。红线不变——没核实的条目永远不变成连接器。
-19. 目录里的写操作（发邮件、删仓库、删表）没有走审批就不放行。
-20. 测试总数变了但 PR 里没说清楚差异，不签核。
+Four questions, each answered from primary sources (the spec site, the official registry API, the npm registry, vendor documentation) and measured where it could be measured.
 
-**四、测试怎么跑（不碰真实服务）**
+#### 1. ACP is a host protocol for us, not a connector type
 
-21. 身份探测用 `ds-bot/test/fixtures/connector-stub/` 里的 `node:http` 桩，监听 `127.0.0.1`；MCP 挂载用现成的假 loader（`ds-bot/test/connectors.test.js:57-66`），不需要真的 MCP 服务器。共用助手：`ds-bot/test/connector-harness.js`。
-22. 两条先行修的当前代码，各自有测试文件，QA 已写好并量过（红的，等 Security 的修复）：
-   - `ds-bot/src/host/capabilities.js:114-121` —— streamable-http 的能力不再默认 `approved: true`，没批准不挂载；`http:` 地址一律拒绝；改了 URL 的远程 MCP 必须重新批准才能再挂载。测试：`ds-bot/test/capability-remote-mcp.test.js`（4 条）。
-   - `ds-bot/src/host/connectors.js:116` —— 探测回来的账号名显示前过滤（字符集 + 长度），只取自该连接器自己的探测；账号名整体不合法就拒绝这次连接，报错点名该服务，不存密钥、不挂载。测试：`ds-bot/test/connector-account-sanitised.test.js`（5 条）。
+The Agent Client Protocol (ACP) standardises communication between code editors and coding agents over JSON-RPC 2.0. The spec is published at [agentclientprotocol.com](https://agentclientprotocol.com/llms.txt) in two revisions, **v1** and **v2**. The client library is [`@agentclientprotocol/sdk`](https://www.npmjs.com/package/@agentclientprotocol/sdk), latest **2.6.0**, **Apache-2.0**, published 2026-11-10 (the v1 line ends at 1.9.0). There is an **ACP Registry** — a curated set of agents that support authentication — and the official agents page lists **48** agents (Claude Agent, Codex CLI, Gemini CLI, Goose, OpenCode, Hermes, Cursor, Copilot CLI, and others).
 
-两点说明：
+Two facts decide our design:
 
-1. 第 20 条要写进 PR 里的数字就是这个基线（1439 / 1437 / 0 / 2）。QA 测的时候是在共享 clone 的 `fix/app-window-origin`（`13a2a407`）上跑的，不是工作区里的改动。
-2. 第 22 条那两处修好之后，现有的 `ds-bot/test/capabilities.test.js` 里有 **4 条**测试会红（它们今天假设远程 MCP 保存即批准）：`capabilities.test.js` 里的 `mounts agent-only MCP and skills…`、以及用 `mountUrlCapability` 助手的三条 HTTP MCP 测试。这四条要在同一个 PR 里改成「先批准再挂载」。QA 实测（按最新两个测试文件）：当前代码 `tests 9 | pass 2 | fail 7 | exit 1`；模拟修复后 `tests 36 | pass 32 | fail 4 | exit 1`，失败的正是这四条；`connectors.test.js` 原有 7 条断言全绿。
+- **Our runtime is an ACP server, and it has no ACP client.** `dsh-acp` (0.2.1-rc.4 in the packaged app, 0.2.0-rc.2 in the host install) is the only runtime package that depends on `@agentclientprotocol/sdk`, which it pins at **1.4.0**. Driving a third-party ACP agent from Nova Bots would require a new client side (spawn over JSON-RPC stdio, `initialize`, `auth/login`, `session/new`, `session/prompt`, plus `session/request_permission`, `fs/*` and `terminal/*` handling). That is runtime work, not a connector record.
+- **The reverse direction already works and costs nothing.** `dsh-acp` lets an external editor (Zed) drive Nova Bots. That is a host integration; it does not belong on the Connectors page.
 
-## 不做什么
+ACP and MCP meet in one place: `session/new` carries an `mcpServers` array, so a client can hand MCP servers to an agent (stdio is mandatory for agents, http and sse are optional capabilities). Support is **per agent**, not a property of ACP — in our own handshake test OpenCode called a client-supplied MCP tool, while Goose ignored it and exposed no such tool.
 
-- 不做外部市场，不从别人的注册表拉定义；注册表在本仓库里，一个服务一条经过审核的定义。
-- 第一批不做 OAuth，不做需要浏览器的同意流程。
-- 不把第三方服务 vendored 进仓库；它们是单独进程。
-- 不让 Bot 看到或输入凭据的值；新连接的凭据默认不进 Bot 的 shell，除非用户在密钥页面自己放开。
-- 不做按名字模糊匹配的自动安装；每个服务是注册表里审核过的一条定义。
-- 不在目录里写没读过的价格。
+**Conclusion: a connector is an MCP server (remote endpoint or local stdio). ACP stays a host-side protocol we already serve; the catalogue lists services, not agents.**
 
-## 已知限制
+#### 2. MCP Apps: a connector can return text and JSON today, and no interactive UI
 
-- 这个设计改变今天 GitHub 连接器的行为（挂载从全团队变成按 Bot）。这是对已定设计（[浏览器、联网搜索、密钥和连接器](2026-10-08-browser-and-secrets.md) 的连接器一节）的改动，**要 Jahanzaib 明确同意后才生效**；那一篇的「变更」也只在这之后才加。
-- 目录里的免费额度和价格是 2026-11-12 读到的快照，会过时。每条定义带 `verifiedOn`，超过半年标「需复核」。
-- 目录里的条目在许可证核实之前不进注册表；未核实的条目只作为对照行存在。
-- Gmail 那一行是真的，但属于第三期。
-- 引擎镜像缺 `sqlite3`、`psql`、`soffice`、`pandoc`、`tesseract`，本地 stdio 服务暂时只有纯 JS / 纯 Python 的能跑。
-- 工具名空间 `mcp__<id>__` 与能力同名时那个能力注册不到工具（运行时把冲突那台服务的工具整批撤掉）。
-- 探针回来的账号名今天不过滤就显示，先行修复之后过滤（两处先行修复：远程 MCP 需要批准、账号名过滤）。
-- 目录的中文和英文是两份文字，改一边要改另一边。
-- 改动前后的测试基线：1439 个测试 / 1437 通过 / 0 失败 / 2 跳过，连接器相关 7 条断言。
+MCP Apps is the extension that lets an MCP server ship an interactive interface. A server declares **UI resources** with the **`ui://`** URI scheme at tool-registration time; the host fetches the resource and renders it in a **sandboxed iframe**, and the view completes a `ui/initialize` handshake with the host before the tool runs. The extension is published at `modelcontextprotocol/ext-apps`, spec revision **2026-01-26**, with the SDK `@modelcontextprotocol/ext-apps` at **2.0.4** (**MIT**, 2026-10-27). Its security model is declarative CSP inside the iframe, and it is designed as a progressive enhancement: a host without MCP Apps support still gets the tool, returning text.
 
-## 变更
+**What our runtime can do today:** `dsh-mcp-resources` (0.2.1-rc.4) exposes exactly three shared model tools — `list_mcp_resources`, `list_mcp_resource_templates`, `read_mcp_resource` — and contains no `ui://` handling at all; the `ext-apps` package is not installed. Rendering a connector's UI would need `ui://` support in the resource layer, an iframe host with the postMessage bridge, the `ui/initialize` lifecycle, and a CSP story consistent with the CSP hardening work already in flight.
 
-- 2026-11-12：初稿。连接器从写死的 GitHub 块改成数据驱动的定义，按 Bot 授权；定下目录的表格、详情页、写法规则和许可证规则。
+**Conclusion: today a connector returns text and structured JSON only. If a service can ship MCP Apps, the catalogue records that as a capability of the *service* while the host's own limitation is recorded separately, so the page never promises a UI our runtime cannot draw.**
+
+#### 3. Plugin and app manifests: partly expressible, not fully
+
+| ecosystem | manifest | what it carries | expressible in our model? |
+|---|---|---|---|
+| Claude Code plugins | `.claude-plugin/plugin.json` (+ `.mcp.json`, `marketplace.json`) | `name`, `displayName`, `version`, `metadata`, `userConfig`, `mcpServers`, `commands`, `hooks`, `skills/`, `lspServers`, `monitors` | **partly** — `mcpServers` and `skills/` map onto our `mcp` and `skill` capabilities; `commands`, `hooks`, `lspServers` and `userConfig` prompts have no expression in a Cordis plugin plus `dsh` manifest |
+| OpenAI / ChatGPT plugins (portable "Agent Plugins") | root `plugin.json` + `mcp.json` + `.app.json` + `skills/`, `hooks/`, `scripts/`, `assets/`; `.codex-plugin/plugin.json` kept as a compatibility fallback; OpenAI-specific data under `extensions.com.openai` | plugin identity, skills, MCP server mappings, registered app ids | **partly** — skills and MCP servers map onto our capability model; `extensions.com.openai` and `hooks/` do not |
+| VS Code extensions | VSIX with `package.json` (`contributes`), MCP servers via the portable `mcpServers` format or a workspace `.mcp.json` | a whole editor-extension runtime | **no** — but its MCP server entry is portable and is expressible |
+| Zapier / Make / Pipedream | no installable manifest — hosted MCP endpoints reached over HTTP with OAuth or a connection token | — | **yes**, as remote MCP endpoints, which is how we would list them |
+
+**Name-squat and impersonation risk is measurable, not theoretical.** A search of the official registry returns **22** servers whose name contains "gmail", **25** for "slack", **43** for "postgres", **29** for "figma" and **17** for "stripe" — in each case exactly one is the vendor's own, and the rest are third parties with no vendor relationship. The npm `markitdown` is not Microsoft's tool. Any catalogue row must therefore name its publisher.
+
+#### 4. The official MCP Registry exists, and it guarantees much less than it appears to
+
+| fact | value |
+|---|---|
+| Service | **Official MCP Registry**, "a community driven registry service for MCP servers" |
+| Version | **1.8.9** (built 2026-11-10) |
+| API | `GET /v0/servers` (parameters `cursor`, `limit`, `updated_since`, `search`, `version`, `include_deleted`), `GET /v0/servers/{name}/versions`, `POST /v0/publish`, `POST /v0/validate`, publisher auth via DNS / HTTP / OIDC / GitHub |
+| Public | **Yes** — reads need no key (measured) |
+| Size (measured, full pagination, 624 pages) | **62,331** distinct servers; **42,009** with a remote endpoint; **24,294** with a package; 4,660 with both; remote transports: 42,224 `streamable-http`, 1,142 `sse` |
+
+**What it guarantees:** a reverse-DNS namespace the publisher has proven it controls, and metadata (name, version, description, remotes, packages with a `sha256` for `mcpb` bundles, declared environment variables including which are secrets).
+
+**What it does not guarantee:** it has **no licence field at all** (the published server schema contains no `license` property), it does not review the server's code, it does not scan it, and it signs nothing except the `mcpb` bundle digest. It is an index of claims, not a certification.
+
+**Rule that follows:** the registry is a **candidate source** for URLs, never a source of truth for a catalogue row. Every row still passes our own verification — licence, publisher, version and date, self-hosted or hosted, the exact credential it asks for, and the date we verified it. The registry is also a good detector of lookalikes: the same service name is claimed by many unrelated publishers.
+
+#### 5. Hosted vendor endpoints, measured
+
+Each endpoint below was probed with a single unauthenticated `initialize` request — no token was sent and nothing was created.
+
+| endpoint | response | credential it asks for |
+|---|---|---|
+| `https://mcp.context7.com/mcp` | **200** | **none** (keyless) |
+| `https://mcp.notion.com/mcp` | 401 | OAuth |
+| `https://mcp.linear.app/mcp` | 401 | OAuth (a read-only endpoint exists too) |
+| `https://mcp.stripe.com` | 401 | OAuth |
+| `https://mcp.figma.com/mcp` | 401 | OAuth |
+| `https://mcp.atlassian.com/v1/mcp` | 401 | OAuth |
+| `https://mcp.make.com` | 401 | OAuth |
+| `https://mcp.zapier.com/api/mcp` | 403 | OAuth inside the client, or a connection token for code clients |
+| `https://mcp.sentry.dev/mcp` | 401 | OAuth |
+| `https://api.githubcopilot.com/mcp/` | 401 | `Authorization: Bearer` — our connector today |
+| `https://mcp.gmail.com/mcp` | **no such host** | — |
+
+Two corrections this table forces:
+
+- **Google's Gmail MCP is official but local.** There is no hosted Gmail endpoint, so a Gmail connector means either a stdio server in the engine image or a third-party hosted one whose publisher and licence we verify ourselves.
+- **Most hosted vendor endpoints are OAuth-shaped.** Notion, Linear, Stripe, Figma, Atlassian, Make, Zapier and Sentry want an OAuth grant, not a pasted token. The connector definition therefore has to state the **credential kind** (`token` | `oauth` | `none`) as a first-class field, and an OAuth connector is a later tranche, not a first one.
+
+#### 6. What this changes in the note
+
+Nothing in the data model. The record already carries `url`, `headers`, `secretName`, `authKind`, `category`, `licence`, `selfHostable`, `freeTier`, `paid`, `version` and `verifiedOn` — which is exactly the set of facts the registry cannot supply, so the rule "an entry we have not verified is not listed as a connector" stays as it is. Two additions are worth making:
+
+1. **A credential kind is explicit** (`token` | `oauth` | `none`), because half of the good hosted endpoints are OAuth-only and a user reading "paste your token" for an OAuth service would be misled.
+2. **A host-capability flag**, so a row can say "this service can ship an interactive UI; our host returns text and JSON today" without the catalogue promising something the runtime cannot draw.
+
+**Adopt today:** a remote MCP endpoint as a connector definition (already supported by the MCP client); a local stdio MCP server as a connector definition (approval-gated, binary must exist in the engine image); the official registry as a discovery source behind our own verification step.
+**Needs work on our side:** an OAuth flow for connectors; MCP Apps rendering (resource layer, iframe host, `ui/initialize`, CSP); a licence and publisher verification step for every catalogue row; an ACP client — only if a third-party coding agent is ever to be a connector.
+
+## What this does not do
+
+- No external marketplace, and no pulling definitions from someone else's registry; the registry is
+  in this repository, one reviewed definition per service.
+- Tranche 1 does no OAuth and no browser consent flow.
+- Third-party services are not vendored into the repository; they run as separate processes.
+- A Bot never sees or enters the value of a credential; a newly connected credential does not
+  reach a Bot's shell unless the user opens that up on the Secrets page.
+- No fuzzy name matching and no automatic install; every service is one reviewed definition.
+- Prices that were not read are never written.
+- **ACP is not a connector type.** The runtime has no ACP client (`dsh-acp` is a server only), so
+  driving OpenCode, Goose or Gemini as a connector would be runtime work. ACP stays a host-side
+  protocol we already serve: `dsh-acp` lets Zed drive Nova Bots.
+- **MCP Apps are not a connector feature.** `dsh-mcp-resources` exposes three read-only resource
+  tools and has no `ui://` handling, so an interactive connector UI is runtime work. The
+  catalogue records that as a host capability, never as a service feature.
+- **Plugin manifests are only partly expressible.** We can take `mcpServers` and `skills/` from
+  Claude Code and OpenAI/ChatGPT portable plugins; `commands`, `hooks`, `lspServers`,
+  `userConfig` and VS Code's `contributes` have no expression in our plugin model, and
+  Zapier/Make/Pipedream are hosted endpoints, not manifests.
+- **The official MCP Registry finds, it does not certify.** It guarantees the namespace and the
+  metadata and nothing else — no licence field, no code review, no signature — so it is a source
+  of candidate URLs behind our own verification, never the source of truth for a row.
+
+## Known limits
+
+- This design changes today's GitHub connector behaviour (mounted per Bot instead of team-wide).
+  That is a change to a decided design (the connector section of
+  [Browser, web search, secrets and connectors](2026-10-08-browser-and-secrets.md)), so **it takes
+  effect only after Jahanzaib's explicit OK**; that note's "Changes" list gets a dated entry only
+  after that OK.
+- A catalogue entry does not enter the registry before its licence is verified; an unverified
+  entry exists only as a comparison row.
+- The free tiers and prices in the catalogue are a snapshot read on 2026-11-12 and go out of date.
+  Every definition carries `verifiedOn`; after six months the row is marked "needs re-check".
+- The Gmail row is real but belongs to tranche 3, and Google has **no hosted** Gmail MCP
+  endpoint (`mcp.gmail.com` does not resolve): Google's own Gmail MCP is official but
+  **local**, so a Gmail connector means a stdio server in the engine image or a third-party
+  hosted one whose publisher and licence we verify ourselves.
+- An interactive connector UI (MCP Apps) needs runtime work — `ui://` handling in the
+  resource layer, an iframe host with the `ui/initialize` handshake and a CSP story — so a
+  connector returns text and JSON today.
+- The engine image has no `sqlite3`, `psql`, `soffice`, `pandoc` or `tesseract`, so only pure JS /
+  pure Python local stdio services can run today.
+- The tool namespace `mcp__<id>__` collides with a capability of the same name, and that
+  capability then registers no tools (the runtime withdraws the whole conflicting server's tools).
+- The account name a probe returns is shown unfiltered today; the current-code fixes filter it
+  (remote MCP needs approval / account name filtering).
+- The catalogue reference page is English only, following `docs/local-models.md`; only
+  `README.md` / `README.zh.md` and the interface strings carry Chinese.
+- The test baseline before and after the change (`dev` = `61179955`): 1462 tests / 1460 pass / 0 fail
+  / 2 skipped, and 7 connector assertions. The two current-code fixes measure 1466 / 1464 / 0 / 2
+  and 1467 / 1465 / 0 / 2.
+
+## Changes
+
+- 2026-11-12: first draft. The connector changes from a hardcoded GitHub block to a data-driven
+  definition granted per Bot; the catalogue's table, detail page, writing rules and licence rules
+  are decided.
+- 2026-11-12: rewritten in English on the maintainer's instruction, with Security's rules R1-R12,
+  QA's 23 acceptance criteria and the research findings added.

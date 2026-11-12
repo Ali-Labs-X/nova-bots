@@ -2,7 +2,7 @@
 
 这里收录 Nova Bots 已经定下的设计：为什么这样做、已定的行为、不做什么、已知限制。拿不准一个现象是 bug 还是设计如此时，先查这里和 [愿景](../vision.zh.md)；这里没写的，在 Issue 里问。
 
-设计文档用中文写。
+Design notes are written in English. `README.zh.md` and the Chinese interface strings stay Chinese.
 
 ## 什么时候写
 
@@ -13,23 +13,23 @@
 ## 格式
 
 ```markdown
-# 标题
+# Title
 
-- 日期：设计定下的日期（之后的修改在文末「变更」里追加）
-- 相关：Issue / PR 编号
+- Date: the day the design was decided (later changes are appended under "Changes")
+- Related: issue / pull request numbers
 
-## 为什么
-要解决的问题，以及当时的取舍。
+## Why
+The problem being solved, and the trade-off taken at the time.
 
-## 已定的行为
-可以验证的规则。写现在的行为，不写过程。
+## Decided behaviour
+Rules that can be checked. Write the current behaviour, not the process.
 
-## 不做什么
+## What this does not do
 
-## 已知限制
+## Known limits
 
-## 变更
-- 日期：改了什么，对应的 PR。
+## Changes
+- Date: what changed, and the pull request.
 ```
 
 ## 目录
@@ -53,4 +53,4 @@
 | [消息布局和宽度](2026-10-22-message-layout.md) | 气泡 / 平铺两种布局；平铺时 Bot 的话带头像、名字、时间；气泡宽度和平铺正文宽度各用一个滑块，按正文列的百分比调 |
 | [手机 App](2026-10-24-mobile-app.md) | iOS 和 Android 远程操控电脑上的 Nova Bots 团队：手机不跑 Agent；扫码配对、端到端加密、电脑只往外连；完整功能，高权限操作要解锁手机 |
 | [Office 文档](2026-10-27-office-documents.md) | Bot 离线处理 .docx/.pptx/.xlsx：应用带的 payload、`office.js` 命令行、office 路由换成带 `office-tools` 的版本 |
-| [连接器与连接器目录](2026-11-12-connectors-and-catalogue.md) | 连接器从写死的 GitHub 块改成数据驱动的定义、按 Bot 授权；目录的表格、写法规则和许可证规则 |
+| [Connectors and the connector catalogue](2026-11-12-connectors-and-catalogue.md) | The connector changes from a hardcoded GitHub block to a data-driven definition, granted per Bot; the catalogue's table, writing rules and licence rules (English) |

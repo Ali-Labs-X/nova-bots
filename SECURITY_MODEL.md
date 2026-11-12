@@ -39,7 +39,7 @@ Trust boundaries:
 
 ## Assets (maintainer-ranked)
 
-1. **Critical: API keys and Bot secrets** — provider keys, `secrets.json`, `$DSH_SECRET_*`, connector tokens. Must not leak to the model, logs, tool results, other Bots outside the secret's scope, or outbound requests.
+1. **Critical: API keys and Bot secrets** — provider keys, `secrets.json`, `$DSH_SECRET_*`, connector tokens; a connector token never reaches a Bot's shell. Must not leak to the model, logs, tool results, other Bots outside the secret's scope, or outbound requests.
 2. **Critical: files on the user's computer** — outside the Bot's work folder; `~/.dsh` must never be written by the app.
 3. Other: imported cookies / browser login state, conversations and memory.
 
@@ -53,7 +53,10 @@ Trust boundaries:
 - Main-Bot checks in `tools.js` (`rt.isMain`, `rt.isAdminOf`).
 - Per-Bot permission presets (`permissions.js`), set on every Session.
 - Secrets: scoped per Bot (`canUse`), redacted from tool results and outbound model requests (`redactor`, JSON/URL-encoded forms).
-- Connectors refuse non-HTTPS addresses (`connectors.js`).
+- Connectors: each connector's credential lives in the team secret store only, and is used only in the request headers of that connector's own endpoint, built in memory at mount time. It never reaches the Nova profile, never reaches a Bot's shell, never appears in a tool result or a model request, and never reaches another connector's endpoint (`ds-bot/src/host/connectors.js`, `ds-bot/src/host/secrets.js`).
+- A connector is mounted for the whole team today; its secret is stored with an empty scope and is read at mount time without a scope check (`ds-bot/src/host/connectors.js`, `ds-bot/src/host/secrets.js`). The per-Bot grant is designed but not built — see the connectors design note (`docs/plans/2026-11-12-connectors-and-catalogue.md`).
+- Connectors refuse non-HTTPS addresses, and a definition's probe address and MCP address must share one registrable domain (`ds-bot/src/host/connectors.js`).
+- Remote (streamable-http) MCP servers need an explicit approval, like local (stdio) ones, and only HTTPS URLs are accepted; the account label a connector probe returns is sanitised (character set and length) before it is shown (`ds-bot/src/host/capabilities.js`, `ds-bot/src/host/connectors.js`).
 - HTML widgets in `sandbox="allow-scripts"` iframes; Electron webviews sandboxed with contextIsolation and own partitions; IPC handlers call `assertWindow(event)`.
 - Cookie values stay in the Electron main process (`cookie-import.mjs`).
 - Launch token redacted from host logs (`host-process.mjs`).
