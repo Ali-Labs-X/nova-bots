@@ -106,6 +106,51 @@
 - streamable-http 的能力：地址不是 `https:` 一律拒绝；不再默认 `approved: true`。
 - 探测回来的账号名显示前过滤（见上）。
 
+### 验收标准
+
+下面每一条都是可测的判定，每条写明落在哪个测试文件里。基线（`fix/app-window-origin`，`13a2a407` 实测）：`npm test` = 1439 个用例 / 1437 通过 / 0 失败 / 2 跳过；`ds-bot/test/connectors.test.js` = 7 条断言。以后每个 PR 的总数变化都要在 PR 里说清楚。
+
+**一、通用：每个连接器 id 都成立（`ds-bot/test/connectors-generic.test.js`）**
+
+1. 列表按配置顺序列出每一条启用的连接器，一个 id 一行，不重复、不漏项。
+2. 配置为 `false` 的连接器不出现；被移除的连接器从列表消失，并且它的挂载被解除。
+3. 一个连接器只存自己那一个密钥（名字来自定义，按 `SECRET_NAME` 校验），挂载时用它自己的 url 和请求头。
+4. 密钥只出现在该连接器自己服务的请求头里：发给别的服务的请求中没有它。
+5. 密钥不出现在 roster、`state.json`、客户端 bundle、日志行和错误信息里；出现一次就判不通过。
+6. 密钥不进任何 Bot 的 shell（scope 保持 `[]`）。
+7. 探测按连接器自己定义来：自己的身份地址和自己的账号字段；探测不通时该行是失败状态、点名是哪个服务，且没有密钥、没有挂载。
+8. 探针主机和 MCP 主机必须同一个可注册域，在加载时就拒绝。
+9. 未知 id 照今天的样子被拒绝（对照 `ds-bot/test/connectors.test.js`）。
+10. 断开和重试只动被点名的那一个连接器。
+11. 挂载失败不留半个挂载，也不留密钥。
+12. 任一端点缺 `https://` 检查就在发密钥之前拒绝。
+
+**二、客户端页面（`ds-bot/test/connectors-client.test.js`）**
+
+13. 每条连接器一行，顺序同配置；状态只有未连接 / 连接中 / 已连接 / 连接失败四种。
+14. 表单按定义里的 `fields` 渲染：字段、标签、遮罩输入都来自定义，不是写死的。
+15. 「去拿令牌」的链接来自定义，并停在厂商自己的域名上；一条 Gmail 的行不能指向 GitHub。
+16. 失败行带 `role="alert"`；连接中的行只是等待提示，没有 `.bt-error`、没有 `role="alert"`。
+17. 图标取不到时用首字母；加一个服务不需要重新生成客户端 bundle。
+
+**三、不签核的红线**
+
+18. 凭据出现在任何产物里、凭据发给了非本服务的主机、密钥进了 Bot 的 shell、挂载失败留下半个挂载或残留密钥、端点缺 `https://` 检查、目录里出现没核实过的条目（许可证、发布方、版本/日期、自托管还是托管、到底要哪种凭据）——`markitdown` 这种抢名字的要在上架前就拦下来。
+19. 目录里的写操作（发邮件、删仓库、删表）没有走审批就不放行。
+20. 测试总数变了但 PR 里没说清楚差异，不签核。
+
+**四、测试怎么跑（不碰真实服务）**
+
+21. 身份探测用 `ds-bot/test/fixtures/connector-stub/` 里的 `node:http` 桩，监听 `127.0.0.1`；MCP 挂载用现成的假 loader（`ds-bot/test/connectors.test.js:57-66`），不需要真的 MCP 服务器。共用助手：`ds-bot/test/connector-harness.js`。
+22. 两条先行修的当前代码，各自有测试文件，QA 已写好并量过（红的，等 Security 的修复）：
+   - `ds-bot/src/host/capabilities.js:114-121` —— streamable-http 的能力不再默认 `approved: true`，没批准不挂载；`http:` 地址一律拒绝。测试：`ds-bot/test/capability-remote-mcp.test.js`（3 条）。
+   - `ds-bot/src/host/connectors.js:116` —— 探测回来的账号名显示前过滤（字符集 + 长度），只取自该连接器自己的探测。测试：`ds-bot/test/connector-account-sanitised.test.js`（3 条）。
+
+两点说明：
+
+1. 第 20 条要写进 PR 里的数字就是这个基线（1439 / 1437 / 0 / 2）。QA 测的时候是在共享 clone 的 `fix/app-window-origin`（`13a2a407`）上跑的，不是工作区里的改动。
+2. 第 22 条那两处修好之后，现有的 `ds-bot/test/capabilities.test.js` 里有 **4 条**测试会红（它们今天假设远程 MCP 保存即批准）：`capabilities.test.js` 里的 `mounts agent-only MCP and skills…`、以及用 `mountUrlCapability` 助手的三条 HTTP MCP 测试。这四条要在同一个 PR 里改成「先批准再挂载」。QA 已实测：模拟修复后 `tests 20 / pass 16 / fail 4`，失败的正是这四条；模拟账号过滤后 `tests 10 / pass 10 / fail 0`。
+
 ## 不做什么
 
 - 不做外部市场，不从别人的注册表拉定义；注册表在本仓库里，一个服务一条经过审核的定义。
