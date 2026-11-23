@@ -81,7 +81,7 @@ test('a registry install finds the newest version on the next registry and insta
   assert.equal(view.latest, '9.0.0')
   assert.equal(view.current, PKG.version)
   assert.equal(view.source, 'registry')
-  assert.equal(view.notesUrl, 'https://github.com/Jahanzaib211/nova-bots/releases')
+  assert.equal(view.notesUrl, 'https://github.com/Ali-Labs-X/nova-bots/releases')
   assert.equal(rt.updateStart().phase, 'installing')
   await flush()
   assert.deepEqual(installs, [[`${PKG.name}@9.0.0`, { registry: 'https://registry.npmmirror.com/' }]])
@@ -163,9 +163,9 @@ test('in the desktop app, which updates as a whole, it never asks the network an
 
 test('the package\'s own repository gives the release notes link and the star count', async () => {
   const { rt, fetched } = start({ source: `${PKG.name}@^${PKG.version}` })
-  assert.equal(rt.updateView().repoUrl, 'https://github.com/Jahanzaib211/nova-bots')
+  assert.equal(rt.updateView().repoUrl, 'https://github.com/Ali-Labs-X/nova-bots')
   assert.equal(await rt.repoStars(), null)
-  assert.deepEqual(fetched, ['https://api.github.com/repos/Jahanzaib211/nova-bots'])
+  assert.deepEqual(fetched, ['https://api.github.com/repos/Ali-Labs-X/nova-bots'])
 })
 
 test('without a source from the plugin manager, the profile\'s own dependency entry decides', async () => {

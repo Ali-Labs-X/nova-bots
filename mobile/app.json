@@ -1,14 +1,14 @@
 {
   "expo": {
     "name": "Nova Bots",
-    "slug": "dsbot",
+    "slug": "nova-bots",
     "version": "0.1.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "io.github.fei2411.dsbot"
+      "bundleIdentifier": "com.alilabsx.novabots"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,8 +18,8 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "io.github.fei2411.dsbot"
+      "package": "com.alilabsx.novabots"
     },
-    "scheme": "dsbot"
+    "scheme": "novabots"
   }
 }

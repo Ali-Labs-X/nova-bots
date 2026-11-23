@@ -88,5 +88,5 @@ deb:
 # so the build itself never publishes (--publish never).
 publish:
   provider: github
-  owner: Jahanzaib211
+  owner: Ali-Labs-X
   repo: nova-bots

@@ -607,12 +607,12 @@
 
         <h3 id="docker">Self-host with Docker</h3>
         <p>Docker builds the whole stack — engine, plugin, browser runtime and the interface — into one container. You need Docker 24+ with Compose v2.24+ and a model provider API key.</p>
-        <pre><code>git clone https://github.com/Jahanzaib211/nova-bots.git Nova-Bots
+        <pre><code>git clone https://github.com/Ali-Labs-X/nova-bots.git Nova-Bots
 cd Nova-Bots
 cp docker/.env.example docker/.env
 ./nova-bots.sh start
 ./nova-bots.sh url</code></pre>
-        <p>Open the printed login URL once. After that, <code>http://127.0.0.1:13080/</code> opens the UI directly. The team, chats and model settings live in <code>docker/data/</code>; back up that folder and <code>docker/.env</code> (stop the container first). Host folders, ports, mounts and reboot survival are in <a href="https://github.com/Jahanzaib211/nova-bots/blob/main/RUNNING.md" target="_blank" rel="noopener">RUNNING.md</a> and the <a href="https://github.com/Jahanzaib211/nova-bots/blob/main/docker/README.md" target="_blank" rel="noopener">Docker guide</a>.</p>
+        <p>Open the printed login URL once. After that, <code>http://127.0.0.1:13080/</code> opens the UI directly. The team, chats and model settings live in <code>docker/data/</code>; back up that folder and <code>docker/.env</code> (stop the container first). Host folders, ports, mounts and reboot survival are in <a href="https://github.com/Ali-Labs-X/nova-bots/blob/main/RUNNING.md" target="_blank" rel="noopener">RUNNING.md</a> and the <a href="https://github.com/Ali-Labs-X/nova-bots/blob/main/docker/README.md" target="_blank" rel="noopener">Docker guide</a>.</p>
 
         <h3 id="desktop">Desktop app</h3>
         <p>The Electron app runs on Windows, macOS and Linux. It carries a pinned runtime, keeps its data in its own home, and can import an existing team (read only). To run it from source:</p>
@@ -621,10 +621,10 @@ cd app
 npm ci
 npm run build   # builds the app's own UI into ui/dist
 npm start       # starts the app</code></pre>
-        <p>Packaging, updates and platform notes are in <a href="https://github.com/Jahanzaib211/nova-bots/blob/main/app/README.md" target="_blank" rel="noopener">app/README.md</a>.</p>
+        <p>Packaging, updates and platform notes are in <a href="https://github.com/Ali-Labs-X/nova-bots/blob/main/app/README.md" target="_blank" rel="noopener">app/README.md</a>.</p>
 
         <h3 id="plugin">Plugin</h3>
-        <p>Nova Bots also installs as a plugin into a compatible agent runtime: build or download the <code>nova-bots</code> package and add it through the runtime's plugin manager. Source builds and internals are in <a href="https://github.com/Jahanzaib211/nova-bots/blob/main/ds-bot/README.md" target="_blank" rel="noopener">ds-bot/README.md</a>.</p>
+        <p>Nova Bots also installs as a plugin into a compatible agent runtime: build or download the <code>nova-bots</code> package and add it through the runtime's plugin manager. Source builds and internals are in <a href="https://github.com/Ali-Labs-X/nova-bots/blob/main/ds-bot/README.md" target="_blank" rel="noopener">ds-bot/README.md</a>.</p>
       </section>
 
       <section id="models" class="doc-section">
@@ -640,7 +640,7 @@ npm start       # starts the app</code></pre>
 
       <section id="security" class="doc-section">
         <h2>Security model</h2>
-        <p>The full threat model is in <a href="https://github.com/Jahanzaib211/nova-bots/blob/main/SECURITY_MODEL.md" target="_blank" rel="noopener">SECURITY_MODEL.md</a>. The short version:</p>
+        <p>The full threat model is in <a href="https://github.com/Ali-Labs-X/nova-bots/blob/main/SECURITY_MODEL.md" target="_blank" rel="noopener">SECURITY_MODEL.md</a>. The short version:</p>
         <ul>
           <li><strong>Prompt injection is the main threat.</strong> Web pages, files, tool results and messages from other bots are treated as untrusted. The controls aim to stop them from making a bot exceed its rights.</li>
           <li><strong>Rights are enforced, not suggested.</strong> Only a Main Bot (commander) can create, change or stop other bots, squads and folders. Each bot runs with its own permission preset.</li>
@@ -660,7 +660,7 @@ npm start       # starts the app</code></pre>
         </details>
         <details>
           <summary>Does my data leave my machine?</summary>
-          <p>Self-hosted, your team, chats and memory stay in Nova Bots' data folder on your machine; the requests your bots make to your model provider and the web go out as you'd expect. On the hosted workspace, your data lives in your account's own engine volumes on the AliLabsX server.</p>
+          <p>Self-hosted, your team, chats and memory stay in Nova Bots' data folder on your machine; the requests your bots make to your model provider and the web go out as you'd expect. On the hosted workspace, your data lives in your account's own engine volumes on the ALI LABS X server.</p>
         </details>
         <details>
           <summary>Which models can I use?</summary>
@@ -680,12 +680,12 @@ npm start       # starts the app</code></pre>
         <h2>Contact</h2>
         <ul>
           <li>Email: <a href="mailto:Jahanzaib@alilabsx.com">Jahanzaib@alilabsx.com</a> (also for security reports)</li>
-          <li>Bugs and requests: <a href="https://github.com/Jahanzaib211/nova-bots/issues" target="_blank" rel="noopener">GitHub issues</a></li>
-          <li>Source: <a href="https://github.com/Jahanzaib211/nova-bots" target="_blank" rel="noopener">github.com/Jahanzaib211/nova-bots</a></li>
+          <li>Bugs and requests: <a href="https://github.com/Ali-Labs-X/nova-bots/issues" target="_blank" rel="noopener">GitHub issues</a></li>
+          <li>Source: <a href="https://github.com/Ali-Labs-X/nova-bots" target="_blank" rel="noopener">github.com/Ali-Labs-X/nova-bots</a></li>
         </ul>
         <div class="hero-actions doc-actions">
           <a class="btn btn-primary" href="/login">Build your bot army <svg width="17" height="17" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9M9 3.5 13 8l-4 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-          <a class="btn btn-ghost" href="https://github.com/Jahanzaib211/nova-bots" target="_blank" rel="noopener">Self-host it →</a>
+          <a class="btn btn-ghost" href="https://github.com/Ali-Labs-X/nova-bots" target="_blank" rel="noopener">Self-host it →</a>
         </div>
       </section>
     </main>
@@ -700,7 +700,7 @@ npm start       # starts the app</code></pre>
             </svg>
             <span class="logo-text">Nova <span>Bots</span></span>
           </a>
-          <p class="footer-note">Build your bot army: bots that remember, collaborate in squads and report to a commander. Built by AliLabsX. Open source under Apache 2.0. Contact: <a href="mailto:Jahanzaib@alilabsx.com">Jahanzaib@alilabsx.com</a></p>
+          <p class="footer-note">Build your bot army: bots that remember, collaborate in squads and report to a commander. Built by ALI LABS X. Open source under Apache 2.0. Contact: <a href="mailto:Jahanzaib@alilabsx.com">Jahanzaib@alilabsx.com</a></p>
         </div>
         <div class="footer-col">
           <h4>Product</h4>
@@ -711,24 +711,24 @@ npm start       # starts the app</code></pre>
         </div>
         <div class="footer-col">
           <h4>Resources</h4>
-          <a href="https://github.com/Jahanzaib211/nova-bots" target="_blank" rel="noopener">GitHub repository</a>
-          <a href="https://github.com/Jahanzaib211/nova-bots/issues" target="_blank" rel="noopener">Report an issue</a>
+          <a href="https://github.com/Ali-Labs-X/nova-bots" target="_blank" rel="noopener">GitHub repository</a>
+          <a href="https://github.com/Ali-Labs-X/nova-bots/issues" target="_blank" rel="noopener">Report an issue</a>
           <a href="https://www.linkedin.com/in/jahanzaib-ali-labsx" target="_blank" rel="noopener">LinkedIn</a>
-          <a href="https://alilabsx.com/" target="_blank" rel="noopener">AliLabsX</a>
+          <a href="https://alilabsx.com/" target="_blank" rel="noopener">ALI LABS X</a>
           <a href="https://nova.alilabsx.com/" target="_blank" rel="noopener">Nova</a>
         </div>
         <div class="footer-col">
           <h4>Legal</h4>
           <a href="/privacy">Privacy Policy</a>
           <a href="/terms">Terms of Service</a>
-          <a href="https://github.com/Jahanzaib211/nova-bots/blob/main/LICENSE" target="_blank" rel="noopener">Apache 2.0 License</a>
+          <a href="https://github.com/Ali-Labs-X/nova-bots/blob/main/LICENSE" target="_blank" rel="noopener">Apache 2.0 License</a>
           <a href="mailto:jahanzaib@alilabsx.com">Security</a>
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 Ali Labs · Nova Bots · Apache License 2.0</span>
+        <span>Nova Bots by ALI LABS X · Apache License 2.0</span>
         <div class="right">
-          <a href="https://github.com/Jahanzaib211/nova-bots" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/Ali-Labs-X/nova-bots" target="_blank" rel="noopener">GitHub</a>
           <a href="https://www.linkedin.com/in/jahanzaib-ali-labsx" target="_blank" rel="noopener">LinkedIn</a>
           <a href="/docs">Docs</a>
           <a href="/privacy">Privacy</a>
