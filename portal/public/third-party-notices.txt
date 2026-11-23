@@ -1,0 +1,348 @@
+Nova Bots
+Copyright 2026 Jahanzaib Ali
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Nova Bots is derived from DS Bot, which is licensed under the Apache License,
+Version 2.0. Its notice follows and is kept as required by section 4(d):
+
+DS Bot
+Copyright 2026 Fei2411 and the DS Bot contributors
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+==============================================================================
+Third-party code in this repository
+==============================================================================
+
+DeepSeek Harness (https://github.com/deepseek-ai/deepseek-harness)
+MIT License, Copyright (c) 2026 DeepSeek
+
+  - ds-bot/dev/desktop-linux/launch.mts follows the steps of
+    apps/desktop/scripts/dev.ts in DeepSeek Harness and reuses a few of its
+    lines (the release record and the Electron launch arguments). It is a
+    developer script for screenshots on Linux and is not in the npm package.
+  - app/src/host.mjs and app/src/profile.mjs follow
+    apps/desktop-host/src/index.ts: the profile boot and the ready, fatal and
+    shutdown messages. app/src/office-patch.mjs follows
+    apps/desktop-host/src/office.ts: the workspace-dependencies and skill-office
+    plugin rows with the payload's Node and the unpacked LibreOffice Kit CLI.
+  - ds-bot/src/office/skills/office/SKILL.md adapts the office routing skill
+    (assets/office/SKILL.md in @deepseek-ai/dsh-skill-office): the routing body
+    is kept, with one added row that routes package checks and in-place edits
+    to office-tools.
+  - app/scripts/prepare-runtime.mjs and app/scripts/primary-runtime.lock.json are a
+    JavaScript port of scripts/primary-runtime/ (prepare.ts, prune-python-tests.ts
+    and lock.json): the pinned Python, Node and wheel downloads with checksum
+    verification, the wheel test pruning and the Office skill asset copy.
+  - app/src/host-process.mjs follows apps/desktop/src/host-process.ts: the
+    Host in Electron's Node mode and the shutdown escalation.
+  - app/src/main.mjs follows apps/desktop/src/main.ts for the Windows window
+    options (the caption-button overlay, its colors and the native theme). app/src/preload.cjs adapts
+    apps/desktop/src/preload-windows.ts, apps/desktop/src/preload-platform.ts
+    and apps/desktop/src/preload-theme.ts: the caption-band marks, the
+    fullscreen mark, the caption-color measure and the theme sync.
+  - app/src/shell.mjs, app/src/tray.mjs and app/src/background-notice.mjs follow
+    apps/desktop/src/tray.ts and apps/desktop/src/background-notice.ts: the
+    system tray with its menu, the window that hides instead of closing, and
+    the one-time confirmation before it hides.
+  - app/src/bot-browser.mjs adapts apps/desktop/src/browser-guests.ts, and
+    the browser part of app/src/preload.cjs follows
+    apps/desktop/src/preload-browser.ts: the webview leases, the attachment
+    checks and fixed guest preferences, the session policy and the new-window
+    requests.
+  - app/engine/cordis.patch.yml follows the bundle patch of
+    @deepseek-ai/dsh-web-app (packages/bundle/web-app/cordis.patch.yml): the
+    transport and host-service rows and the agent-plane rows it turns off.
+    app/engine/preset-standard.patch.yml copies its standard preset
+    (presets/standard.patch.yml), including the plan-mode prompt text,
+    without the goal rows.
+  - .agents/skills/record-browser-gif/ comes from the skill of the same name
+    in DeepSeek Harness (.agents/skills/record-browser-gif/): SKILL.md is
+    adapted and translated for this repository; scripts/encode_gif.py and
+    scripts/test_encode_gif.py are copied unchanged.
+
+  Full license text:
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+Microsoft Playwright (https://github.com/microsoft/playwright) and
+Playwright MCP (https://github.com/microsoft/playwright-mcp)
+Apache License, Version 2.0, Copyright (c) Microsoft Corporation
+
+  - ds-bot/src/host/browser/ follows the browser tools of Playwright MCP:
+    the ARIA page snapshot with [ref=eN] element refs, a fresh snapshot
+    returned by every action, and the per-action tool set (open, snapshot,
+    click, upload, type, select, press, tabs, back, screenshot). The
+    session drives the browser through the Playwright API itself
+    (ariaSnapshot({ mode: 'ai' }) and the aria-ref locators those refs
+    resolve to). The playwright package is not bundled: the plugin loads
+    it at run time from the install it is pointed at (playwrightUrl),
+    the same way it uses the host's @deepseek-ai/* packages.
+
+  The license is the same Apache License, Version 2.0 that covers this
+  repository; see LICENSE for the text.
+
+No other third-party code is copied into this repository. At run time the
+plugin uses the @deepseek-ai/* packages of the DeepSeek Harness install it
+runs in; they are not bundled. The bundled ds-bot/office.js includes
+@xmldom/xmldom (https://github.com/xmldom/xmldom, MIT License, Copyright (c)
+jindw and contributors) from npm. esbuild is a build tool only. The desktop app
+in app/ installs the pinned @deepseek-ai/* packages, Electron and pnpm from
+npm; they keep their own licenses. The build of its window (app/ui) bundles,
+from npm, React and React DOM (MIT, Copyright (c) Meta Platforms, Inc. and
+affiliates), and react-markdown and remark-gfm with the packages they use
+(MIT, most of them Copyright (c) Titus Wormer; @ungap/structured-clone is ISC,
+Copyright (c) Andrea Giammarchi). Vite is a build tool only.
+
+==============================================================================
+Projects that gave us ideas (no code copied)
+==============================================================================
+
+We thank these projects for the designs they published. DS Bot learned from
+their ideas; it does not contain their code.
+
+  - AgentMemoryRepo (https://github.com/AgentMemoryRepo/agentmemoryrepo), MIT:
+    the Markdown format of Bot memory (one entry per line with [key: value]
+    metadata, a MEMORY.md index that links topic files).
+  - OpenAI Codex (https://github.com/openai/codex), Apache-2.0:
+    keeping the user's messages next to the summary in a checkpoint, and
+    message anchors for searching earlier chat.
+  - OpenMausBot (https://github.com/milind-soni/OpenMausBot), Apache-2.0:
+    group chat rounds and @mention relays between Bots.
+  - Hermes Agent (https://github.com/NousResearch/hermes-agent) and
+    Hermes Bot Mode (https://github.com/NousResearch/Hermes-Bot-Mode), MIT:
+    one Session per member per group chat, and the list of earlier user
+    messages that the plugin, not the model, writes into the handoff.
+  - OpenCode (https://github.com/sst/opencode), MIT;
+    goose (https://github.com/block/goose), Apache-2.0;
+    pi (https://github.com/badlogic/pi-mono), MIT;
+    Gemini CLI (https://github.com/google-gemini/gemini-cli), Apache-2.0:
+    when to condense a long conversation, and what a handoff note holds.
+  - obelisk (https://github.com/tommy0103/obelisk), AGPL-3.0:
+    searching a Bot's own chat with a SQLite FTS5 index ranked by BM25.
+  - DeepSeek Harness Voice Input plugin
+    (packages/experimental/client-ui-voice-input), MIT: the voice chat
+    records with the same steps (record, resample to 16 kHz mono, PCM16 WAV)
+    before it calls the plugin's speech service.
+
+
+===== LICENSE =====
+
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   END OF TERMS AND CONDITIONS
+
+   APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+   Copyright [yyyy] [name of copyright owner]
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.

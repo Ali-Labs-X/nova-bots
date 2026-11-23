@@ -26,7 +26,8 @@
     "web-search.js",
     "cordis.patch.yml",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "NOTICE"
   ],
   "scripts": {
     "build": "node scripts/build-client.mjs",
@@ -59,10 +60,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Jahanzaib211/nova-bots.git"
+    "url": "https://github.com/Ali-Labs-X/nova-bots.git"
   },
-  "homepage": "https://github.com/Jahanzaib211/nova-bots",
+  "homepage": "https://github.com/Ali-Labs-X/nova-bots",
   "bugs": {
-    "url": "https://github.com/Jahanzaib211/nova-bots/issues"
+    "url": "https://github.com/Ali-Labs-X/nova-bots/issues"
   }
 }

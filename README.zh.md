@@ -31,7 +31,7 @@
 最省事的方式是 Docker。它把运行时、插件、浏览器环境和 Nova 界面打包进一个容器。
 
 ```sh
-git clone https://github.com/Jahanzaib211/nova-bots.git Nova-Bots
+git clone https://github.com/Ali-Labs-X/nova-bots.git Nova-Bots
 cd Nova-Bots
 cp docker/.env.example docker/.env
 ./nova-bots.sh start
@@ -120,15 +120,15 @@ npm run lint
 
 - [esbuild](https://esbuild.github.io/) 打包界面代码。
 - 机器人记忆格式、群聊轮次、聊天搜索和交接笔记参考了 AgentMemoryRepo、OpenAI Codex、OpenMausBot、Hermes Agent、OpenCode、goose、pi、Gemini CLI 和 obelisk 公开发布的设计思路；不包含这些项目的代码。
-- Nova Bots 源自 Fei2411 和 DS Bot 贡献者的 [DS Bot](https://github.com/Fei2411/DS-Bot)，采用 Apache 2.0 许可证；其声明保留在 [NOTICE](NOTICE) 中。
+- 开源版权声明和许可证见 [NOTICE](NOTICE)。
 - 每一位运行 Nova Bots、提出问题并报告缺陷的人。
 
 ## 链接
 
 - 产品：https://bots.alilabsx.com/
 - Nova（姊妹应用）：https://nova.alilabsx.com/
-- Ali Labs：https://alilabsx.com/
-- GitHub：https://github.com/Jahanzaib211/nova-bots
+- ALI LABS X：https://alilabsx.com/
+- GitHub：https://github.com/Ali-Labs-X/nova-bots
 - LinkedIn：https://www.linkedin.com/in/jahanzaib-ali-labsx
 
 ## 许可证
@@ -141,7 +141,7 @@ Nova Bots 是一个独立项目。机器人使用你自己的模型额度；当�
 
 ## 合作
 
-Nova Bots 由 Jahanzaib Ali 开发，他是 AliLabsX 的创始人兼系统工程师。如果你需要自己的 Bot 军团、自托管部署，或平台工程方面的帮助，欢迎联系。如果不想自己运行，也可以用托管版：https://bots.alilabsx.com。
+Nova Bots 由 Jahanzaib Ali 开发，他是 ALI LABS X 的创始人兼系统工程师。如果你需要自己的 Bot 军团、自托管部署，或平台工程方面的帮助，欢迎联系。如果不想自己运行，也可以用托管版：https://bots.alilabsx.com。
 
 - 邮箱：Jahanzaib@alilabsx.com
 - 网站：https://alilabsx.com

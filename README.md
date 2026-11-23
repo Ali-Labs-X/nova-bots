@@ -43,7 +43,7 @@ The fastest way to run Nova Bots is Docker. It builds the whole stack — engine
 plugin, browser runtime and the Nova interface — into one container.
 
 ```sh
-git clone https://github.com/Jahanzaib211/nova-bots.git Nova-Bots
+git clone https://github.com/Ali-Labs-X/nova-bots.git Nova-Bots
 cd Nova-Bots
 cp docker/.env.example docker/.env
 ./nova-bots.sh start
@@ -180,17 +180,15 @@ npm run lint
   informed by ideas published by AgentMemoryRepo, OpenAI Codex, OpenMausBot,
   Hermes Agent, OpenCode, goose, pi, Gemini CLI and obelisk. No code from those
   projects is included.
-- Nova Bots is derived from [DS Bot](https://github.com/Fei2411/DS-Bot) by
-  Fei2411 and the DS Bot contributors, licensed under Apache 2.0. Its notice is
-  kept in [NOTICE](NOTICE).
+- Open-source copyright notices and licenses are kept in [NOTICE](NOTICE).
 - Everyone who runs Nova Bots, asks questions and reports bugs.
 
 ## Links
 
 - Product: https://bots.alilabsx.com/
 - Nova (sister app): https://nova.alilabsx.com/
-- Ali Labs: https://alilabsx.com/
-- GitHub: https://github.com/Jahanzaib211/nova-bots
+- ALI LABS X: https://alilabsx.com/
+- GitHub: https://github.com/Ali-Labs-X/nova-bots
 - LinkedIn: https://www.linkedin.com/in/jahanzaib-ali-labsx
 
 ## License
@@ -206,7 +204,7 @@ actions yourself.
 
 ## Work with me
 
-Nova Bots is built by Jahanzaib Ali, Founder & Systems Engineer at AliLabsX. If
+Nova Bots is built by Jahanzaib Ali, Founder & Systems Engineer at ALI LABS X. If
 you want your own bot army, a self-hosted deployment or help with platform
 engineering, get in touch. If you would rather not run it yourself, there is a
 hosted version at https://bots.alilabsx.com.

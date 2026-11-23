@@ -4,14 +4,14 @@
   "version": "0.2.6",
   "private": true,
   "description": "Nova Bots desktop app: the Nova Bots team on its own pinned runtime.",
-  "author": "Jahanzaib211",
-  "homepage": "https://github.com/Jahanzaib211/nova-bots",
+  "author": "ALI LABS X",
+  "homepage": "https://github.com/Ali-Labs-X/nova-bots",
   "bugs": {
-    "url": "https://github.com/Jahanzaib211/nova-bots/issues"
+    "url": "https://github.com/Ali-Labs-X/nova-bots/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Jahanzaib211/nova-bots.git"
+    "url": "https://github.com/Ali-Labs-X/nova-bots.git"
   },
   "desktopName": "novabots.desktop",
   "license": "Apache-2.0",
