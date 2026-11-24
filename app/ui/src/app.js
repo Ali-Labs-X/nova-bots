@@ -54,6 +54,7 @@ export function App() {
   const closeOverlays = (error) => {
     actions.closeSettings()
     actions.closeMemory()
+    actions.closeMemoryBank()
     actions.closeMenu()
     actions.closePanel()
     actions.closePalette()

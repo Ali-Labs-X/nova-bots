@@ -1,9 +1,17 @@
 import { createElement as h, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { call } from '../../../ds-bot/src/client/api.js'
 import { Bubbles, ChatRows, Shimmer } from '../../../ds-bot/src/client/cells.js'
-import { ComposerPlus, ComposerVoice } from '../../../ds-bot/src/client/composer.js'
+import { commandOf, commandsFor, runCommand } from '../../../ds-bot/src/client/commands.js'
+import { ComposerFolder, ComposerPlus, ComposerVoice } from '../../../ds-bot/src/client/composer.js'
 import { t } from '../../../ds-bot/src/client/i18n.js'
 import { ArrowUpIcon } from '../../../ds-bot/src/client/icons.js'
+import { mentionRows } from '../../../ds-bot/src/client/at-menu.js'
+import { HandoffDock } from '../../../ds-bot/src/client/handoff-card.js'
+import { LearningDock } from '../../../ds-bot/src/client/learning-card.js'
+import { MemberDock } from '../../../ds-bot/src/client/member-status.js'
+import { SecretDock } from '../../../ds-bot/src/client/secret-card.js'
+import { parseSideLine, submitSide } from '../../../ds-bot/src/client/side-model.js'
+import { WidgetDock } from '../../../ds-bot/src/client/widget-cell.js'
 import { ModelChoiceDock } from '../../../ds-bot/src/client/model-menu.js'
 import { PendingQuestion } from '../../../ds-bot/src/client/questions.js'
 
@@ -72,12 +80,12 @@ function useChat(botId, part, feed) {
   }), [feed, botId, load])
 
   // Shown at once: the message can come back on the feed before the request returns.
-  const send = async (text, actions, sessionId) => {
+  const send = async (text, files, actions, sessionId) => {
     const entry = { kind: 'user', text, time: Date.now() }
     setPending(list => [...list, entry])
     actions.noteSent(sessionId)
     try {
-      await actions.send(sessionId, text)
+      await actions.send(sessionId, text, files)
     } catch (error) {
       setPending(list => list.filter(item => item !== entry))
       throw error
@@ -98,10 +106,40 @@ function useInput(field, setText) {
   }), [field, setText])
 }
 
-function Composer({ sessionId, placeholder, disabled, onSend, actions, useUi, useRoster }) {
+const readFile = file => new Promise((resolve, reject) => {
+  const reader = new FileReader()
+  reader.onload = () => resolve({ name: file.name, mediaType: file.type, data: String(reader.result).split(',')[1] ?? '' })
+  reader.onerror = () => reject(reader.error)
+  reader.readAsDataURL(file)
+})
+
+function Composer({ sessionId, placeholder, disabled, running, onSend, actions, useUi, useRoster }) {
   const [text, setText] = useState('')
   const [error, setError] = useState(null)
+  const roster = useRoster(state => state)
   const field = useRef(null)
+  const [files, setFiles] = useState([])
+  const mention = /(?:^|\s)@([^\s@]*)$/.exec(text)
+  const people = mention ? mentionRows(roster, sessionId, mention[1]) ?? [] : []
+  const add = async (list) => {
+    try {
+      const read = await Promise.all([...list].map(readFile))
+      setFiles(now => [...now, ...read])
+    } catch (failure) { setError(failure.message) }
+  }
+  // A dropped folder is where to work; dropped files go with the message.
+  const drop = (event) => {
+    event.preventDefault()
+    const entry = event.dataTransfer.items?.[0]?.webkitGetAsEntry?.()
+    const [file] = event.dataTransfer.files
+    if (!entry?.isDirectory) { void add(event.dataTransfer.files); return }
+    const workDir = globalThis.dsBotApp?.pathForFile?.(file)
+    const room = roster.roomsById[sessionId]
+    const bot = roster.byId[sessionId]
+    if (!workDir || !(room ?? bot)) { setError(t('The folder path is not available here.')); return }
+    void (room ? actions.updateRoom(room.id, { workDir }) : actions.updateBot(bot.id, { workDir })).catch(failure => setError(failure.message))
+  }
+  const matches = /^\/[a-z]*$/.test(text) ? commandsFor(roster, sessionId, text) : []
   const inputActions = useInput(field, setText)
   useLayoutEffect(() => {
     const node = field.current
@@ -111,20 +149,37 @@ function Composer({ sessionId, placeholder, disabled, onSend, actions, useUi, us
   useEffect(() => { if (!disabled) field.current?.focus() }, [sessionId, disabled])
   const submit = async () => {
     const value = text.trim()
-    if (value === '' || disabled) return
+    if ((value === '' && files.length === 0) || disabled) return
     setError(null)
     setText('')
+    setFiles([])
     try {
-      await onSend(value)
+      const side = parseSideLine(value)
+      const command = commandOf(roster, sessionId, value)
+      if (side && roster.byId[sessionId]) {
+        await submitSide({ call: actions.sideCall, roster, sessionId, args: side.args, attachments: files, open: chatId => actions.openSideChat(sessionId, chatId) })
+      } else if (command && files.length === 0) await runCommand(command, { roster, sessionId, actions })
+      else await onSend(value, files)
     } catch (failure) {
       setText(current => (current === '' ? value : current))
+      setFiles(files)
       setError(failure.message)
     }
   }
   return h('div', { className: 'dsb-composer-wrap' },
     error ? h('p', { className: 'dsb-composer-error', role: 'alert' }, error) : null,
-    h('div', { className: 'dsb-composer', 'data-composer-card': '', 'data-multiline': text.includes('\n') || undefined },
-      h('div', { className: 'dsb-composer-tools' }, h(ComposerPlus, { sessionId, inputActions, useRoster, actions })),
+    people.length ? h('div', { className: 'dsb-commands', role: 'listbox', 'aria-label': t('Bots') }, people.map(row => h('button', {
+      key: row.text, type: 'button', role: 'option', 'aria-selected': false,
+      onClick: () => { setText(now => now.slice(0, now.length - mention[1].length - 1) + row.text); field.current?.focus() },
+    }, h('b', null, row.text.trim()), h('span', null, row.bot?.role ?? '')))) : null,
+    files.length ? h('div', { className: 'dsb-files' }, files.map((file, index) => h('button', { key: index, type: 'button', title: t('Remove file'), 'aria-label': `${t('Remove file')} ${file.name}`, onClick: () => setFiles(now => now.filter((_, at) => at !== index)) }, file.name, ' ×'))) : null,
+    matches.length ? h('div', { className: 'dsb-commands', role: 'listbox', 'aria-label': t('Commands') }, matches.map(command => h('button', {
+      key: command.name, type: 'button', role: 'option', 'aria-selected': false,
+      onClick: () => { setText(`/${command.name}`); field.current?.focus() },
+    }, h('b', null, `/${command.name}`), h('span', null, command.hint())))) : null,
+    h('div', { className: 'dsb-composer', 'data-composer-card': '', onDragOver: event => event.preventDefault(), onDrop: drop, 'data-multiline': text.includes('\n') || undefined },
+      h('div', { className: 'dsb-composer-tools' },
+        h('input', { type: 'file', multiple: true, hidden: true, 'aria-label': t('Attach files'), onChange: (event) => { void add(event.target.files); event.target.value = '' } }), h(ComposerPlus, { sessionId, inputActions, useRoster, actions }), h(ComposerFolder, { sessionId, useRoster, useUi, actions })),
       h('div', { className: 'dsb-composer-input', 'data-input-scroll': '' },
         h('textarea', {
           ref: field,
@@ -135,6 +190,7 @@ function Composer({ sessionId, placeholder, disabled, onSend, actions, useUi, us
           'aria-label': placeholder,
           'data-composer-input': '',
           onChange: event => setText(event.target.value),
+          onPaste: (event) => { if (event.clipboardData.files.length) { event.preventDefault(); void add(event.clipboardData.files) } },
           onKeyDown: (event) => {
             if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
               event.preventDefault()
@@ -144,7 +200,8 @@ function Composer({ sessionId, placeholder, disabled, onSend, actions, useUi, us
         })),
       h('div', { className: 'dsb-composer-trailing' },
         h(ComposerVoice, { sessionId, inputActions, actions, useUi }),
-        h('button', { type: 'button', className: 'dsb-send', disabled: disabled || text.trim() === '', 'aria-label': t('Send message'), title: t('Send message'), onClick: () => { void submit() } }, h(ArrowUpIcon)))))
+        running ? h('button', { type: 'button', className: 'dsb-stop', 'aria-label': t('Stop'), title: t('Stop'), onClick: () => { void actions.stopChat(roster.byId[sessionId]?.id).catch(failure => setError(failure.message)) } }, t('Stop')) : null,
+        h('button', { type: 'button', className: 'dsb-send', disabled: disabled || (text.trim() === '' && files.length === 0), 'aria-label': t('Send message'), title: t('Send message'), onClick: () => { void submit() } }, h(ArrowUpIcon)))))
 }
 
 // One conversation in the main view, drawn with the Bot views' own rows, cards and docks.
@@ -176,6 +233,7 @@ export function Chat({ sessionId, team }) {
       : view.cursor ? h('button', { type: 'button', className: 'bt-soft', onClick: () => load(view.cursor, scroller.current) }, t('Load earlier')) : null
   const waiting = bot?.waiting === true
 
+  const docks = { ...hooks, sessionId, actions }
   return h('div', { className: 'dsb-chat' },
     h('div', { ref: scroller, className: 'dsb-scroll', 'data-conversation-scroll': '', onScroll },
       h('div', { className: 'dsb-column' },
@@ -188,12 +246,18 @@ export function Chat({ sessionId, team }) {
           h('div', { 'data-chat-running': '' }),
           question ? h(PendingQuestion, { key: JSON.stringify([sessionId, question.id]), sessionId, question, actions, inline: true }) : null))),
     h('div', { className: 'dsb-composer-root' },
+      h(MemberDock, docks),
       h(ModelChoiceDock, { sessionId, useRoster: hooks.useRoster, actions }),
+      h(WidgetDock, docks),
+      h(SecretDock, docks),
+      h(HandoffDock, docks),
+      h(LearningDock, docks),
       h(Composer, {
         sessionId,
         disabled: waiting,
+        running: running && bot !== undefined,
         placeholder: waiting ? t('Pick a model and {name} can start.', { name }) : name ? t('Message {name}', { name }) : t('Message'),
-        onSend: text => send(text, actions, sessionId),
+        onSend: (text, files) => send(text, files, actions, sessionId),
         actions,
         useUi: hooks.useUi,
         useRoster: hooks.useRoster,

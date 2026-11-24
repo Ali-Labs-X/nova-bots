@@ -1268,6 +1268,20 @@ export function install(rt) {
   }
   rt.stopMemberWork = stopMemberWork
 
+  // The user stops the turn and subagents of a Bot's own chat.
+  async function stopChat(botId) {
+    await rt.load()
+    const bot = rt.botOf(botId)
+    if (bot === undefined) return false
+    const sessionId = rt.chatOf(bot.id)
+    await rt.stopSubagents?.(sessionId)
+    const agent = await rt.resolveAgent(sessionId)
+    if (agent.status === 'idle') return false
+    agent.cancel({ kind: 'user' })
+    return true
+  }
+  rt.stopChat = stopChat
+
   // The user stops everything at work in this group at once: the round the group's own
   // Session runs, which takes the member turns it started with it, then each member's
   // turn here. The round goes first, so it calls no one else meanwhile. Work the same

@@ -104,3 +104,11 @@ body[data-bt-room] [data-composer-card]:has(.dsb-send:disabled) .bt-mic:not([ari
 .md-code pre{margin:0;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--bt-ink) 5%,transparent);overflow-x:auto;font-size:13px;line-height:20px}
 .md-copy{position:absolute;top:6px;right:6px;padding:2px 8px;border:0;border-radius:6px;background:var(--bt-main);color:var(--bt-ink-2);font:inherit;font-size:12px;line-height:18px;cursor:pointer;opacity:0;transition:opacity .12s ease}
 .md-code:hover .md-copy,.md-copy:focus-visible{opacity:1}
+
+.dsb-commands { display: flex; flex-direction: column; margin-bottom: 6px; padding: 4px; border: 1px solid var(--bt-line); border-radius: 12px; background: var(--bt-card); }
+.dsb-commands button { display: flex; gap: 10px; padding: 7px 10px; border: 0; border-radius: 8px; background: none; color: var(--bt-ink); font: inherit; text-align: left; cursor: pointer; }
+.dsb-commands button:hover { background: var(--bt-hover); }
+.dsb-commands span { color: var(--bt-ink-2); }
+.dsb-stop { border: 0; border-radius: 999px; padding: 6px 12px; background: var(--bt-hover); color: var(--bt-ink); font: inherit; cursor: pointer; }
+.dsb-files { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.dsb-files button { border: 0; border-radius: 8px; padding: 4px 8px; background: var(--bt-hover); color: var(--bt-ink); font: inherit; cursor: pointer; }

@@ -11,8 +11,10 @@ import { TeamSidebar, YouAvatar, AccountLauncher, FooterAccount, BrandMark, Bran
 import { frameLayout, readSidebar, writeSidebar, toggledPref, DSH_NARROW } from './frame-layout.js'
 import { installFrameWatch } from './frame-watch.js'
 import { HeaderPill } from './header.js'
-import { ComposerPlus, ComposerVoice, menuIcons } from './composer.js'
+import { ComposerFolder, ComposerPlus, ComposerVoice, menuIcons } from './composer.js'
 import { CHATS_SOURCE, atSources } from './at-menu.js'
+import { commandSource } from './commands.js'
+import { BANK_CSS, ClassicMemoryBank, ClassicMemoryButton } from './memory-bank.js'
 import { BtwDock, BtwTurnTail } from './btw.js'
 import { SIDE_CSS, sideSource } from './side-chat.js'
 import { VOICE_BUNDLE, closingReplyText, requestPreparation } from './speech.js'
@@ -23,7 +25,8 @@ import { HandoffDock, HANDOFF_CSS } from './handoff-card.js'
 import { installHeaderNavigation } from './header-navigation.js'
 import { AssistantCell, TriggerCell, TurnProcessCell, Nothing, CellEmpty, TurnTailCell, ToolCell } from './cells.js'
 import { Overlays } from './overlays.js'
-import { createBotBrowsers, serveBrowserReads } from './bot-browsers.js'
+import { createBotBrowsers } from './bot-browsers.js'
+import { browserActions, followBrowsers } from './browser-actions.js'
 import { BROWSER_CSS } from './browser-pane.js'
 import { SECRET_CSS, SecretDock } from './secret-card.js'
 import { LearningDock, LearningTurnTail, LEARNING_CSS } from './learning-card.js'
@@ -276,24 +279,7 @@ export function apply(ctx) {
   const bridge = (window.dshDesktop?.protocolVersion === 1 ? window.dshDesktop.browser : globalThis.dsBotApp?.browser) ?? null
   const browsers = bridge ? createBotBrowsers({ bridge, createSource }) : null
   if (browsers) {
-    ctx.effect(() => {
-      let stopReads = null
-      const sync = () => {
-        const snapshot = roster.getSnapshot()
-        if (!snapshot.ready) return
-        const on = snapshot.browser === true
-        if (on && !stopReads) stopReads = serveBrowserReads({ browsers, post: call })
-        if (!on && stopReads) { stopReads(); stopReads = null }
-        // A Bot deleted here or in another window takes its guests and saved tabs along.
-        void browsers.retain(snapshot.bots.map(bot => bot.id))
-        // A panel open on the browser view without a browsable subject falls back
-        // to the details view.
-        ui.set(state => (state.details && state.view === 'browser' && (!on || !snapshot.byId[state.details]) ? { ...state, view: 'details' } : state))
-      }
-      sync()
-      const offRoster = roster.subscribe(sync)
-      return () => { offRoster(); stopReads?.(); browsers.dispose() }
-    }, 'Nova Bots: Bot browsers')
+    ctx.effect(() => followBrowsers({ browsers, roster, ui, call }), 'Nova Bots: Bot browsers')
   }
 
   ctx.effect(() => () => { markupCache.clear() }, 'Nova Bots: character markup')
@@ -443,7 +429,6 @@ export function apply(ctx) {
   const ownsModels = pluginOwnsModels(host)
   const actions = {
     ...teamActions({ call, after, partFor, roster, ui, live, cards, heldCards, turnClock, panelFolded }),
-    learningAnswer: (id, approve) => after(call('learning-answer', { id, approve })),
     // The full-pane overlays sit above the conversation, so opening one must dismiss them
     // or the click appears to do nothing.
     isAgentSession: id => isAgentSessionId(id),
@@ -586,64 +571,7 @@ export function apply(ctx) {
   }
   // Without the Desktop bridge these stay undefined, and no browser control renders.
   if (browsers) {
-    Object.assign(actions, {
-      // The globe button: the Bot's active tab in the browser view, or a new tab.
-      openBrowser: (id) => {
-        const bot = roster.getSnapshot().byId[id]
-        if (!bot) return
-        browsers.ensureTabs(bot.id)
-        if (browsers.tabs.getSnapshot()[bot.id]?.active == null) browsers.openTab(bot.id)
-        ui.set(state => ({ ...state, details: id, view: 'browser', renaming: false, tab: null, panelYield: yieldBrowser(state) }))
-      },
-      // '+' on the strip or the drawer's new-tab card: a blank tab in the browser view.
-      browserNewTab: (id) => {
-        const bot = roster.getSnapshot().byId[id]
-        if (!bot) return null
-        browsers.ensureTabs(bot.id)
-        const tabId = browsers.openTab(bot.id)
-        ui.set(state => ({ ...state, details: id, view: 'browser', renaming: false, tab: null, panelYield: yieldBrowser(state) }))
-        return tabId
-      },
-      // A drawer card: its tab active, the panel on the browser view.
-      browserPick: (id, tabId) => {
-        const bot = roster.getSnapshot().byId[id]
-        if (!bot) return
-        browsers.activate(bot.id, tabId)
-        ui.set(state => ({ ...state, details: id, view: 'browser', panelYield: yieldBrowser(state) }))
-      },
-      browserEnsure: botId => browsers.ensureTabs(botId),
-      browserCloseTab: (botId, tabId) => browsers.closeTab(botId, tabId),
-      browserActivate: (botId, tabId) => browsers.activate(botId, tabId),
-      browserShow: (tabId, box) => browsers.show(tabId, box),
-      browserNavigate: (tabId, input) => browsers.navigate(tabId, input),
-      browserCommand: (tabId, name) => browsers.command(tabId, name),
-      browserFocus: (tabId) => browsers.focus(tabId),
-      browserTakeover: bridge.views ? async botId => {
-        const result = await call('browser-takeover', { botId })
-        await bridge.views.hold(botId, true)
-        return result
-      } : undefined,
-      browserStop: bridge.views ? async botId => {
-        const result = await call('browser-stop', { botId })
-        await bridge.views.hold(botId, true)
-        return result
-      } : undefined,
-      // `answer` is a handoff card's { callId, outcome }; the panel's Give back sends none.
-      browserGiveBack: bridge.views ? async (botId, answer = {}) => {
-        const result = await call('browser-give-back', { botId, ...answer })
-        await bridge.views.hold(botId, false)
-        return result
-      } : undefined,
-      // Cookie imports, only where the bridge offers them (the desktop app): a file or an
-      // installed browser's profile is previewed, then applied into the Bot's storage key.
-      browserImport: typeof bridge.importSources === 'function' ? {
-        sources: () => bridge.importSources(),
-        pick: () => bridge.importPick(),
-        live: (source, close) => bridge.importLive(source, close),
-        apply: (botId, pending) => bridge.importApply(`bot:${botId}`, pending),
-        cancel: (pending) => bridge.importCancel(pending),
-      } : null,
-    })
+    Object.assign(actions, browserActions({ browsers, bridge, roster, ui, call, yieldBrowser }))
   }
   // Whether AccountLauncher holds the shell's settings seat; FooterAccount steps aside if so.
   actions.signInEntry = () => ctx.slots.entries?.('settings.models.sign-in')?.[0] ?? null
@@ -857,6 +785,7 @@ export function apply(ctx) {
         const offs = [
           ...atSources({ roster, sessions: ctx.sessions, launched, iconFor: menuIcons(roster) }).map(source => triggers.registerSource(source)),
           triggers.registerSource(sideSource({ roster, actions })),
+          triggers.registerSource(commandSource({ roster, actions })),
         ]
         atMenu = { controllerOf }
         return () => {
@@ -967,6 +896,7 @@ export function apply(ctx) {
     () => shadow('conversation.composer.dock', { id: 'usage', order: 1, priority: BOT_PRIORITY }, Nothing),
     () => shadow('conversation.composer.dock', { id: 'btw', order: 2, priority: BOT_PRIORITY, inject: face }, BtwDock),
     () => shadow('conversation.input.left', { id: 'bot-plus', order: -100, inject: face }, ComposerPlus),
+    () => shadow('conversation.input.left', { id: 'bot-folder', order: -90, inject: face }, ComposerFolder),
     () => shadow('conversation.input.right', { id: 'bot-voice', order: 100, inject: face }, ComposerVoice),
     () => shadow('conversation.composer', {
       priority: BOT_PRIORITY,
@@ -983,6 +913,9 @@ export function apply(ctx) {
   // The return button belongs to neither group: it renders only in Agent mode.
   ctx.effect(() => installCompiledStyles(RETURN_CSS, 'return'), 'Nova Bots: return styles')
   shadow('sidebar.footer.action', { id: 'bot-return', order: -300, inject: face }, BotReturn)
+  ctx.effect(() => installCompiledStyles(BANK_CSS, 'memory-bank'), 'Nova Bots: Memory Bank styles')
+  shadow('sidebar.footer.action', { id: 'bot-memory-bank', order: -290, inject: face }, ClassicMemoryButton)
+  shadow('shell.overlay', { id: 'bot-memory-bank', order: 51, inject: face }, ClassicMemoryBank)
 
   // The main view decides `plain`: a Nova Agent Session keeps the Bot shell but
   // withdraws the conversation replacements, so the native dsh page shows. A jump
