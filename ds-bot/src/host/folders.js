@@ -212,6 +212,8 @@ export function install(rt) {
         return {
           team,
           places: (await Promise.all(places().map(async place => (await isFolder(place.path) ? place : undefined)))).filter(Boolean),
+          // Where the page's own server lists and mounts the host's folders, when one is in front.
+          hostApi: typeof rt.config.hostApi === 'string' && /^\/[\w/-]+\/$/.test(rt.config.hostApi) ? rt.config.hostApi : null,
           picker: kind === 'native' || kind === 'browse' ? kind : null,
           folders: present.filter(Boolean),
         }

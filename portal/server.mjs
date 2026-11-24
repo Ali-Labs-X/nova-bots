@@ -29,6 +29,7 @@
 import { createServer } from 'node:http'
 import { Auth } from './auth.mjs'
 import { handleAdmin } from './admin.mjs'
+import { createHostFolders, mountdClient } from './host-folders.mjs'
 import { EngineCookieJar, mintEngineCookie, proxyHttp, proxyUpgrade, redirectToApp } from './bridge.mjs'
 import { LaunchTokenPool } from './launch-token.mjs'
 import { clearEngineCookies, policyFromEnv, routeFor, signupAllowed } from './gate.mjs'
@@ -383,6 +384,17 @@ const upgrade = async (req, socket, head) => {
   }
 }
 
+// The signed-in account, or undefined: the same checks as the app's own gate.
+const signedIn = async (req) => {
+  const payload = auth.verifyToken(cookieValue(req.headers.cookie, COOKIE))
+  const user = payload ? await auth.findById(payload.sub) : null
+  return user && !user.is_forbidden && (user.token_version ?? 0) === (payload.ver ?? 0) ? user : undefined
+}
+const hostFolders = createHostFolders({
+  auth, tenants, userOf: signedIn,
+  mountd: mountdClient(process.env.NOVA_MOUNTD_SOCKET ?? `${process.env.XDG_RUNTIME_DIR ?? '/run/user/1000'}/nova-mountd/sock`),
+})
+
 // ---- the server ---------------------------------------------------------
 
 const server = createServer(async (req, res) => {
@@ -403,6 +415,8 @@ const server = createServer(async (req, res) => {
     if (path.startsWith('/api/v1/bots-admin/') || path === '/api/v1/bots-admin') {
       return handleAdmin(req, res, path, { auth, clientIp, tenants, closeUserSockets, policy: POLICY })
     }
+
+    if (path.startsWith('/api/v1/host/')) return await hostFolders(req, res, path, url)
 
     // The engine's page needs the trailing slash: /app answers with a
     // redirect to /app/, and /app/… is bridged as it is.

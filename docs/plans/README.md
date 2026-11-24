@@ -54,3 +54,4 @@
 | [手机 App](2026-10-24-mobile-app.md) | iOS 和 Android 远程操控电脑上的 Nova Bots 团队：手机不跑 Agent；扫码配对、端到端加密、电脑只往外连；完整功能，高权限操作要解锁手机 |
 | [Office 文档](2026-10-27-office-documents.md) | Bot 离线处理 .docx/.pptx/.xlsx：应用带的 payload、`office.js` 命令行、office 路由换成带 `office-tools` 的版本 |
 | [命令、工作文件夹入口和记忆库](2026-11-24-commands-folders-memory-bank.md) | `/clear` 等命令、输入框旁的文件夹、跨 Bot 的记忆库和经典模式入口、桌面窗口补齐 |
+| [在网页里选电脑上的任意文件夹](2026-11-24-host-folders.md) | portal 窗口里用密码批准、`nova-mountd` 挂载、接口和规则 |
