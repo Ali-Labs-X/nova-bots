@@ -1443,6 +1443,45 @@ export function install(rt) {
     return { reply: answer.reply, changes, view: await memoryView(panelBody(panel)) }
   }
 
+  // The latest changes of a panel's memory, newest first, with the text before and after.
+  const HISTORY_ROWS = 50
+  const lineOf = line => (typeof line === 'string' ? cleanEntry(line) : undefined)
+  function historyOf(panel) {
+    return Object.entries(panel.scopes).flatMap(([tag, scope]) => readJournal(journalFor(scopeKey(scope), 'add').path).split('\n').flatMap((line) => {
+      let row
+      try { row = JSON.parse(line) } catch { return [] }
+      if (row?.scope !== scopeKey(scope) || !['add', 'replace', 'remove'].includes(row.op)) return []
+      const topic = typeof row.file === 'string' && row.file !== MAIN ? row.file.replace(/\.md$/, '') : null
+      return [{ id: row.id, at: row.time ?? null, scope: tag, topic, op: row.op, by: row.actorName ?? null, before: lineOf(row.before) ?? null, after: lineOf(row.after) ?? null }]
+    })).reverse().slice(0, HISTORY_ROWS)
+  }
+  function memoryHistory(body) {
+    return settled(() => historyOf(panelOf(body)))
+  }
+  // Puts back what one change replaced. A line changed again since is not found, and says so.
+  async function memoryUndo(body) {
+    const panel = panelOf(body)
+    const row = await settled(() => historyOf(panel).find(entry => entry.id === body.row))
+    if (row === undefined) throw new Error('This change is no longer in the history')
+    const place = { ...panelBody(panel), scope: row.scope, topic: row.topic }
+    if (row.op === 'add') return memoryForget({ ...place, text: row.after })
+    return memorySave({ ...place, text: row.before, ...(row.op === 'replace' ? { match: row.after } : {}) })
+  }
+
+  // One entry the user writes: a new one, or the new text of `match`.
+  async function memorySave(body) {
+    const panel = panelOf(body)
+    const scope = panel.scopes[body.scope] ?? panel.scopes[panel.group ? 'group' : 'own']
+    const topic = body.topic === null || body.topic === undefined ? undefined : cleanTopic(body.topic)
+    const text = cleanEntry(body.text)
+    const problem = entryProblem(text)
+    if (problem) throw new Error(problem)
+    const change = { scope, text, meta: { source: 'memory panel', by: 'user', added: today() }, actor: USER, label: panelLabel(panel, scope) }
+    if (typeof body.match === 'string') await replaceEntry({ ...change, topic, match: body.match })
+    else await addEntry({ ...change, topic })
+    return await memoryView(panelBody(panel))
+  }
+
   // One entry the user removes from the list.
   async function memoryForget(body) {
     const panel = panelOf(body)
@@ -1800,6 +1839,9 @@ export function install(rt) {
     if (endpoint === 'memory-view') return memoryView(body)
     if (endpoint === 'memory-ask') return memoryAsk(body)
     if (endpoint === 'memory-forget') return memoryForget(body)
+    if (endpoint === 'memory-save') return memorySave(body)
+    if (endpoint === 'memory-history') return memoryHistory(body)
+    if (endpoint === 'memory-undo') return memoryUndo(body)
     throw new Error(`Unknown endpoint ${endpoint}`)
   }
 

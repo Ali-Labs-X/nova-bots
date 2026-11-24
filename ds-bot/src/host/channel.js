@@ -114,7 +114,32 @@ export function install(rt) {
   }
   // What a host that only reads the team may still answer.
   // Updates change the dsh profile, not the team, so a reading host may run them too.
-  const READS = new Set(['state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library'])
+  const READS = new Set(['state', 'models', 'efforts', 'providers', 'provider-models', 'earlier', 'chat', 'run-stats', 'room-progress', 'exchange', 'exchange-text', 'file-text', 'usage', 'schedules', 'memory-view', 'memory-history', 'browser-wait', 'browser-result', 'diagnostics', 'diagnostics-log', 'diagnostics-clear', 'update-check', 'update-install', 'dsh-update-install', 'repo-stars', 'approval-answer', 'thinking', 'avatar-library'])
+
+  // The files of a message a window draws its own composer for, as base64.
+  const IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
+  const FILES_MAX = 10
+  const FILES_CHARS_MAX = 28_000_000
+  function sentFiles(files) {
+    if (files === undefined) return []
+    if (!Array.isArray(files) || files.length > FILES_MAX || files.some(file => typeof file?.data !== 'string' || typeof file.name !== 'string')) throw invalid(`A message takes at most ${FILES_MAX} files`)
+    if (files.reduce((total, file) => total + file.data.length, 0) > FILES_CHARS_MAX) throw invalid('The files are too large. A message takes at most 20 MB.')
+    return files
+  }
+  async function promptFiles(sessionId, files) {
+    const out = []
+    for (const file of files) {
+      if (IMAGE_TYPES.has(file.mediaType)) {
+        out.push({ type: 'image', mediaType: file.mediaType, data: file.data, name: file.name })
+        continue
+      }
+      const uploads = ctx.get?.('fileUploads')
+      if (uploads === undefined) throw invalid('This Nova Bots takes images only')
+      const { receiptId } = await uploads.upload(await rt.resolveAgent(sessionId), { data: file.data, name: file.name }, AbortSignal.timeout(30_000))
+      out.push({ type: 'file', receiptId })
+    }
+    return out
+  }
 
   function setPrefs(body) {
     if (body.theme !== undefined) {
@@ -344,6 +369,8 @@ export function install(rt) {
         case 'approval-answer':
           rt.answerApproval(body.id, body.choice)
           return ok(true)
+        case 'stop-chat':
+          return ok(await rt.stopChat(String(body.botId ?? '')))
         case 'stop-member-work':
           return ok(await rt.stopMemberWork(String(body.roomId ?? ''), String(body.botId ?? '')))
         case 'stop-room-work':
@@ -388,8 +415,14 @@ export function install(rt) {
         case 'memory-view':
         case 'memory-ask':
         case 'memory-forget':
+        case 'memory-save':
+        case 'memory-history':
+        case 'memory-undo':
           await rt.load()
           return ok(await rt.memoryEndpoint(endpoint, body))
+        case 'clear-chat':
+          await rt.load()
+          return ok(await rt.clearChat({ botId: body.botId, roomId: body.roomId }))
         case 'learning-answer':
           await rt.load()
           return ok(await rt.learningEndpoint(endpoint, body))
@@ -443,7 +476,8 @@ export function install(rt) {
         }
         case 'send': {
           const text = String(body.text ?? '').trim()
-          if (text === '' || typeof body.sessionId !== 'string') return fail('Nothing to send', 'bot/invalid')
+          const files = sentFiles(body.files)
+          if ((text === '' && files.length === 0) || typeof body.sessionId !== 'string') return fail('Nothing to send', 'bot/invalid')
           await rt.load()
           // A Bot id, a group chat's id, or an earlier part of either means the
           // current part.
@@ -458,7 +492,7 @@ export function install(rt) {
             requestId: randomUUID(),
             sessionId,
             mode: 'queue',
-            content: [{ type: 'text', text }],
+            content: [...(text === '' ? [] : [{ type: 'text', text }]), ...await promptFiles(sessionId, files)],
           }, AbortSignal.timeout(30_000))
           return ok(true)
         }

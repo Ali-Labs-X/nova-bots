@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { FishLogo } from './dsh-primitives.js'
 import { isMainOf } from './sources.js'
 import { currentPart, previewOf, relativeShort } from './text.js'
-import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, SignOutIcon } from './icons.js'
+import { PlusIcon, SearchIcon, SidebarIcon, GaugeIcon, ClockIcon, GearIcon, PinMarkIcon, ConnectorIcon, SwitchIcon, CloudDownloadIcon, MemoryIcon, SignOutIcon } from './icons.js'
 import { MAIN_LOOK } from './characters.js'
 import { botState, BotMark, BotAvatar, RoomAvatar } from './mark.js'
 import { reducedMotion } from './activity-row.js'
@@ -850,12 +850,12 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
     [
       [t('Usage'), GaugeIcon, () => actions.openSettings('usage')],
       [t('Connectors'), ConnectorIcon, () => actions.openConnectors()],
-      [t('Automation tasks'), ClockIcon, () => actions.selectPanel('schedules')],
+      [t('Automation tasks'), ClockIcon, () => (actions.selectPanel ? actions.selectPanel('schedules') : actions.openSettings('schedules'))],
+      [t('Memory Bank'), MemoryIcon, () => actions.openMemoryBank()],
       [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
     ],
-    [
-      [t('Switch to classic Agent mode'), SwitchIcon, () => actions.setSurface('agent')],
-    ],
+    // Only DSH's own interface has a classic mode to go back to.
+    ...(actions.setSurface ? [[[t('Switch to classic Agent mode'), SwitchIcon, () => actions.setSurface('agent')]]] : []),
   ]
   if (signedIn) groups.push([[accountT('signOut'), SignOutIcon, askSignOut, undefined, true]])
   return h(Fragment, null,

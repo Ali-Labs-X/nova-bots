@@ -1,4 +1,4 @@
-import { createElement as h, Fragment, useState } from 'react'
+import { createElement as h, Fragment, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, FolderIcon, PencilIcon } from './icons.js'
 import { Caret, useAnchoredMenu } from './model-menu.js'
@@ -13,13 +13,14 @@ const Tick = ({ on }) => h('span', { className: 'bt-model-tick', 'aria-hidden': 
 // one a Bot works in the team workspace and a group member in its own folder. `onPick`
 // gets the chosen path, or '' for that default. `team` is the menu for the team workspace
 // itself, which has no default.
-export function FolderMenu({ value, group = false, team = false, actions, run, onPick, wide = false, disabled = false }) {
+export function FolderMenu({ value, group = false, team = false, actions, run, onPick, wide = false, disabled = false, openToken = null, onOpened }) {
   const { isOpen, shownPlace, leaving, button, menu, open, close } = useAnchoredMenu()
   const [info, setInfo] = useState(null)
   const [view, setView] = useState('list')
   const [draft, setDraft] = useState('')
   const [listing, setListing] = useState(null)
   const [problem, setProblem] = useState('')
+  const [filter, setFilter] = useState('')
   const fallback = group ? t("Each Bot's own folder") : t('Team workspace')
   const toggle = () => {
     if (isOpen) { close(); return }
@@ -29,13 +30,19 @@ export function FolderMenu({ value, group = false, team = false, actions, run, o
     void Promise.resolve(actions.folders()).then(setInfo).catch(() => setInfo(last => last ?? { team: null, picker: null, folders: [] }))
     open()
   }
+  // Opened from elsewhere: the "+" menu or /folder.
+  useEffect(() => {
+    if (openToken === null) return
+    onOpened?.()
+    if (!isOpen) toggle()
+  }, [openToken])
   const choose = (path) => {
     close()
     if (path !== (value ?? '')) void onPick(path)
   }
   const browse = (path) => {
     setProblem('')
-    void Promise.resolve(actions.folderList(path)).then((next) => { setListing(next); setView('browse') })
+    void Promise.resolve(actions.folderList(path)).then((next) => { setListing(next); setFilter(''); setView('browse') })
       .catch(failure => setProblem(failure?.message ?? String(failure)))
   }
   const pickNative = () => {
@@ -68,10 +75,12 @@ export function FolderMenu({ value, group = false, team = false, actions, run, o
     }),
     h('button', { type: 'button', className: 'bt-folder-use', disabled: draft.trim() === '', onClick: typed }, t('Use this folder')))
   const parent = listing?.crumbs?.length > 1 ? listing.crumbs.at(-2) : undefined
-  const inside = listing?.entries?.filter(entry => !entry.hidden) ?? []
+  const inside = listing?.entries?.filter(entry => !entry.hidden && entry.name.toLowerCase().includes(filter.trim().toLowerCase())) ?? []
   const browseView = listing ? h('div', { key: `browse:${listing.path}`, className: 'bt-folder-view' },
     h('button', { type: 'button', className: 'bt-folder-back', onClick: () => setView('list') }, h(ChevronLeftIcon), h('span', { className: 'bt-menu-label' }, t('Back'))),
     h('div', { className: 'bt-folder-path bt-folder-here' }, listing.path),
+    h('input', { className: 'bt-folder-input', value: filter, 'aria-label': t('Filter folders'), placeholder: t('Filter folders'), onChange: event => setFilter(event.target.value) }),
+    listing.home && listing.home !== listing.path ? h('button', { type: 'button', role: 'menuitem', title: listing.home, onClick: () => browse(listing.home) }, h(FolderIcon), h('span', { className: 'bt-menu-label' }, t('Home folder'))) : null,
     parent ? h('button', { type: 'button', role: 'menuitem', title: parent.path, onClick: () => browse(parent.path) }, h(FolderIcon), h('span', { className: 'bt-menu-label' }, t('Up one level'))) : null,
     inside.map(entry => h('button', { key: entry.path, type: 'button', role: 'menuitem', onClick: () => browse(entry.path) },
       h(FolderIcon), h('span', { className: 'bt-menu-label' }, entry.name), h(ChevronRightIcon))),
@@ -108,5 +117,7 @@ export const FOLDER_CSS = `
 .bt-menu .bt-folder-use:disabled{color:var(--bt-ink-3);cursor:default;background:none}
 .bt-model-trigger:disabled{opacity:.6;cursor:default}
 .bt-folder-error{padding:4px 8px;font-size:12px;line-height:16px;color:var(--bt-danger);overflow-wrap:anywhere}
+.bt-composer-folder{display:inline-flex;min-width:0;max-width:180px}
+.bt-composer-folder .bt-model-provider{display:none}
 @media (prefers-reduced-motion:reduce){.bt-folder-view{animation:none}}
 `

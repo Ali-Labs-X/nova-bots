@@ -1,6 +1,7 @@
 import { createElement as h, Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChatsIcon, ClockIcon, MicIcon, PaperclipIcon, PeopleIcon, PlusIcon, WaveIcon } from './icons.js'
+import { FolderMenu } from './folder-menu.js'
+import { ChatsIcon, ClockIcon, FolderIcon, MicIcon, PaperclipIcon, PeopleIcon, PlusIcon, WaveIcon } from './icons.js'
 import { BotMark } from './mark.js'
 import { useLinger, useViewport, viewBottom } from './motion.js'
 import { t } from './i18n.js'
@@ -82,7 +83,8 @@ export function ComposerVoice({ sessionId, inputActions, actions, useUi }) {
       'aria-pressed': dictation.listening, title: dictation.listening ? t('Stop dictation') : t('Dictate'),
       onMouseDown: keepComposerFocus, onClick: () => (dictation.listening ? dictation.stop() : dictation.start()),
     }, h(MicIcon)),
-    h('button', {
+    // Voice chat reads the reply from DSH's chat view; the desktop window has none.
+    actions.watchTurns === undefined ? null : h('button', {
       type: 'button', className: 'bt-voice', 'aria-label': t('Start voice chat'), title: t('Voice chat'),
       onMouseDown: keepComposerFocus, onClick: () => actions.openVoice(sessionId),
     }, h(WaveIcon, { size: 18 })),
@@ -142,6 +144,10 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     setOpen(null)
     fileInput()?.click()
   }
+  const folder = () => {
+    setOpen(null)
+    actions.openFolder(target)
+  }
   const schedule = () => {
     setOpen(null)
     actions.openSettings('schedules', target)
@@ -164,5 +170,22 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     },
     shown.files ? h('button', { type: 'button', role: 'menuitem', onClick: attach }, h(PaperclipIcon), h('span', { className: 'bt-menu-label' }, t('Add files'))) : null,
     canReference ? h('button', { type: 'button', role: 'menuitem', onMouseDown: keepComposerFocus, onClick: reference }, h(ChatsIcon), h('span', { className: 'bt-menu-label' }, t('Reference a chat'))) : null,
+    h('button', { type: 'button', role: 'menuitem', onClick: folder }, h(FolderIcon), h('span', { className: 'bt-menu-label' }, t('Work in a folder…'))),
     h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task')))), document.body) : null)
+}
+
+// The folder the Bot or group works in, beside the "+": shown, browsed and changed in place.
+export function ComposerFolder({ sessionId, useRoster, useUi, actions }) {
+  const roster = useRoster(value => value)
+  const asked = useUi(state => state.folder ?? null)
+  const bot = roster.byId?.[sessionId]
+  const room = roster.roomsById?.[sessionId]
+  const owner = room ?? bot
+  if (owner === undefined) return null
+  const run = work => Promise.resolve(work).catch(error => actions.reportError(error, 'folder'))
+  return h('span', { className: 'bt-composer-folder' }, h(FolderMenu, {
+    value: owner.workDir, group: room !== undefined, actions, run,
+    openToken: asked?.id === owner.id ? asked.token : null, onOpened: actions.closeFolder,
+    onPick: workDir => run(room ? actions.updateRoom(room.id, { workDir }) : actions.updateBot(bot.id, { workDir })),
+  }))
 }

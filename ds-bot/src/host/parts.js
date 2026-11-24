@@ -641,6 +641,7 @@ export function install(rt) {
   // together without the model carries the last note the model wrote.
   function noteText(segment) {
     if (segment?.fallback === undefined) return segment?.note
+    if (segment.fallback === 'cleared') return '(The user cleared the chat here, so nothing was carried over.)'
     if (segment.fallback === 'whole') {
       const head = '(No new note: every message of the part was carried over word for word.'
       return segment.note === undefined ? `${head})` : `${head} Below is the note written at the end of part ${segment.noteFrom}, carried over unchanged.)\n\n${segment.note}`
@@ -833,12 +834,12 @@ export function install(rt) {
 
   // `hard`: past the hard line or the window, the part moves on even without a note
   // from the model. `folder`: the part moves on because its working folder changed.
-  function startSwitch(agent, { resume = false, carry = [], info, joined, overflow = false, failed, bare = false, folder = false, hard = overflow || folder } = {}) {
+  function startSwitch(agent, { resume = false, carry = [], info, joined, overflow = false, failed, bare = false, folder = false, clear = false, hard = overflow || folder || clear } = {}) {
     const place = placeOf(agent.id)
-    if (place === undefined || switches.has(agent.id) || readOnly()) return
-    const job = { ...place, carry: [...carry], info, joined, resume, overflow, failed, bare, folder, hard, since: Date.now() }
+    if (place === undefined || switches.has(agent.id) || readOnly()) return undefined
+    const job = { ...place, carry: [...carry], info, joined, resume, overflow, failed, bare, folder, clear, hard, since: Date.now() }
     switches.set(agent.id, job)
-    void runSwitch(agent, job)
+    job.done = runSwitch(agent, job)
       .catch(error => {
         const name = rt.botOf(job.botId)?.name ?? rt.roomOf(job.roomId)?.name ?? agent.id
         if (unloaded(error)) return noteInfo('Nova Bots: plugin unloaded while %s switched parts; input kept in part %s', name, agent.id)
@@ -886,6 +887,7 @@ export function install(rt) {
       // A state write that fails here (full disk, a file another program holds, a lost lock)
       // must not end up as an unhandled rejection, which stops the whole host.
       .catch(error => rt.warn('the switch of %s did not finish: %s', agent.id, error))
+    return job
   }
 
   async function runSwitch(agent, job) {
@@ -945,14 +947,14 @@ export function install(rt) {
     const parts = bot === undefined ? partsOf(undefined, room.id) : partsOf(bot.id, room?.id)
     const number = parts.length
     const budget = Math.min(RECENT_TOKENS, Math.floor((lines?.check ?? 4 * RECENT_TOKENS) / 4))
-    const readLines = () => (job.bare ? { recent: [], earlier: [], unlisted: 0, complete: true } : handoffLines(agent.id, { budget, group: room !== undefined, number }))
+    const readLines = () => (job.bare || job.clear ? { recent: [], earlier: [], unlisted: 0, complete: true } : handoffLines(agent.id, { budget, group: room !== undefined, number }))
     let carried = job.folder ? await readLines() : undefined
     // A short part with no tool work goes over word for word, so it needs no note.
     const whole = carried?.whole === true && !session.deriveMessages().some(message => message.role === 'tool')
     let written
     let failure
     // The group's own Session only relays; it has no route a note could be written with.
-    if (!job.overflow && job.failed === undefined && !whole && bot !== undefined) {
+    if (!job.clear && !job.overflow && job.failed === undefined && !whole && bot !== undefined) {
       try {
         written = await writeNote(agent, AbortSignal.any([signal, AbortSignal.timeout(NOTE_TIMEOUT_MS)]), { folder: job.folder })
       } catch (error) {
@@ -973,6 +975,7 @@ export function install(rt) {
     if (failure !== undefined) rt.warn('handoff note for %s failed past the hard line; moving on with the earlier note: %s', name, failure)
     const previous = parts.at(-2)
     const noted = written !== undefined ? { note: written.note }
+      : job.clear ? { fallback: 'cleared' }
       : { fallback: whole ? 'whole' : job.failed !== undefined ? 'failure' : job.overflow ? 'overflow' : 'failed', ...(previous?.note ? { note: previous.note, noteFrom: previous.noteFrom ?? previous.number } : {}) }
     carried ??= await readLines()
     if (signal.aborted) throw signal.reason
@@ -1041,8 +1044,10 @@ export function install(rt) {
         rt.warn('the fresh part of %s did not start in %s; it works in %s', name, intended, cwd)
       }
       const text = handoffPackage({ room, self: bot === undefined, segment, lines: carried, number: number + 1, resume, overflow: job.overflow, failed: job.failed, bare: job.bare, folder })
-      freshParts.set(freshId, estimateTokens(text))
-      fresh.followup(createUserMessage({ content: [{ type: 'text', text }], source: handoffSource(job, resume) }))
+      if (!job.clear) {
+        freshParts.set(freshId, estimateTokens(text))
+        fresh.followup(createUserMessage({ content: [{ type: 'text', text }], source: handoffSource(job, resume) }))
+      }
       await ctx.sessions.flush(fresh.session)
       carry.push(...job.carry.splice(0))
       await forward(job, [...carry, ...held])
@@ -1201,6 +1206,25 @@ export function install(rt) {
     } catch (error) {
       rt.warn('%s did not move to its working folder: %s', owner.botId === undefined ? rt.roomOf(owner.roomId)?.name ?? owner.roomId : rt.botOf(owner.botId)?.name ?? owner.botId, error)
     }
+  }
+
+  // The user starts a chat over: fresh parts with nothing carried into them, for a Bot's own
+  // chat or for a group and every member's conversation there. The earlier parts stay
+  // readable, as after every other switch, and memory is not touched.
+  async function clearChat({ botId, roomId }) {
+    const room = roomId === undefined ? undefined : rt.roomOf(roomId)
+    const owner = room ?? (roomId === undefined ? rt.botOf(botId) : undefined)
+    if (owner === undefined) throw Object.assign(new Error('Unknown chat'), { code: 'bot/not-found' })
+    const ids = room === undefined ? [rt.chatOf(owner.id)]
+      : [rt.sessionOfRoom(room), ...room.members.map(id => room.sessions?.[id])].filter(Boolean)
+    const agents = await Promise.all(ids.map(id => rt.resolveAgent(id)))
+    if ((room !== undefined && rt.roomBusy(room.id)) || agents.some(agent => agent.status !== 'idle' || switches.has(agent.id))) {
+      throw Object.assign(new Error(`${owner.name} is working. Stop it or wait, then clear the chat.`), { code: 'bot/busy' })
+    }
+    const jobs = agents.map(agent => startSwitch(agent, { clear: true }))
+    await Promise.all(jobs.map(job => job?.done))
+    if (jobs.some(job => job?.moved !== true)) throw new Error(`The chat with ${owner.name} could not be cleared`)
+    return { sessionId: room === undefined ? rt.chatOf(owner.id) : rt.sessionOfRoom(room) }
   }
 
   ctx.on('agent/request-error', async (payload, next) => {
@@ -1469,5 +1493,5 @@ export function install(rt) {
     return { sessionId: parts.at(-1).sessionId, ...(await partPage(parts, index, cursor)) }
   }
 
-  Object.assign(rt, { clock, partsOf, historyEntry, partLines, noteText, earlierPage, chatPage, displayItems, followFolder, heldBack, switchJobs: () => switches.values() })
+  Object.assign(rt, { clock, partsOf, historyEntry, partLines, noteText, earlierPage, chatPage, displayItems, followFolder, clearChat, heldBack, switchJobs: () => switches.values() })
 }
