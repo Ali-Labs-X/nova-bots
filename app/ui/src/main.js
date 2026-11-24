@@ -4,6 +4,7 @@ import { ABOUT_CSS } from '../../../ds-bot/src/client/about.js'
 import { BOT_SETTINGS_CSS } from '../../../ds-bot/src/client/bot-settings.js'
 import { FEEDBACK_CSS } from '../../../ds-bot/src/client/feedback.js'
 import { FOLDER_CSS } from '../../../ds-bot/src/client/folder-menu.js'
+import { PICKER_CSS } from '../../../ds-bot/src/client/folder-picker.js'
 import { GROUP_SETTINGS_CSS } from '../../../ds-bot/src/client/group-settings.js'
 import { installLocale } from '../../../ds-bot/src/client/i18n.js'
 import { AVATAR_LIBRARY_CSS } from '../../../ds-bot/src/client/avatar-library.js'
@@ -33,7 +34,7 @@ if (/mac/iu.test(navigator.userAgentData?.platform ?? navigator.platform)) docum
 // The Bot views' own stylesheets, the same ones the plugin puts in DSH.
 for (const [tag, text] of [
   ['shell', SHELL_CSS], ['sidebar', SIDEBAR_CSS], ['conversation', CONVERSATION_CSS], ['secrets', SECRET_CSS], ['providers', PROVIDERS_CSS],
-  ['models', MODEL_CSS + FOLDER_CSS + BOT_SETTINGS_CSS + GROUP_SETTINGS_CSS], ['usage', USAGE_CSS], ['schedules', SCHEDULE_CSS],
+  ['models', MODEL_CSS + FOLDER_CSS + PICKER_CSS + BOT_SETTINGS_CSS + GROUP_SETTINGS_CSS], ['usage', USAGE_CSS], ['schedules', SCHEDULE_CSS],
   ['feedback', FEEDBACK_CSS], ['about', ABOUT_CSS], ['members', MEMBER_CSS], ['memory-bank', BANK_CSS], ['browser', BROWSER_CSS], ['side', SIDE_CSS], ['widgets', WIDGET_CSS], ['handoff', HANDOFF_CSS], ['learning', LEARNING_CSS], ['avatars', AVATAR_LIBRARY_CSS],
 ]) installStyles(text, tag)
 

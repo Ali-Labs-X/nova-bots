@@ -108,6 +108,7 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     folders: () => call('folders'),
     folderPick: () => call('folder-pick'),
     folderList: path => call('folder-list', { path: path ?? '' }),
+    folderCreate: (path, name) => call('folder-create', { path, name }),
     setTeamWorkspace: path => after(call('team-workspace', { path })),
     deleteBot: id => after(call('delete-bot', { id })),
     releasePrivate: id => after(call('private-release', { id })),

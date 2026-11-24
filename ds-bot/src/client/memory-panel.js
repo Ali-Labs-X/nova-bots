@@ -283,6 +283,8 @@ export function MemoryDialog({ owner, actions, leaving = false }) {
         menuShown ? h('div', { ref: menuRef, className: 'bt-menu bt-mem-menu', role: 'menu', 'aria-label': t('Memory options'), 'data-leaving': menuLeaving || undefined },
           h('button', { type: 'button', role: 'menuitem', onClick: openEntries },
             h('span', { className: 'bt-menu-label' }, t('All entries')), h('span', { className: 'bt-menu-hint' }, String(count))),
+          h('button', { type: 'button', role: 'menuitem', onClick: () => actions.openMemoryBank(owner.id) },
+            h('span', { className: 'bt-menu-label' }, t('Open the Memory Bank'))),
           h('button', { type: 'button', role: 'menuitem', disabled: count === 0 || view?.summarizing, onClick: regenerate },
             h('span', { className: 'bt-menu-label' }, t('Regenerate summary')))) : null),
       h('div', { className: 'bt-mem-body' },
