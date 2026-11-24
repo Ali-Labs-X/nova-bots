@@ -1,7 +1,7 @@
 import { createElement as h, Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { FolderMenu } from './folder-menu.js'
-import { ChatsIcon, ClockIcon, FolderIcon, MicIcon, PaperclipIcon, PeopleIcon, PlusIcon, WaveIcon } from './icons.js'
+import { folderName, useFolderPicker } from './folder-picker.js'
+import { ChatsIcon, ClockIcon, CloseIcon, FolderIcon, MicIcon, PaperclipIcon, PeopleIcon, PlusIcon, WaveIcon } from './icons.js'
 import { BotMark } from './mark.js'
 import { useLinger, useViewport, viewBottom } from './motion.js'
 import { t } from './i18n.js'
@@ -174,18 +174,26 @@ export function ComposerPlus({ sessionId, inputActions, useRoster, actions }) {
     h('button', { type: 'button', role: 'menuitem', onClick: schedule }, h(ClockIcon), h('span', { className: 'bt-menu-label' }, t('Scheduled task')))), document.body) : null)
 }
 
-// The folder the Bot or group works in, beside the "+": shown, browsed and changed in place.
+// The folder the Bot or group works in, beside the "+": a click asks for another one.
 export function ComposerFolder({ sessionId, useRoster, useUi, actions }) {
   const roster = useRoster(value => value)
   const asked = useUi(state => state.folder ?? null)
   const bot = roster.byId?.[sessionId]
   const room = roster.roomsById?.[sessionId]
   const owner = room ?? bot
+  const save = workDir => (room ? actions.updateRoom(room.id, { workDir }) : actions.updateBot(bot.id, { workDir }))
+  const fallback = room ? t("Each Bot's own folder") : t('Team workspace')
+  const picker = useFolderPicker({ value: owner?.workDir, title: t('Choose a working folder'), fallback, actions, onPick: save })
+  useEffect(() => {
+    if (owner === undefined || asked?.id !== owner.id) return
+    actions.closeFolder()
+    void picker.open()
+  }, [asked?.token, owner?.id])
   if (owner === undefined) return null
-  const run = work => Promise.resolve(work).catch(error => actions.reportError(error, 'folder'))
-  return h('span', { className: 'bt-composer-folder' }, h(FolderMenu, {
-    value: owner.workDir, group: room !== undefined, actions, run,
-    openToken: asked?.id === owner.id ? asked.token : null, onOpened: actions.closeFolder,
-    onPick: workDir => run(room ? actions.updateRoom(room.id, { workDir }) : actions.updateBot(bot.id, { workDir })),
-  }))
+  const label = owner.workDir ? t('Working folder: {folder}', { folder: owner.workDir }) : t('Work in a folder…')
+  return h('span', { className: 'bt-composer-folder', 'data-set': owner.workDir ? '' : undefined },
+    h('button', { type: 'button', 'aria-label': label, title: label, onMouseDown: keepComposerFocus, onClick: () => { void picker.open() } },
+      h(FolderIcon), owner.workDir ? h('span', null, folderName(owner.workDir)) : null),
+    owner.workDir ? h('button', { type: 'button', 'aria-label': t('Back to {folder}', { folder: fallback }), title: t('Back to {folder}', { folder: fallback }), onMouseDown: keepComposerFocus, onClick: () => { void save('').catch(error => actions.reportError(error, 'folder')) } }, h(CloseIcon)) : null,
+    picker.dialog)
 }

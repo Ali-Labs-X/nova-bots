@@ -333,6 +333,7 @@ export function install(rt) {
         case 'folders':
         case 'folder-pick':
         case 'folder-list':
+        case 'folder-create':
           await rt.load()
           return ok(await rt.folderEndpoint(endpoint, body, signal))
         case 'team-workspace':
