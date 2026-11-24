@@ -413,6 +413,7 @@ test('the folder menu lists DSH projects and the folders Bots use, but not the t
   assert.deepEqual((await call('folders', {})).value, {
     team,
     places: [],
+    hostApi: null,
     picker: null,
     folders: [{ path: project, title: 'project' }, { path: other, title: 'other' }],
   })

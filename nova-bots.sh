@@ -278,6 +278,13 @@ case "${1:-start}" in
     echo "Mounted $target at $container_path."
     echo "Run '$0 restart' to apply it."
     ;;
+  mounts-list)
+    # One host:container[:ro] per line, for ops/mountd.mjs.
+    mount_entries
+    ;;
+  share-path)
+    if [ -n "$HOST_SHARE" ]; then (cd "$HOST_SHARE" 2>/dev/null && pwd -P) || true; fi
+    ;;
   unmount)
     target="${2:-}"
     if [ -z "$target" ]; then

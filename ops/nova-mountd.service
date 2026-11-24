@@ -1,0 +1,18 @@
+# Lists and mounts folders of this computer for the Bots, asked by the portal. A user unit:
+#   install -m 0644 ops/nova-mountd.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload && systemctl --user enable --now nova-mountd
+[Unit]
+Description=Nova Bots folder mounts
+After=docker.service
+
+[Service]
+WorkingDirectory=%h/Desktop/Nova-Bots
+RuntimeDirectory=nova-mountd
+RuntimeDirectoryMode=0700
+ExecStart=/usr/bin/node ops/mountd.mjs
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target
