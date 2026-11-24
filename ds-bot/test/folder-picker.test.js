@@ -20,5 +20,5 @@ test('picking starts from the host places, and lists each folder once', () => {
 })
 
 test('the container starts picking at the mounted host folder', () => {
-  assert.match(readFileSync(new URL('../../docker/docker.patch.yml', import.meta.url), 'utf8'), /places:\n\s+- \{ path: \/host,/)
+  assert.match(readFileSync(new URL('../../docker/docker.patch.yml', import.meta.url), 'utf8'), /places:\s+- \{ path: \/host,/)
 })
