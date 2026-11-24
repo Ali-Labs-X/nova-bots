@@ -14,6 +14,8 @@
   config:
     workspace: /workspace
     # Where picking a folder starts: the host folder from HOST_SHARE.
+    # The portal lists and mounts other folders of the host for its owner.
+    hostApi: /api/v1/host/
     places:
       - { path: /host, title: This computer }
     # The image is updated by rebuilding it, so the plugin never asks a

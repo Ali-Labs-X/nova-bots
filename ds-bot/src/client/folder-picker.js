@@ -20,7 +20,22 @@ export function pickerPlaces(info, home, withTeam = true) {
   return places.filter((place, index) => places.findIndex(other => other.path === place.path) === index)
 }
 
+// The computer behind the container, through the server in front of it (portal/host-folders.mjs).
+async function hostCall(api, method, name, body) {
+  const response = await fetch(`${api}${name}`, { method, cache: 'no-store', credentials: 'same-origin', ...(body ? { headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {}) })
+  const value = await response.json().catch(() => ({}))
+  if (!response.ok) throw Object.assign(new Error(value.detail?.message ?? `HTTP ${response.status}`), { status: response.status })
+  return value
+}
+const wait = ms => new Promise(done => setTimeout(done, ms))
+
 function PickerDialog({ value, title, info, fallback, actions, onPick, onClose }) {
+  const api = info.hostApi
+  const [mode, setMode] = useState('rw')
+  const [asking, setAsking] = useState('')
+  const [mounts, setMounts] = useState([])
+  const open = useRef(true)
+  useEffect(() => () => { open.current = false }, [])
   const [listing, setListing] = useState(null)
   const [path, setPath] = useState(value ?? '')
   const [filter, setFilter] = useState('')
@@ -37,7 +52,7 @@ function PickerDialog({ value, title, info, fallback, actions, onPick, onClose }
     setBusy(true)
     setProblem('')
     try {
-      const found = await actions.folderList(next)
+      const found = api ? await hostCall(api, 'GET', `folders?path=${encodeURIComponent(next ?? '')}`) : await actions.folderList(next)
       if (mine !== ticket.current) return false
       home.current = found.home
       setListing(found)
@@ -52,13 +67,50 @@ function PickerDialog({ value, title, info, fallback, actions, onPick, onClose }
       if (mine === ticket.current) setBusy(false)
     }
   }
-  const start = value ?? info.places?.[0]?.path ?? info.team
+  // A container path says nothing on the computer's side, so browsing starts at its home there.
+  const start = api ? info.hostStart : value ?? info.places?.[0]?.path ?? info.team
+  useEffect(() => { if (api) void hostCall(api, 'GET', 'mounts').then(found => setMounts(found.mounts)).catch(() => {}) }, [])
   useEffect(() => { void go(start).then(ok => { if (!ok && start !== undefined) void go(undefined) }) }, [])
+  // A folder the Bots cannot see yet is asked for; the answer is given in the server's own window.
+  // The container restarts for it, so the Bots are away for a while.
+  const connect = async (folder) => {
+    if (!api || folder === '') return folder
+    const popup = listing.mounted ? null : window.open('about:blank', '_blank', 'width=520,height=600')
+    try {
+      const asked = await hostCall(api, 'POST', 'requests', { path: folder, mode })
+      if (asked.container) { popup?.close(); return asked.container }
+      if (!popup) throw new Error(t('Allow popups for this site, then try again.'))
+      popup.location.replace(asked.approve)
+      setAsking(t('Waiting for your approval in the other window…'))
+      for (;;) {
+        await wait(1500)
+        if (!open.current) throw new Error('closed')
+        let now
+        try { now = await hostCall(api, 'GET', `requests/${asked.id}`) } catch (failure) { if (failure.status === 404) throw failure; continue }
+        if (now.state === 'working') setAsking(t('Connecting the folder. The Bots restart…'))
+        if (now.state === 'denied') throw new Error(t('You did not allow this folder.'))
+        if (now.state === 'failed') throw new Error(now.error)
+        if (now.state === 'done') return now.container
+      }
+    } finally { setAsking('') }
+  }
+  const save = async (path, tries = 20) => {
+    for (;;) {
+      try { return await onPick(path) } catch (failure) {
+        tries -= 1
+        if (!api || tries === 0 || failure?.code) throw failure
+        await wait(2000)
+      }
+    }
+  }
+  const disconnect = async (mount) => {
+    try { await hostCall(api, 'DELETE', `mounts?path=${encodeURIComponent(mount.host)}`); setMounts(now => now.filter(other => other.host !== mount.host)) } catch (failure) { setProblem(failure.message) }
+  }
   const choose = async (folder) => {
     setBusy(true)
     setProblem('')
     try {
-      await onPick(folder)
+      await save(await connect(folder))
       onClose()
     } catch (failure) {
       setProblem(failure?.message ?? String(failure))
@@ -77,7 +129,11 @@ function PickerDialog({ value, title, info, fallback, actions, onPick, onClose }
       h('header', null, h('h2', null, title), h('button', { type: 'button', 'aria-label': t('Close'), onClick: onClose }, h(CloseIcon))),
       h('nav', { 'aria-label': t('Places') },
         fallback ? h('button', { type: 'button', className: 'bt-fpick-place', onClick: () => choose('') }, h('span', null, fallback), value ? null : h(CheckIcon)) : null,
-        pickerPlaces(info, home.current, !fallback || fallback !== t('Team workspace')).map(place => h('button', { key: place.path, type: 'button', className: 'bt-fpick-place', title: place.path, 'aria-current': listing?.path === place.path || undefined, onClick: () => go(place.path) }, h(FolderIcon), h('span', null, place.title)))),
+        (api ? hostPlaces(home.current) : pickerPlaces(info, home.current, !fallback || fallback !== t('Team workspace'))).map(place => h('button', { key: place.path, type: 'button', className: 'bt-fpick-place', title: place.path, 'aria-current': listing?.path === place.path || undefined, onClick: () => go(place.path) }, h(FolderIcon), h('span', null, place.title))),
+        mounts.length > 0 ? h('small', null, t('Connected folders')) : null,
+        mounts.map(mount => h('span', { key: mount.host, className: 'bt-fpick-mount' },
+          h('button', { type: 'button', className: 'bt-fpick-place', title: mount.host, onClick: () => go(mount.host) }, h(FolderIcon), h('span', null, folderName(mount.host))),
+          h('button', { type: 'button', 'aria-label': t('Disconnect {folder}', { folder: folderName(mount.host) }), title: t('Disconnect. The Bots restart.'), onClick: () => disconnect(mount) }, h(CloseIcon))))),
       h('section', null,
         h('form', { className: 'bt-fpick-path', onSubmit: (event) => { event.preventDefault(); void go(path.trim()) } },
           h('input', { value: path, spellCheck: false, 'aria-label': t('Folder path'), onChange: event => setPath(event.target.value) })),
@@ -85,10 +141,11 @@ function PickerDialog({ value, title, info, fallback, actions, onPick, onClose }
           index > 0 ? h(ChevronRightIcon) : null, h('button', { type: 'button', onClick: () => go(crumb.path) }, crumb.name)))),
         h('div', { className: 'bt-fpick-tools' },
           h('label', { className: 'bt-fpick-search' }, h(SearchIcon), h('input', { type: 'search', autoFocus: true, value: filter, placeholder: t('Filter folders'), 'aria-label': t('Filter folders'), onChange: event => setFilter(event.target.value) })),
-          h('button', { type: 'button', disabled: listing === null, onClick: () => setNaming(now => (now === null ? '' : null)) }, h(PlusIcon), t('New folder'))),
+          api ? null : h('button', { type: 'button', disabled: listing === null, onClick: () => setNaming(now => (now === null ? '' : null)) }, h(PlusIcon), t('New folder'))),
         naming === null ? null : h('form', { className: 'bt-fpick-path', onSubmit: create },
           h('input', { autoFocus: true, value: naming, placeholder: t('Name of the new folder'), 'aria-label': t('Name of the new folder'), onChange: event => setNaming(event.target.value) }),
           h('button', { type: 'submit', disabled: naming.trim() === '' }, t('Create'))),
+        asking ? h('p', { role: 'status', className: 'bt-shimmer' }, asking) : null,
         problem ? h('p', { className: 'bt-fpick-problem', role: 'alert' }, hostText(problem)) : null,
         h('ul', { className: 'bt-fpick-list', 'aria-busy': busy }, rows.map(entry => h('li', { key: entry.path },
           h('button', { type: 'button', onClick: () => go(entry.path) }, h(FolderIcon), h('span', null, entry.name), h(ChevronRightIcon)))),
@@ -96,9 +153,10 @@ function PickerDialog({ value, title, info, fallback, actions, onPick, onClose }
         listing?.truncated ? h('li', { className: 'bt-fpick-none' }, t('Some folders are not shown.')) : null)),
       h('footer', null,
         h('label', null, h('input', { type: 'checkbox', checked: hidden, onChange: event => setHidden(event.target.checked) }), t('Show hidden folders')),
+        api && listing && !listing.mounted ? h('select', { value: mode, 'aria-label': t('What Bots may do there'), onChange: event => setMode(event.target.value) }, h('option', { value: 'rw' }, t('Can edit')), h('option', { value: 'ro' }, t('Read only'))) : null,
         h('span', { className: 'bt-fpick-here', title: listing?.path }, listing ? folderName(listing.path) : ''),
         h('button', { type: 'button', onClick: onClose }, t('Cancel')),
-        h('button', { type: 'button', className: 'bt-fpick-use', disabled: busy || listing === null, onClick: () => choose(listing.path) }, t('Use this folder'))))), document.body)
+        h('button', { type: 'button', className: 'bt-fpick-use', disabled: busy || listing === null, onClick: () => choose(listing.path) }, api && listing && !listing.mounted ? t('Ask to use this folder') : t('Use this folder'))))), document.body)
 }
 
 // `open()` asks for a folder; `dialog` is what to render. `onPick` gets the path, or '' for the
@@ -116,7 +174,12 @@ export function useFolderPicker({ value, title, fallback, actions, onPick }) {
         return
       }
       const found = await actions.folders()
-      if (found.picker !== 'native') { setInfo(found); return }
+      // An account without the computer behind it keeps the container's own folders.
+      if (found.hostApi) {
+        const here = await hostCall(found.hostApi, 'GET', 'folders?path=').catch(() => null)
+        if (here === null) found.hostApi = null
+      }
+      if (found.hostApi || found.picker !== 'native') { setInfo(found); return }
       const path = await actions.folderPick()
       if (path) await onPick(path)
     } catch (failure) {
@@ -129,7 +192,12 @@ export function useFolderPicker({ value, title, fallback, actions, onPick }) {
   return { open, dialog }
 }
 
+export const hostPlaces = home => (home ? [{ path: home, title: t('Home folder') }, ...['Desktop', 'Documents', 'Downloads'].map(name => ({ path: `${home}/${name}`, title: name }))] : [])
+
 export const PICKER_CSS = `
+.bt-fpick nav small{padding:10px 8px 2px;color:var(--bt-ink-3)}
+.bt-fpick-mount{display:flex}
+.bt-fpick footer select{height:30px;border:1px solid var(--bt-line);border-radius:8px;background:var(--bt-card);color:inherit;font:inherit}
 .bt-fpick-layer{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;z-index:70;display:flex;align-items:center;justify-content:center;font-family:var(--bt-font);font-size:13px;line-height:18px;color:var(--bt-ink)}
 .bt-fpick-scrim{position:absolute;inset:0;background:color-mix(in srgb,var(--bt-ink) 30%,transparent);animation:bt-fade .2s ease-out}
 .bt-fpick{position:relative;display:grid;grid-template:auto 1fr auto/190px 1fr;width:min(760px,calc(100vw - 32px));height:min(560px,calc(100vh - 64px));border:.5px solid var(--bt-line-2);border-radius:18px;background:var(--bt-main);overflow:hidden}
