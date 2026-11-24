@@ -13,6 +13,9 @@
 - id: bot
   config:
     workspace: /workspace
+    # Where picking a folder starts: the host folder from HOST_SHARE.
+    places:
+      - { path: /host, title: This computer }
     # The image is updated by rebuilding it, so the plugin never asks a
     # registry or a repository whether a newer release exists. Nothing reaches
     # the network to find out.

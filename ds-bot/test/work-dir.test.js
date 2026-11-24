@@ -412,6 +412,7 @@ test('the folder menu lists DSH projects and the folders Bots use, but not the t
   await call('update-room', { id: 'r1', workDir: other })
   assert.deepEqual((await call('folders', {})).value, {
     team,
+    places: [],
     picker: null,
     folders: [{ path: project, title: 'project' }, { path: other, title: 'other' }],
   })

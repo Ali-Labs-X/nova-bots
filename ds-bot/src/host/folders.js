@@ -190,6 +190,11 @@ export function install(rt) {
     }
   }
 
+  // Folders the host is set up to start picking from, such as a container's mount.
+  const places = () => (Array.isArray(rt.config.places) ? rt.config.places : [])
+    .filter(place => typeof place?.path === 'string' && isAbsolute(place.path))
+    .map(place => ({ path: place.path, title: String(place.title ?? (basename(place.path) || place.path)) }))
+
   async function folderEndpoint(endpoint, body, signal) {
     switch (endpoint) {
       case 'folders': {
@@ -206,6 +211,7 @@ export function install(rt) {
         const kind = picker()?.kind
         return {
           team,
+          places: (await Promise.all(places().map(async place => (await isFolder(place.path) ? place : undefined)))).filter(Boolean),
           picker: kind === 'native' || kind === 'browse' ? kind : null,
           folders: present.filter(Boolean),
         }
@@ -220,6 +226,13 @@ export function install(rt) {
         if (browse?.kind !== 'browse') throw new Error('This Nova Bots cannot list folders')
         const listing = await browse.list(typeof body.path === 'string' && body.path !== '' ? body.path : undefined, signal)
         return { path: listing.path, home: listing.home, crumbs: listing.crumbs, entries: listing.entries, truncated: listing.truncated }
+      }
+      case 'folder-create': {
+        const browse = picker()
+        if (browse?.kind !== 'browse') throw new Error('This Nova Bots cannot make folders')
+        const parent = String(body.path ?? '')
+        if (await guarded(await realBeyond(parent))) throw new Error(`${parent} holds Nova Bots data, so a folder cannot be made there`)
+        return { path: await browse.createDirectory(parent, String(body.name ?? '')) }
       }
       default:
         throw new Error(`Unknown endpoint ${endpoint}`)

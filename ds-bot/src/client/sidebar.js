@@ -574,11 +574,12 @@ export function TeamSidebar(props) {
         h('span', { className: 'bt-rail-sep', 'aria-hidden': true }))
   // The foot stands in for the shell's hidden footer: the account avatar, and on
   // the rail the new-chat button above it.
+  const bank = roster.memory === false ? null : h('button', { type: 'button', className: wideContent ? 'bt-side-bank' : 'bt-round', 'aria-label': t('Memory Bank'), title: t('Memory Bank'), onClick: () => actions.openMemoryBank() }, h(MemoryIcon), wideContent ? h('span', null, t('Memory Bank')) : null)
   const foot = wideContent
-    ? h('div', { className: 'bt-leftcol-foot' }, h(AccountLauncher, { seat: false, actions }))
+    ? h('div', { className: 'bt-leftcol-foot' }, h(AccountLauncher, { seat: false, actions }), bank)
     : h('div', { className: 'bt-leftcol-foot bt-leftcol-foot-rail' },
         h('button', { type: 'button', className: 'bt-round', 'aria-label': t('New…'), title: t('New…'), onClick: () => actions.openNewChat('new') }, h(PlusIcon)),
-        h(AccountLauncher, { seat: false, actions }))
+        bank, h(AccountLauncher, { seat: false, actions }))
   const content = h('div', { className: wideContent ? 'bt-side' : 'bt-side bt-rail', onKeyDown: typeToSearch },
     top,
     wideContent && roster.readOnly ? h('div', { className: 'bt-hint bt-read-only', role: 'status' }, hostText(roster.readOnly)) : null,
@@ -851,7 +852,6 @@ export function AccountLauncher({ seat = true, settingsOpen, openSettings, openO
       [t('Usage'), GaugeIcon, () => actions.openSettings('usage')],
       [t('Connectors'), ConnectorIcon, () => actions.openConnectors()],
       [t('Automation tasks'), ClockIcon, () => (actions.selectPanel ? actions.selectPanel('schedules') : actions.openSettings('schedules'))],
-      [t('Memory Bank'), MemoryIcon, () => actions.openMemoryBank()],
       [t('Bot settings'), GearIcon, () => actions.openSettings('general')],
     ],
     // Only DSH's own interface has a classic mode to go back to.
@@ -965,6 +965,9 @@ export function BrandName() {
 // FooterAccount only shows when the seat went to no one. The shell's footer classes
 // are CSS-module names, so they match on their stems.
 export const SIDEBAR_CSS = `
+.bt-side-bank{display:flex;align-items:center;gap:8px;flex:1;min-width:0;height:36px;padding:0 12px;border:0;border-radius:10px;background:none;color:var(--bt-ink-2);font:inherit;font-size:13px;cursor:pointer}
+.bt-side-bank:hover{background:var(--bt-hover);color:var(--bt-ink)}
+.bt-side-bank svg{flex:none}
 .bt-confirm{width:260px;max-width:72vw;padding:10px 12px 12px;display:flex;flex-direction:column;gap:10px}
 .bt-confirm-text{margin:0;font-size:13px;line-height:19px;color:var(--bt-ink-2)}
 .bt-confirm-error{margin:0;font-size:12px;line-height:17px;color:var(--bt-danger);overflow-wrap:anywhere}

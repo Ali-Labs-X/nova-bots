@@ -3,7 +3,7 @@
 // origin as the address the browser comes back to, and accepts only a loopback one. The Host
 // serves the app's own UI there, so the page is same-origin with the Host.
 import { app, BrowserWindow, WebContentsView, dialog, ipcMain, Menu, nativeImage, nativeTheme, powerMonitor, session, shell as electronShell, Tray } from 'electron'
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { readFile, rm } from 'node:fs/promises'
 import { release } from 'node:os'
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path'
@@ -32,7 +32,7 @@ import { CAPTION_HEIGHT, cssColor, micaAvailable, nativeThemeSource } from './wi
 
 const IPC = {
   caption: 'ds-bot:caption-colors', nativeTheme: 'ds-bot:native-theme', fullscreen: 'ds-bot:fullscreen',
-  dataLocation: 'ds-bot:data-location', moveData: 'ds-bot:move-data', teamWorkspace: 'ds-bot:team-workspace',
+  dataLocation: 'ds-bot:data-location', moveData: 'ds-bot:move-data', teamWorkspace: 'ds-bot:team-workspace', pickFolder: 'ds-bot:pick-folder',
   browserAcquire: 'ds-bot:browser-acquire', browserRelease: 'ds-bot:browser-release', browserForget: 'ds-bot:browser-forget',
   browserViewChanged: 'ds-bot:browser-view-changed', browserViewCreate: 'ds-bot:browser-view-create',
   browserViewSync: 'ds-bot:browser-view-sync', browserViewPlace: 'ds-bot:browser-view-place',
@@ -242,6 +242,12 @@ async function start() {
   ipcMain.handle(IPC.dataLocation, (event) => {
     assertWindow(event)
     return { path: places.dataDir, fixed }
+  })
+  ipcMain.handle(IPC.pickFolder, async (event, current) => {
+    assertWindow(event)
+    const start = typeof current === 'string' && isAbsolute(current) && existsSync(current) ? current : app.getPath('home')
+    const picked = await dialog.showOpenDialog(mainWindow, { defaultPath: start, properties: ['openDirectory', 'createDirectory', 'promptToCreate'] })
+    return picked.canceled ? null : picked.filePaths[0] ?? null
   })
   ipcMain.handle(IPC.moveData, (event, workspace) => {
     assertWindow(event)

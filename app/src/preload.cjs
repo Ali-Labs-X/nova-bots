@@ -11,6 +11,7 @@ if (host !== undefined && location.origin === host) {
   contextBridge.exposeInMainWorld('dsBotApp', {
     dataLocation: () => ipcRenderer.invoke('ds-bot:data-location'),
     moveData: (workspace) => ipcRenderer.invoke('ds-bot:move-data', typeof workspace === 'string' ? workspace : undefined),
+    pickFolder: current => ipcRenderer.invoke('ds-bot:pick-folder', typeof current === 'string' ? current : undefined),
     pathForFile: file => webUtils.getPathForFile(file),
     teamWorkspaceChanged: (path) => { ipcRenderer.send('ds-bot:team-workspace', String(path)) },
     // The Bot browsers, in the shape of DSH Desktop's browser bridge so that ds-bot drives both
