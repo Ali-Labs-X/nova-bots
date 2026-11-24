@@ -55,6 +55,17 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     closeSettings: () => { ui.set(state => (state.settings ? { ...state, settings: null } : state)) },
     openMemory: (id) => { ui.set(state => ({ ...state, memory: id, menu: null, palette: null })) },
     closeMemory: () => { ui.set(state => (state.memory ? { ...state, memory: null } : state)) },
+    openMemoryBank: (id = null) => { ui.set(state => ({ ...state, memoryBank: { id, token: Date.now() }, memory: null, menu: null, palette: null, settings: null })) },
+    closeMemoryBank: () => { ui.set(state => (state.memoryBank ? { ...state, memoryBank: null } : state)) },
+    // Opens the folder menu of the composer that shows this Bot or group.
+    openFolder: (id) => { ui.set(state => ({ ...state, folder: { id, token: Date.now() } })) },
+    closeFolder: () => { ui.set(state => (state.folder ? { ...state, folder: null } : state)) },
+    memorySave: (id, entry) => call('memory-save', { ...memoryOf(id), ...entry }),
+    memoryHistory: id => call('memory-history', memoryOf(id)),
+    memoryUndo: (id, row) => call('memory-undo', { ...memoryOf(id), row }),
+    clearChat: id => after(call('clear-chat', memoryOf(id))),
+    stopChat: botId => after(call('stop-chat', { botId })),
+    learningAnswer: (id, approve) => after(call('learning-answer', { id, approve })),
     openConnectors: () => { ui.set(state => ({ ...state, settings: { page: 'connectors', id: null }, menu: null, palette: null, newChat: null })) },
     setPanelView: (view) => {
       if (view !== 'details' && view !== 'browser' && view !== 'side') return
@@ -104,7 +115,7 @@ export function teamActions({ call, after, partFor, roster, ui, live, cards, hel
     setPrefs: prefs => after(call('set-prefs', prefs)),
     setMain: (id, main = true, options = {}) => after(call('set-main', { id, main, ...options })),
     updateRoom: (id, patch) => after(call('update-room', { id, ...patch })),
-    send: (sessionId, text) => after(call('send', { sessionId: partFor(sessionId), text })),
+    send: (sessionId, text, files = []) => after(call('send', { sessionId: partFor(sessionId), text, ...(files.length > 0 ? { files } : {}) })),
     answerQuestion: (sessionId, questionId, answer) => after(call('answer-question', { sessionId: partFor(sessionId), questionId, answer })),
     dismissQuestion: sessionId => after(call('dismiss-question', { sessionId })),
     answerView: (sessionId, viewId, action, values) => after(call('view-reply', { sessionId: partFor(sessionId), viewId, action, values })),

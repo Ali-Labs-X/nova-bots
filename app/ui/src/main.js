@@ -6,6 +6,13 @@ import { FEEDBACK_CSS } from '../../../ds-bot/src/client/feedback.js'
 import { FOLDER_CSS } from '../../../ds-bot/src/client/folder-menu.js'
 import { GROUP_SETTINGS_CSS } from '../../../ds-bot/src/client/group-settings.js'
 import { installLocale } from '../../../ds-bot/src/client/i18n.js'
+import { AVATAR_LIBRARY_CSS } from '../../../ds-bot/src/client/avatar-library.js'
+import { BROWSER_CSS } from '../../../ds-bot/src/client/browser-pane.js'
+import { HANDOFF_CSS } from '../../../ds-bot/src/client/handoff-card.js'
+import { LEARNING_CSS } from '../../../ds-bot/src/client/learning-card.js'
+import { SIDE_CSS } from '../../../ds-bot/src/client/side-chat.js'
+import { WIDGET_CSS } from '../../../ds-bot/src/client/widget-cell.js'
+import { BANK_CSS } from '../../../ds-bot/src/client/memory-bank.js'
 import { MEMBER_CSS } from '../../../ds-bot/src/client/member-status.js'
 import { MODEL_CSS } from '../../../ds-bot/src/client/model-menu.js'
 import { PROVIDERS_CSS } from '../../../ds-bot/src/client/providers-page.js'
@@ -27,7 +34,7 @@ if (/mac/iu.test(navigator.userAgentData?.platform ?? navigator.platform)) docum
 for (const [tag, text] of [
   ['shell', SHELL_CSS], ['sidebar', SIDEBAR_CSS], ['conversation', CONVERSATION_CSS], ['secrets', SECRET_CSS], ['providers', PROVIDERS_CSS],
   ['models', MODEL_CSS + FOLDER_CSS + BOT_SETTINGS_CSS + GROUP_SETTINGS_CSS], ['usage', USAGE_CSS], ['schedules', SCHEDULE_CSS],
-  ['feedback', FEEDBACK_CSS], ['about', ABOUT_CSS], ['members', MEMBER_CSS],
+  ['feedback', FEEDBACK_CSS], ['about', ABOUT_CSS], ['members', MEMBER_CSS], ['memory-bank', BANK_CSS], ['browser', BROWSER_CSS], ['side', SIDE_CSS], ['widgets', WIDGET_CSS], ['handoff', HANDOFF_CSS], ['learning', LEARNING_CSS], ['avatars', AVATAR_LIBRARY_CSS],
 ]) installStyles(text, tag)
 
 // The plugin's colors switch on body[data-ds-dark-theme], which DSH sets; here the system's

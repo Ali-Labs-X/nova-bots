@@ -7,6 +7,8 @@ import { workPhrase } from '../../../ds-bot/src/client/cells.js'
 import { language } from '../../../ds-bot/src/client/i18n.js'
 import { toolState } from '../../../ds-bot/src/client/mark.js'
 import { noteLeft, setUnread, sharedMap, toggleReaction } from '../../../ds-bot/src/client/shared-map.js'
+import { browserActions, followBrowsers } from '../../../ds-bot/src/client/browser-actions.js'
+import { createBotBrowsers } from '../../../ds-bot/src/client/bot-browsers.js'
 import { createSource, EMPTY_ROSTER, indexRoster } from '../../../ds-bot/src/client/sources.js'
 import { STORAGE, migrateStorage } from '../../../ds-bot/src/client/storage.js'
 import { teamActions } from '../../../ds-bot/src/client/team-actions.js'
@@ -45,6 +47,9 @@ function createBus() {
   }
 }
 
+// A reply adds an entry, which voice chat counts; a message of the user replaces the last one.
+const outline = (before = [], kind, text) => (kind === 'bot' ? [...before, { turn: -1, response: text }] : [...before.slice(0, -1), { turn: -1, prompt: text }])
+
 const setChanged = (source, value) => { if (JSON.stringify(source.getSnapshot()) !== JSON.stringify(value)) source.set(value) }
 
 export function createTeam() {
@@ -63,8 +68,12 @@ export function createTeam() {
   const cards = createSource({})
   const turnClock = createSource({})
   const update = createSource({ available: false, phase: 'idle' })
-  const browserPages = createSource({})
-  const browserTabs = createSource({})
+  const bridge = globalThis.dsBotApp?.browser ?? null
+  const browsers = bridge ? createBotBrowsers({ bridge, createSource }) : null
+  const browserPages = browsers?.pages ?? createSource({})
+  const browserTabs = browsers?.tabs ?? createSource({})
+  const browserHolds = browsers?.holds ?? createSource({})
+  const lastReply = {}
   const layout = createSource({ wide: true })
   // The Session facts: the list (each one's latest entry and change, and which one fills
   // the main view), the status (running, a reply not yet seen) and what was just sent.
@@ -188,6 +197,15 @@ export function createTeam() {
     },
   }
 
+  if (browsers) Object.assign(actions, browserActions({ browsers, bridge, roster, ui, call, yieldBrowser: () => false }))
+  // Voice chat speaks the latest reply once the Bot's turn has ended.
+  Object.assign(actions, {
+    // The window has no turn model, so a learning proposal shows in the dock.
+    turnFacts: () => ({ turns: undefined, openTurn: undefined }),
+    closingReply: id => lastReply[partFor(id)],
+    watchTurns: (_id, listener) => chat.on((event) => { if (event === 'message') listener() }),
+  })
+
   // Running and the tool at work come with the team's state; the plugin reads them from
   // DSH's Session status and its own tool cells.
   const followWork = () => {
@@ -210,9 +228,10 @@ export function createTeam() {
         ...row,
         updatedAt: Math.max(row.updatedAt ?? 0, item.time ?? 0),
         // The sidebar's preview line; turn -1 is never a hidden exchange turn.
-        projectionValues: text ? { turnOutline: [{ turn: -1, [item.kind === 'bot' ? 'response' : 'prompt']: text }] } : row.projectionValues,
+        projectionValues: text ? { turnOutline: outline(row.projectionValues?.turnOutline, item.kind, text) } : row.projectionValues,
       }))
       if (item.kind === 'bot' && shown.getSnapshot() !== sessionId) setStatus(sessionId, { completionUnread: true })
+      if (item.kind === 'bot' && text) lastReply[sessionId] = text
       if (item.kind === 'user') sent.set(state => (state[sessionId]?.length ? { ...state, [sessionId]: state[sessionId].slice(1) } : state))
     }
     // While a reply streams in, it stands in for the activity row.
@@ -230,6 +249,7 @@ export function createTeam() {
       })
     }
     read()
+    const offBrowsers = browsers ? followBrowsers({ browsers, roster, ui, call }) : () => {}
     const closeFeed = openFeed((event, data) => {
       if (READ_AGAIN.has(event)) read()
       onFeed(event, data)
@@ -240,6 +260,7 @@ export function createTeam() {
     return () => {
       stopped = true
       closeFeed()
+      offBrowsers()
       clearInterval(timer)
       window.removeEventListener('pagehide', onPageHide)
     }
@@ -259,6 +280,7 @@ export function createTeam() {
     useRegistry: use(registry),
     useBrowserPages: use(browserPages),
     useBrowserTabs: use(browserTabs),
+    useBrowserHolds: use(browserHolds),
     useSessions: use(sessions),
     useSessionStatus: use(status),
     useSessionRetainInfo: (id, selector) => useSelect(sessions, list => selector(list.byId[id])),
