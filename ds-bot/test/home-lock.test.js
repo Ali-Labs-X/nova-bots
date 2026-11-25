@@ -6,7 +6,7 @@ import { hostname, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { createRuntime } from '../index.js'
-import { homeLock } from '../src/host/home-lock.js'
+import { homeLock, pidStart } from '../src/host/home-lock.js'
 import { fakeContext } from './fake-ctx.js'
 
 const tempHome = (t) => {
@@ -61,6 +61,47 @@ test('a fresh same-host lock stays live while its process is alive', (t) => {
   t.after(() => late.release())
   assert.equal(late.claim().token, 'live')
   assert.equal(late.owns(), false)
+})
+
+test('a same-host lock is taken over when another process runs under its pid', (t) => {
+  const path = join(tempHome(t), 'state.lock')
+  writeFileSync(path, JSON.stringify({ pid: 101, started: '500', host: hostname(), token: 'killed' }))
+  const next = homeLock(path, { pid: 202, isAlive: () => true, startOf: pid => (pid === 101 ? '900' : '910') })
+  t.after(() => next.release())
+  assert.equal(next.claim(), undefined)
+  assert.equal(next.owns(), true)
+  assert.equal(JSON.parse(readFileSync(path, 'utf8')).started, '910')
+})
+
+test('a fresh same-host lock stays live while the process that took it runs, or may run', (t) => {
+  const path = join(tempHome(t), 'state.lock')
+  const holder = (started, seen) => {
+    writeFileSync(path, JSON.stringify({ pid: 101, started, host: hostname(), token: 'live' }))
+    return homeLock(path, { pid: 202, isAlive: () => true, startOf: pid => (pid === 101 ? seen : '910') }).claim()?.token
+  }
+  assert.equal(holder('500', '500'), 'live')
+  // The system does not tell, or the lock is from before it noted the start.
+  assert.equal(holder('500', undefined), 'live')
+  assert.equal(holder(undefined, '900'), 'live')
+})
+
+test('a process is known by its pid and its start', { skip: process.platform !== 'linux' }, (t) => {
+  assert.match(pidStart(process.pid), /^\d+$/)
+  assert.equal(pidStart(process.pid), pidStart(process.pid))
+  assert.equal(pidStart(0x7fffffff), undefined)
+  const path = join(tempHome(t), 'state.lock')
+  const first = homeLock(path)
+  t.after(() => first.release())
+  assert.equal(first.claim(), undefined)
+  const lock = JSON.parse(readFileSync(path, 'utf8'))
+  assert.deepEqual([lock.pid, lock.started], [process.pid, pidStart(process.pid)])
+  // Another runtime on this system sees that process alive.
+  assert.equal(homeLock(path, { pid: 202 }).claim().pid, process.pid)
+  // The same lock with another start is a leftover of a process that had the pid before.
+  writeFileSync(path, JSON.stringify({ ...lock, started: String(Number(lock.started) - 1) }))
+  const second = homeLock(path, { pid: 202 })
+  t.after(() => second.release())
+  assert.equal(second.claim(), undefined)
 })
 
 test('an old lock from another host is taken over', (t) => {

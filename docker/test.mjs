@@ -54,6 +54,35 @@ function checkDataOwner(uid, gid) {
   `)
 }
 
+async function answers(container) {
+  const probe = `
+    const response = await fetch('http://127.0.0.1:3080/');
+    if (![200, 401].includes(response.status)) throw new Error('Unexpected HTTP status: ' + response.status);
+  `
+  const deadline = Date.now() + 45_000
+  while (Date.now() < deadline) {
+    if (docker(['exec', container, 'node', '--input-type=module', '-e', probe], { allowFailure: true }).status === 0) return true
+    await setTimeout(300)
+  }
+  return false
+}
+
+// What the team answers to `state`: null when this engine may change it.
+function readOnly(container) {
+  return JSON.parse(docker(['exec', container, 'node', '--input-type=module', '-e', `
+    import { readFileSync } from 'node:fs'
+    const token = readFileSync('/data/.launch-token', 'utf8').trim()
+    const login = await fetch('http://127.0.0.1:3080/?token=' + token, { redirect: 'manual' })
+    const cookie = login.headers.getSetCookie().map(value => value.split(';')[0]).join('; ')
+    const response = await fetch('http://127.0.0.1:3080/api/bot', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', cookie },
+      body: JSON.stringify({ endpoint: 'state', payload: {} }),
+    })
+    console.log(JSON.stringify((await response.json()).value.readOnly))
+  `]).stdout)
+}
+
 try {
   for (const volume of [data, workspace]) {
     docker(['volume', 'create', volume])
@@ -102,20 +131,7 @@ try {
     '-e', 'PUID=1234', '-e', 'PGID=1235', '-e', 'DSH_TELEMETRY_DISABLED=1',
     '-e', 'NOVA_LAUNCH_TOKEN_FILE=/data/.launch-token', image,
   ])
-  const probe = `
-    const response = await fetch('http://127.0.0.1:3080/');
-    if (![200, 401].includes(response.status)) throw new Error('Unexpected HTTP status: ' + response.status);
-  `
-  const deadline = Date.now() + 45_000
-  let ready = false
-  while (Date.now() < deadline) {
-    if (docker(['exec', server, 'node', '--input-type=module', '-e', probe], { allowFailure: true }).status === 0) {
-      ready = true
-      break
-    }
-    await setTimeout(300)
-  }
-  assert.ok(ready, 'web server must answer HTTP after ownership migration')
+  assert.ok(await answers(server), 'web server must answer HTTP after ownership migration')
   const processOwner = docker(['exec', server, 'stat', '-c', '%u:%g', '/proc/1']).stdout.trim()
   assert.equal(processOwner, '1234:1235', 'web process must run under the new identity')
   const identity = docker(['exec', server, 'gosu', 'node', 'id']).stdout
@@ -146,6 +162,53 @@ try {
   `
   docker(['exec', server, 'node', '--input-type=module', '-e', silentBrowser])
   console.log('PASS: a browser that is slow to answer keeps its connection')
+  docker(['stop', '--time', '15', server])
+
+  // Started the way the portal starts an account's engine (portal/tenants.mjs).
+  const tenant = `${name}-tenant`
+  containers.add(tenant)
+  docker([
+    'run', '--detach', '--name', tenant, '--hostname', 'nova-bots', '--network', 'none', ...mounts(),
+    '--cap-drop', 'ALL', '--cap-add', 'CHOWN', '--cap-add', 'SETUID', '--cap-add', 'SETGID', '--cap-add', 'DAC_OVERRIDE',
+    '--security-opt', 'no-new-privileges',
+    '-e', 'PUID=1234', '-e', 'PGID=1235', '-e', 'DSH_TELEMETRY_DISABLED=1',
+    '-e', 'NOVA_LAUNCH_TOKEN_FILE=/data/.launch-token', image,
+  ])
+  assert.ok(await answers(tenant), 'web server must answer HTTP with the capabilities of an account')
+
+  const zombies = docker(['exec', tenant, '/bin/sh', '-c', `
+    for i in 1 2 3 4 5; do (sleep 0.3 &); done
+    sleep 1.5
+    cat /proc/[0-9]*/status 2>/dev/null | grep -c '^State:.Z' || true
+  `]).stdout.trim()
+  assert.equal(zombies, '0', 'processes that outlive their command must not stay as zombies')
+  console.log('PASS: left-behind processes are collected')
+
+  const stopping = Date.now()
+  docker(['stop', '--time', '15', tenant])
+  const stopped = docker(['inspect', '--format', '{{.State.ExitCode}}', tenant]).stdout.trim()
+  assert.equal(stopped, '0', 'the engine must end by itself when the container stops')
+  assert.ok(Date.now() - stopping < 14_000, 'the engine must get the stop signal')
+  console.log('PASS: the engine stops by itself without CAP_KILL')
+
+  docker(['start', tenant])
+  assert.ok(await answers(tenant), 'web server must answer HTTP after a restart')
+  assert.equal(readOnly(tenant), null, 'the team must be open for changes')
+  docker(['kill', tenant])
+  // The pid in the lock a killed engine leaves behind belongs to another process
+  // once the container's processes are numbered from 1 again.
+  shell(`
+    test -s /data/bot/state.lock
+    node -e '
+      const { readFileSync, writeFileSync } = require("node:fs")
+      const lock = JSON.parse(readFileSync("/data/bot/state.lock", "utf8"))
+      writeFileSync("/data/bot/state.lock", JSON.stringify({ ...lock, pid: 1 }))
+    '
+  `)
+  docker(['start', tenant])
+  assert.ok(await answers(tenant), 'web server must answer HTTP after it was killed')
+  assert.equal(readOnly(tenant), null, 'a killed engine must not keep its own team read-only')
+  console.log('PASS: an engine that was killed opens its team again at once')
 } finally {
   for (const container of containers) {
     docker(['rm', '--force', container], { allowFailure: true })

@@ -38,7 +38,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         bash git curl ca-certificates \
         python3 python3-pip python3-venv \
-        build-essential jq ripgrep unzip zip ffmpeg less procps gosu sudo \
+        build-essential jq ripgrep unzip zip ffmpeg less procps gosu sudo tini \
         xvfb x11vnc fluxbox x11-xkb-utils xauth x11-utils \
         libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libatspi2.0-0 \
         libcups2 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 \

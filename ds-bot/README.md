@@ -355,7 +355,7 @@ Files in `bot/`:
 | `state.json` | The team: bots, groups, bot-to-bot messages, preferences and open questions. A long message keeps only its first 2,000 characters here; all of it is in the session it went to. |
 | `group-lines/` | Long group lines, up to the 20,000 characters a member reads, one file per line; each is removed when its line leaves the group's latest 60 lines or the group is deleted |
 | `handoff-results/` | The whole result of a piece of work a bot handed on, when it is longer than the 2,000 characters `state.json` keeps, one file per result; each is removed once the answer it went into has gone up |
-| `state.lock` | The runtime that is using this data (pid and host), its mtime bumped as a heartbeat. It is removed when that runtime exits; a leftover whose heartbeat has stopped is taken over by the next runtime to load. |
+| `state.lock` | The runtime that is using this data (pid, when it started, and host), its mtime bumped as a heartbeat. It is removed when that runtime exits; a leftover whose heartbeat has stopped is taken over by the next runtime to load. |
 | `chat-index.sqlite` | Full-text index of older chat parts (`read_own_chat`); rebuilt if deleted |
 | `usage.sqlite` | Token counts for the Usage page; rebuilt from the session logs if deleted, losing only the calls outside the logs and the names of deleted bots |
 | `memory/` | Memory (see [Memory](#memory)): `bots/<id>/`, `groups/<id>/` and `team/` (`MEMORY.md` and topics), `journal.jsonl` (every change), `snapshots/` (the section each session froze), `summaries/` (the panel's summary; safe to delete), `reviewed.json` (how far the memory review has read) and `archive/` (deleted bots and group chats) |
