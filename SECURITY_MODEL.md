@@ -99,11 +99,26 @@ Residual risks and accepted limits:
   portal only ever routes an account to its own engine, so that script only
   runs in its own author's browser session. Do not add routes that serve one
   tenant's content to another account.
+- **Shared addresses**: accounts ask for the same addresses (`/app/assets/…`)
+  and get their own engine's answer, so nothing between may keep one. The
+  portal marks every answer `private` with `Vary: Cookie` and drops the headers
+  that steer caches, whatever the engine says (`keepPrivate` in `bridge.mjs`).
+  Do not add a rule at the edge that caches `/app/` or the engine's paths.
+- **Service workers** from an engine are refused: one would answer for every
+  page of the origin, the sign-in and approval pages among them.
 - **Egress** to the internet is open (the Bots need their providers and the
   web). Abuse handling is operational (forbid the account; its engine stops).
 - The admin's tenant is the pre-tenancy shared engine (`nova-bots`, mapped as
   `legacy`): it still mounts `/host` (the operator's Desktop) and holds the
   operator's keys. It is reachable only by the admin account.
+- **What `/host` holds, the admin's Bots can read and change**, as the user who
+  runs the portal. A `HOST_SHARE` that contains this repository hands them
+  `portal/portal.env` and the code the portal, `nova-mountd` and `nova-bots.sh`
+  run from, and with it the user's account on the host. Share the folders the
+  Bots work in, not one above this repository.
+- **The visitor's address** comes from the hops in front of the portal (loopback
+  and Docker's own bridges, `NOVA_TRUSTED_PROXIES` for more), never from what
+  the visitor sent. The tenants' bridge is not one of them.
 
 ## Open questions
 
