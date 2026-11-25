@@ -15,7 +15,7 @@
 # default, twice: it hangs up, and the browser starts the same download again.
 - id: typert-gateway
   config:
-    websocketHeartbeatIntervalMs: 30000
+    websocketHeartbeatIntervalMs: 45000
 - id: bot
   config:
     workspace: /workspace
