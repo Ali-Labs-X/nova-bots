@@ -90,3 +90,11 @@ export const requestUrl = (raw) => {
   const path = String(raw ?? '/')
   return new URL(`http://portal.local/${path.startsWith('/') ? path.replace(/^[/\\]+/, '') : ''}`)
 }
+
+// A page of another site must not sign this browser in to an account of its
+// choosing. The front door may have taken the port off the Host.
+export const foreignOrigin = (req) => {
+  const { origin, host } = req.headers
+  if (origin === undefined) return false
+  try { return new URL(origin).hostname !== new URL(`http://${host}`).hostname } catch { return true }
+}

@@ -185,3 +185,56 @@ test('a body over the limit is refused', async (t) => {
   assert.equal(res.statusCode, 413)
   assert.ok(refused instanceof BodyTooLarge)
 })
+
+// Every account asks for the same addresses and gets its own engine's answer.
+const answerOf = async (t, headers, path = '/app/x', requestHeaders = {}) => {
+  let seen
+  const engine = createHttp((req, res) => { seen = req.headers; res.writeHead(200, headers); res.end('x') })
+  const target = { url: `http://127.0.0.1:${await listen(engine)}`, cookie: async () => 'dsh-auth-h=x' }
+  const portal = createHttp((req, res) => proxyHttp(req, res, target))
+  const port = await listen(portal)
+  t.after(() => { for (const server of [portal, engine]) { server.closeAllConnections(); server.close() } })
+  const answer = await new Promise((resolve, reject) => {
+    const req = request({ host: '127.0.0.1', port, path, headers: requestHeaders }, res => { res.resume(); res.on('end', () => resolve(res.headers)) })
+    req.on('error', reject)
+    req.end()
+  })
+  return { answer, seen }
+}
+
+test('no cache between keeps what an engine answers, whatever the engine says', async (t) => {
+  const cases = [
+    [{}, 'private'],
+    [{ 'cache-control': 'public, max-age=31536000, immutable' }, 'private, max-age=31536000, immutable'],
+    [{ 'cache-control': 'PUBLIC, s-maxage=600, max-age=60' }, 'private, max-age=60'],
+    [{ 'cache-control': 'no-store' }, 'private, no-store'],
+    [{ 'cache-control': ['public', 'max-age=5'] }, 'private, max-age=5'],
+  ]
+  for (const [headers, expected] of cases) assert.equal((await answerOf(t, headers)).answer['cache-control'], expected)
+  const { answer } = await answerOf(t, {
+    'cdn-cache-control': 'max-age=600', 'cloudflare-cdn-cache-control': 'max-age=600', 'surrogate-control': 'max-age=600', 'x-accel-expires': '600', expires: 'Fri, 01 Jan 2038 00:00:00 GMT', vary: 'Accept-Encoding',
+  })
+  for (const name of ['cdn-cache-control', 'cloudflare-cdn-cache-control', 'surrogate-control', 'x-accel-expires', 'expires']) assert.equal(answer[name], undefined, name)
+  assert.equal(answer['cache-control'], 'private')
+  assert.equal(answer.vary, 'Accept-Encoding, Cookie', 'nor does a browser give one account what it kept for another')
+})
+
+test('the browser that asked may keep a file that is named by its content', async (t) => {
+  assert.equal((await answerOf(t, {}, '/app/assets/index-5SrrfWpU.js')).answer['cache-control'], 'private, max-age=14400')
+  assert.equal((await answerOf(t, {}, '/app/assets/../api/state')).answer['cache-control'], 'private')
+  assert.equal((await answerOf(t, {}, '/app/api/state')).answer['cache-control'], 'private')
+})
+
+test('the engine compresses for a browser that can read it', async (t) => {
+  assert.equal((await answerOf(t, {}, '/app/x', { 'accept-encoding': 'gzip, deflate, br, zstd' })).seen['accept-encoding'], 'gzip')
+  assert.equal((await answerOf(t, {}, '/app/x', { 'accept-encoding': 'br' })).seen['accept-encoding'], undefined)
+  assert.equal((await answerOf(t, {}, '/app/x', { 'accept-encoding': 'gzip;q=0' })).seen['accept-encoding'], undefined)
+  assert.equal((await answerOf(t, {}, '/app/x')).seen['accept-encoding'], undefined)
+})
+
+test('a page of another site cannot sign this browser in', async (t) => {
+  const { port } = await startPortal(t)
+  const signIn = origin => raw(port, `POST /api/v1/auth/login/local HTTP/1.1\r\nHost: bots.example\r\n${origin ? `Origin: ${origin}\r\n` : ''}Connection: close\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 0\r\n\r\n`)
+  for (const origin of ['https://evil.test', 'null', 'https://bots.example.evil.test']) assert.match(await signIn(origin), /^HTTP\/1\.1 403 /, origin)
+  for (const origin of ['https://bots.example', 'http://bots.example:13080', undefined]) assert.match(await signIn(origin), /^HTTP\/1\.1 400 /, String(origin))
+})
