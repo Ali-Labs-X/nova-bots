@@ -80,10 +80,10 @@ html body::before {
   animation: nova-ui-pulse 4s ease-in-out infinite;
 }
 
-/* Menus, popovers and dialogs read as glass over the aurora. */
-html body [role="menu"],
-html body [role="listbox"],
-html body [role="dialog"] {
+/* Menus, popovers and dialogs read as glass over the aurora. A list inside one
+   of them and a pane that stands in for the conversation are no surfaces of
+   their own: their shadow would fall on what is beside them. */
+html body :is([role="menu"], [role="listbox"], [role="dialog"]):not(:is([role="menu"], [role="dialog"], [data-trigger-menu], .bt-pane) *) {
   backdrop-filter: blur(24px) saturate(1.15);
   -webkit-backdrop-filter: blur(24px) saturate(1.15);
   box-shadow: 0 24px 70px -24px rgba(0, 0, 0, .72), 0 0 0 1px rgba(139, 124, 255, .1), 0 0 60px -28px rgba(109, 94, 252, .45);
@@ -94,6 +94,19 @@ html body :focus-visible {
   outline: 2px solid rgba(139, 124, 255, .7);
   outline-offset: 2px;
   box-shadow: 0 0 0 4px rgba(109, 94, 252, .14);
+}
+
+/* The message box shows its focus on the card around it. A ring of its own is
+   cut off by the scroller it sits in, which leaves two bars. */
+html body [data-composer-input]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* The "/" and "@" menus hang in the composer card, which blurs what is behind
+   it. A blur inside a blur sees nothing, so the chat would show through. */
+html body [data-trigger-menu] {
+  background: var(--bt-main, Canvas);
 }
 
 /* Buttons that carry the shell's own primary treatment get the same lift. */
