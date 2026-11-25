@@ -17,6 +17,7 @@
 //     from before is deleted.
 
 import { request as httpRequest } from 'node:http'
+import { requestUrl } from './http.mjs'
 import {
   clearEngineCookies,
   ENGINE_COOKIE_PREFIX,
@@ -96,9 +97,10 @@ export class EngineCookieJar {
 
 // The app is served under /app; the engine lives at the root.
 export const enginePath = (rawUrl) => {
-  const url = new URL(rawUrl ?? '/', 'http://portal.local')
+  const url = requestUrl(rawUrl)
   const path = url.pathname === '/app' ? '/' : url.pathname.startsWith('/app/') ? url.pathname.slice(4) || '/' : url.pathname
-  return path + url.search
+  // A path that starts with two slashes would be read as another host.
+  return path.replace(/^\/+/, '/') + url.search
 }
 
 const HOP_BY_HOP = ['connection', 'keep-alive', 'proxy-connection', 'transfer-encoding', 'upgrade', 'te', 'trailer', 'proxy-authorization']
@@ -186,7 +188,7 @@ const unavailable = (res, status, message, extra = {}) => {
 // the browser resolves its scripts to the portal's root and the app stays
 // blank. /app answers with a redirect to /app/ instead.
 export const redirectToApp = (req, res) => {
-  const url = new URL(req.url ?? '/', 'http://portal.local')
+  const url = requestUrl(req.url)
   const location = url.search ? `/app/?${url.search}` : '/app/'
   res.writeHead(302, { location, 'cache-control': 'no-store' })
   res.end()
@@ -248,7 +250,10 @@ export const proxyHttp = async (req, res, target, { retried = false, payload, ke
     if (upstreamResponse.statusCode === 401) {
       upstreamResponse.resume()
       target.invalidate?.()
-      if (!retried && replayable) return proxyHttp(req, res, target, { retried: true, payload: { body, replayable }, keepAliveMs })
+      if (!retried && replayable) {
+        return proxyHttp(req, res, target, { retried: true, payload: { body, replayable }, keepAliveMs })
+          .catch(() => unavailable(res, 502, 'The Nova Bots engine is not reachable.'))
+      }
       return unavailable(res, 401, 'The Nova Bots workspace refused the session. Reload the page and sign in again.')
     }
     const headers = { ...upstreamResponse.headers }
@@ -310,7 +315,7 @@ export const proxyUpgrade = async (req, socket, head, target, { onOpen, onClose,
     upstreamResponse.resume()
     if (upstreamResponse.statusCode === 401 && !retried) {
       target.invalidate?.()
-      return proxyUpgrade(req, socket, head, target, { onOpen, onClose, retried: true })
+      return proxyUpgrade(req, socket, head, target, { onOpen, onClose, retried: true }).catch(() => socket.destroy())
     }
     socket.destroy()
   })

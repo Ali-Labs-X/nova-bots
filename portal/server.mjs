@@ -35,6 +35,7 @@ import { LaunchTokenPool } from './launch-token.mjs'
 import { clearEngineCookies, policyFromEnv, routeFor, signupAllowed } from './gate.mjs'
 import { capacityPage, failedPage, heldPage, provisioningPage } from './pages.mjs'
 import { Tenants, tenancyConfigFromEnv } from './tenants.mjs'
+import { BodyTooLarge, clientIp, readBody, requestUrl } from './http.mjs'
 import { untilDatabase } from './startup.mjs'
 
 const PORT = Number(process.env.NOVA_PORTAL_PORT ?? 13081)
@@ -54,11 +55,6 @@ const auth = new Auth({
 const POLICY = policyFromEnv()
 const SUPPORT_CONTACT = process.env.NOVA_SUPPORT_CONTACT ?? 'jahanzaib@alilabs.com'
 
-const clientIp = (req) => {
-  const forwarded = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim()
-  return forwarded || (req.socket.remoteAddress ?? 'unknown')
-}
-
 const cookieValue = (header, name) => {
   for (const part of String(header ?? '').split(';')) {
     const [key, ...rest] = part.trim().split('=')
@@ -66,13 +62,6 @@ const cookieValue = (header, name) => {
   }
   return undefined
 }
-
-const readBody = (req) => new Promise((resolve, reject) => {
-  const chunks = []
-  req.on('data', chunk => chunks.push(chunk))
-  req.on('end', () => resolve(Buffer.concat(chunks)))
-  req.on('error', reject)
-})
 
 const send = (res, status, body, headers = {}) => {
   res.writeHead(status, { 'cache-control': 'no-store', ...headers })
@@ -180,6 +169,7 @@ const register = async (req, res) => {
   const email = (form.get('email') ?? '').trim().toLowerCase()
   const password = form.get('password') ?? ''
   if (!email || !password) return json(res, 400, { detail: { message: 'Enter an email and a password.' } })
+  if (email.length > 320) return json(res, 400, { detail: { message: 'That does not look like an email address.' } })
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json(res, 400, { detail: { message: 'That does not look like an email address.' } })
   if (password.length < 8) return json(res, 400, { detail: { message: 'Use at least 8 characters.' } })
 
@@ -227,16 +217,16 @@ const register = async (req, res) => {
 }
 
 const changePassword = async (req, res) => {
-  const token = cookieValue(req.headers.cookie, COOKIE)
-  const payload = auth.verifyToken(token)
-  if (!payload) return json(res, 401, { detail: { message: 'Not signed in.' } })
+  const user = await signedIn(req)
+  if (!user) return json(res, 401, { detail: { message: 'Not signed in.' } })
+  const limit = auth.rateLimit(`password:${user.id}`)
+  if (!limit.allowed) return json(res, 429, { detail: { message: `Too many attempts. Try again in ${limit.retryAfter} seconds.` } })
   const body = await readBody(req)
   const form = new URLSearchParams(body.toString())
   const current = form.get('current_password') ?? ''
   const next = form.get('new_password') ?? ''
   if (next.length < 8) return json(res, 400, { detail: { message: 'Use at least 8 characters.' } })
-  const user = await auth.findById(payload.sub)
-  if (!user || !(await auth.authenticate(user.email, current))) {
+  if (!(await auth.authenticate(user.email, current))) {
     return json(res, 401, { detail: { message: 'The current password is not right.' } })
   }
   await auth.setPassword(user.id, next)
@@ -338,9 +328,10 @@ const tenantUnavailable = (req, res, error) => {
 
 const bridge = async (req, res) => {
   const { user, route } = await sessionFor(req)
+  if (user && req.headers.accept?.includes('text/event-stream')) trackSocket(user.id, res)
   if (route === 'no-session') return toLogin(req, res)
   if (route === 'not-entitled') return holdOut(req, res)
-  if (route === 'shared') return proxyHttp(req, res, sharedTarget)
+  if (route === 'shared') return await proxyHttp(req, res, sharedTarget)
 
   // own-tenant: the account's own engine and nothing else. A page load while
   // the engine is created or woken shows a page that refreshes; API calls wait.
@@ -355,7 +346,7 @@ const bridge = async (req, res) => {
       }
     }
     const target = await tenants.targetFor(user)
-    return proxyHttp(req, res, target)
+    return await proxyHttp(req, res, target)
   } catch (error) {
     console.error(`portal: workspace for an account is unavailable: ${error.message}`)
     return tenantUnavailable(req, res, error)
@@ -369,7 +360,7 @@ const upgrade = async (req, socket, head) => {
   try {
     const { user, route } = await sessionFor(req)
     if (route === 'shared') {
-      return proxyUpgrade(req, socket, head, sharedTarget, { onOpen: s => trackSocket(user.id, s) })
+      return await proxyUpgrade(req, socket, head, sharedTarget, { onOpen: s => trackSocket(user.id, s) })
     }
     if (route !== 'own-tenant') return socket.destroy()
     const target = await tenants.targetFor(user)
@@ -399,22 +390,22 @@ const hostFolders = createHostFolders({
 // ---- the server ---------------------------------------------------------
 
 const server = createServer(async (req, res) => {
-  const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`)
-  const path = url.pathname
-
   try {
+    const url = requestUrl(req.url)
+    const path = url.pathname
+
     if (path.startsWith('/api/v1/auth/')) {
-      if (path === '/api/v1/auth/login/local' && req.method === 'POST') return login(req, res)
-      if (path === '/api/v1/auth/me' && req.method === 'GET') return me(req, res)
-      if (path === '/api/v1/auth/logout' && req.method === 'POST') return logout(req, res)
-      if (path === '/api/v1/auth/setup-status' && req.method === 'GET') return setupStatus(req, res)
-      if (path === '/api/v1/auth/register' && req.method === 'POST') return register(req, res)
-      if (path === '/api/v1/auth/change-password' && req.method === 'POST') return changePassword(req, res)
+      if (path === '/api/v1/auth/login/local' && req.method === 'POST') return await login(req, res)
+      if (path === '/api/v1/auth/me' && req.method === 'GET') return await me(req, res)
+      if (path === '/api/v1/auth/logout' && req.method === 'POST') return await logout(req, res)
+      if (path === '/api/v1/auth/setup-status' && req.method === 'GET') return await setupStatus(req, res)
+      if (path === '/api/v1/auth/register' && req.method === 'POST') return await register(req, res)
+      if (path === '/api/v1/auth/change-password' && req.method === 'POST') return await changePassword(req, res)
       return json(res, 404, { detail: { message: 'Unknown endpoint.' } })
     }
 
     if (path.startsWith('/api/v1/bots-admin/') || path === '/api/v1/bots-admin') {
-      return handleAdmin(req, res, path, { auth, clientIp, tenants, closeUserSockets, policy: POLICY })
+      return await handleAdmin(req, res, path, { auth, clientIp, tenants, closeUserSockets, policy: POLICY })
     }
 
     if (path.startsWith('/api/v1/host/')) return await hostFolders(req, res, path, url)
@@ -422,15 +413,18 @@ const server = createServer(async (req, res) => {
     // The engine's page needs the trailing slash: /app answers with a
     // redirect to /app/, and /app/… is bridged as it is.
     if (path === '/app' && (req.method === 'GET' || req.method === 'HEAD')) return redirectToApp(req, res)
-    if (path === '/app' || path.startsWith('/app/')) return bridge(req, res)
+    if (path === '/app' || path.startsWith('/app/')) return await bridge(req, res)
 
     if (path === '/health') return send(res, 200, 'ok', { 'content-type': 'text/plain; charset=utf-8' })
 
     // Everything else is the engine's own surface (assets, plugin bundles,
     // its own API calls): it goes through the same gate as the app.
-    return bridge(req, res)
+    return await bridge(req, res)
   } catch (error) {
-    send(res, 500, `The portal failed: ${error?.message ?? error}`, { 'content-type': 'text/plain; charset=utf-8' })
+    if (error instanceof BodyTooLarge) return send(res, 413, error.message, { 'content-type': 'text/plain; charset=utf-8', connection: 'close' })
+    console.error(`portal: a request failed: ${error?.message ?? error}`)
+    if (res.headersSent) return res.destroy()
+    send(res, 500, 'The portal could not answer. Try again in a moment.', { 'content-type': 'text/plain; charset=utf-8' })
   }
 })
 

@@ -11,18 +11,20 @@ import bcrypt from 'bcryptjs'
 import { Pool } from 'pg'
 
 const HASH_PREFIX = '$dfv2$'
+const MAX_RATE_KEYS = 10000
 
 // bcrypt truncates at 72 bytes; hashing the digest first keeps every byte of
 // the password in play. The digest is 44 base64 characters, well inside it.
 const preHash = (password) => createHash('sha256').update(password, 'utf8').digest('base64')
 
-export const hashPassword = (password) => `${HASH_PREFIX}${bcrypt.hashSync(preHash(password), bcrypt.genSaltSync(10)).toString('utf8')}`
+// The async calls let other requests run between the rounds.
+export const hashPassword = async (password) => `${HASH_PREFIX}${await bcrypt.hash(preHash(password), 10)}`
 
-export const verifyPassword = (plain, hashed) => {
+export const verifyPassword = async (plain, hashed) => {
   try {
     if (typeof hashed !== 'string' || hashed.length === 0) return false
     const value = hashed.startsWith(HASH_PREFIX) ? hashed.slice(HASH_PREFIX.length) : hashed
-    return bcrypt.compareSync(preHash(plain), value)
+    return await bcrypt.compare(preHash(plain), value)
   } catch {
     return false
   }
@@ -120,7 +122,7 @@ export class Auth {
   }
 
   async createUser({ email, password, systemRole = 'user', needsSetup = false }) {
-    const hash = password ? hashPassword(password) : null
+    const hash = password ? await hashPassword(password) : null
     const { rows } = await this.pool.query(
       `INSERT INTO users (email, password_hash, system_role, needs_setup)
        VALUES ($1, $2, $3, $4)
@@ -131,7 +133,7 @@ export class Auth {
   }
 
   async setPassword(id, password) {
-    const hash = hashPassword(password)
+    const hash = await hashPassword(password)
     await this.pool.query(
       'UPDATE users SET password_hash = $2, token_version = token_version + 1, updated_at = now() WHERE id = $1',
       [id, hash],
@@ -369,7 +371,10 @@ export class Auth {
     const now = Date.now()
     const entry = this.attempts.get(key)
     if (!entry || now - entry.first > windowMs) {
+      this.attempts.delete(key)
       this.attempts.set(key, { first: now, count: 1 })
+      // The key is the visitor's address: the oldest go first.
+      if (this.attempts.size > MAX_RATE_KEYS) this.attempts.delete(this.attempts.keys().next().value)
       return { allowed: true, remaining: max - 1 }
     }
     entry.count += 1
@@ -387,7 +392,7 @@ export class Auth {
   async authenticate(email, password) {
     const user = await this.findByEmail(email)
     if (!user || !user.password_hash) return null
-    if (!verifyPassword(password, user.password_hash)) return null
+    if (!await verifyPassword(password, user.password_hash)) return null
     if (user.is_forbidden) return { forbidden: true, user }
     return user
   }
