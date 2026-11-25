@@ -11026,7 +11026,7 @@ function PickerDialog({ value, title, info, fallback, actions, onPick, onClose }
   return (0, import_react_dom5.createPortal)((0, import_react22.createElement)(
     "div",
     { className: "bt-fpick-layer" },
-    (0, import_react22.createElement)("div", { className: "bt-fpick-scrim", onMouseDown: onClose }),
+    (0, import_react22.createElement)("div", { className: "bt-scrim", onMouseDown: onClose }),
     (0, import_react22.createElement)(
       "div",
       { className: "bt-fpick", role: "dialog", "aria-modal": true, "aria-label": title },
@@ -11137,7 +11137,6 @@ var PICKER_CSS = `
 .bt-fpick-mount{display:flex}
 .bt-fpick footer select{height:30px;border:1px solid var(--bt-line);border-radius:8px;background:var(--bt-card);color:inherit;font:inherit}
 .bt-fpick-layer{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;z-index:70;display:flex;align-items:center;justify-content:center;font-family:var(--bt-font);font-size:13px;line-height:18px;color:var(--bt-ink)}
-.bt-fpick-scrim{position:absolute;inset:0;background:color-mix(in srgb,var(--bt-ink) 30%,transparent);animation:bt-fade .2s ease-out}
 .bt-fpick{position:relative;display:grid;grid-template:auto 1fr auto/190px 1fr;width:min(760px,calc(100vw - 32px));height:min(560px,calc(100vh - 64px));border:.5px solid var(--bt-line-2);border-radius:18px;background:var(--bt-main);overflow:hidden}
 .bt-fpick button{display:inline-flex;align-items:center;gap:8px;min-width:0;border:0;border-radius:8px;padding:6px 8px;background:none;color:inherit;font:inherit;cursor:pointer}
 .bt-fpick button:hover,.bt-fpick [aria-current]{background:var(--bt-hover)}
@@ -11174,7 +11173,6 @@ var PICKER_CSS = `
 .bt-composer-folder span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-composer-folder[data-set] button:first-child{background:color-mix(in srgb,var(--bt-accent) 12%,transparent);color:var(--bt-accent)}
 @media(max-width:600px){.bt-fpick{grid-template:auto auto 1fr auto/1fr}.bt-fpick nav{flex-direction:row;border-right:0;border-bottom:.5px solid var(--bt-line)}.bt-fpick-place{width:auto;flex:none}.bt-fpick footer label,.bt-fpick-here{display:none}.bt-fpick footer{justify-content:flex-end}}
-@media(prefers-reduced-motion:reduce){.bt-fpick-scrim{animation:none}}
 `;
 
 // src/client/composer.js
@@ -11892,7 +11890,8 @@ function ClassicMemoryButton({ wide, useSurface, useRoster, actions }) {
 var BANK_CSS = `
 .bt-bank-layer{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;z-index:62;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:20px;color-scheme:light;color:var(--bt-ink,CanvasText)}
 body[data-ds-dark-theme] .bt-bank-layer{color-scheme:dark}
-.bt-bank-scrim{position:absolute;inset:0;background:color-mix(in srgb,CanvasText 28%,transparent)}
+.bt-bank-scrim{position:absolute;inset:0;background:rgba(0,0,0,.32)}
+body[data-ds-dark-theme] .bt-bank-scrim{background:rgba(0,0,0,.5)}
 .bt-bank{position:relative;display:grid;grid-template:auto 1fr/210px 1fr;width:min(880px,calc(100vw - 32px));height:min(680px,calc(100vh - 64px));border-radius:18px;overflow:hidden;background:var(--bt-main,Canvas);border:1px solid color-mix(in srgb,currentColor 15%,transparent)}
 .bt-bank header{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid color-mix(in srgb,currentColor 10%,transparent)}
 .bt-bank h2{margin:0;font-size:16px;flex:1}
