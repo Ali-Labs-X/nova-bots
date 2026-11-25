@@ -206,11 +206,33 @@ const requestBody = async req => {
   return { body: Buffer.concat(chunks), replayable: true }
 }
 
+// The edge closes an answer that stays silent for about two minutes, and the
+// engine's live feed says nothing until something changes.
+const KEEP_ALIVE_MS = 25000
+const KEEP_ALIVE = ': keep-alive\n\n'
+
+// A comment between two events is ignored by the browser; inside an event it
+// would break it, so one is sent only after an empty line.
+const keepFeedOpen = (upstreamResponse, res, keepAliveMs) => {
+  let tail = '\n\n'
+  upstreamResponse.on('data', chunk => {
+    tail = (tail + chunk.toString('latin1').slice(-4)).slice(-4)
+    timer.refresh()
+  })
+  const timer = setInterval(() => {
+    if (/(\n\n|\r\n\r\n)$/.test(tail) && !res.writableNeedDrain) res.write(KEEP_ALIVE)
+  }, keepAliveMs)
+  const stop = () => clearInterval(timer)
+  upstreamResponse.on('end', stop)
+  upstreamResponse.on('close', stop)
+  res.on('close', stop)
+}
+
 // HTTP. A 401 from the engine means the minted cookie is no longer accepted
 // (an engine whose cookie key changed): the request is sent again with a
 // fresh cookie when it can be replayed; one that cannot be replayed is
 // answered with the status the client can act on.
-export const proxyHttp = async (req, res, target, { retried = false, payload } = {}) => {
+export const proxyHttp = async (req, res, target, { retried = false, payload, keepAliveMs = KEEP_ALIVE_MS } = {}) => {
   const host = requestAuthority(req)
   const engineCookie = await target.cookie(host, { fresh: retried })
   if (!engineCookie) return unavailable(res, 503, 'The Nova Bots workspace is not reachable yet. Try again in a moment.', { 'retry-after': '2' })
@@ -226,7 +248,7 @@ export const proxyHttp = async (req, res, target, { retried = false, payload } =
     if (upstreamResponse.statusCode === 401) {
       upstreamResponse.resume()
       target.invalidate?.()
-      if (!retried && replayable) return proxyHttp(req, res, target, { retried: true, payload: { body, replayable } })
+      if (!retried && replayable) return proxyHttp(req, res, target, { retried: true, payload: { body, replayable }, keepAliveMs })
       return unavailable(res, 401, 'The Nova Bots workspace refused the session. Reload the page and sign in again.')
     }
     const headers = { ...upstreamResponse.headers }
@@ -239,8 +261,14 @@ export const proxyHttp = async (req, res, target, { retried = false, payload } =
     delete headers['set-cookie']
     if (cookies.length) headers['set-cookie'] = cookies
     res.writeHead(upstreamResponse.statusCode ?? 502, headers)
+    // `pipe` ends neither side when the other breaks off.
+    upstreamResponse.on('error', () => res.destroy())
+    upstreamResponse.on('close', () => { if (!upstreamResponse.complete) res.destroy() })
+    const feed = String(headers['content-type'] ?? '').startsWith('text/event-stream')
+    if (feed && !headers['content-encoding'] && req.method === 'GET') keepFeedOpen(upstreamResponse, res, keepAliveMs)
     upstreamResponse.pipe(res)
   })
+  res.on('close', () => request.destroy())
   request.on('error', () => unavailable(res, 502, 'The Nova Bots engine is not reachable.'))
   if (replayable) request.end(body ?? undefined)
   else req.pipe(request)
