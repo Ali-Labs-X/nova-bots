@@ -234,7 +234,8 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        animation: gradFlow 5s ease-in-out infinite alternate;
+        /* Flows twice and rests: a text gradient is repainted for every frame it moves. */
+        animation: gradFlow 5s ease-in-out 2 alternate both;
         filter: drop-shadow(0 0 30px rgba(124, 92, 255, 0.35));
       }
       @keyframes gradFlow {
@@ -353,7 +354,8 @@
       }
       .bot-orb .spark { width: 40px; height: 40px; filter: drop-shadow(0 0 10px var(--violet-2)); animation: sparkPulse 2.4s ease-in-out infinite; animation-delay: var(--delay, 0s); }
       @keyframes orbFloat { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
-      @keyframes sparkPulse { 0%,100% { transform: scale(0.9); opacity: 0.75; } 50% { transform: scale(1.12); opacity: 1; filter: drop-shadow(0 0 18px var(--cyan-2)); } }
+      /* Scale and opacity only: an animated filter is painted again on the main thread every frame. */
+      @keyframes sparkPulse { 0%,100% { transform: scale(0.9); opacity: 0.75; } 50% { transform: scale(1.12); opacity: 1; } }
 
       .bot-name { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; color: var(--ink); }
       .bot-role { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cyan); }
