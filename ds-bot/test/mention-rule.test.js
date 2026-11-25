@@ -24,7 +24,7 @@ runInNewContext(bundle.outputFiles[0].text, {
     return platform[name]
   },
 })
-const { userTextParts, mentionableBots, canDrawUserMessages, contentParts } = module.exports
+const { userTextParts, mentionableBots, canDrawUserMessages, contentParts, USER_MESSAGE_CSS } = module.exports
 const plain = value => JSON.parse(JSON.stringify(value))
 
 const called = text => mentionSpans(text, bots).map(span => (span.all ? '@all' : span.bot.name))
@@ -98,4 +98,17 @@ test('a group log line of a Bot named like the user never reads as the user', ()
   assert.equal(speakerOf({ who: 'User', botId: 'b', text: 'hi' }), 'Bot "User"')
   assert.equal(speakerOf({ who: 'you', botId: 'b', text: 'hi' }), 'Bot "you"')
   assert.equal(speakerOf({ who: 'Writer', botId: 'b', text: 'hi' }), 'Writer')
+})
+
+test('in a group "@all" in the user\'s own message is a call, elsewhere it may be a file', () => {
+  const group = text => plain(userTextParts(text, bots, [], { everyone: true }))
+  assert.deepEqual(group('@all please'), [{ all: true, label: '@all' }, { text: ' please' }])
+  assert.deepEqual(group('hi @所有人'), [{ text: 'hi ' }, { all: true, label: '@所有人' }])
+  assert.deepEqual(group('see @all.md and `@all`'), [{ text: 'see @all.md and `@all`' }])
+  assert.deepEqual(plain(userTextParts('@all please', bots)), [{ text: '@all please' }])
+})
+
+// The shell's blue for a file reference is all but the bubble's own color in the default theme.
+test('a file reference in the user\'s own bubble takes the bubble\'s text color', () => {
+  assert.match(USER_MESSAGE_CSS, /\.bt-ubody \[data-ref-chip\]\{color:inherit\}/)
 })

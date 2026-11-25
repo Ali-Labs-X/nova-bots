@@ -3115,6 +3115,7 @@ body[data-ds-dark-theme] .bt-scrim{background:rgba(0,0,0,.5)}
 .bt-settings-close{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:0;background:var(--bt-hover);color:var(--bt-ink-2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .bt-settings-close:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-settings-form{display:flex;flex-direction:column;gap:16px}
+.bt-set-section>.bt-actions{margin-bottom:8px}
 .bt-set-section h3{font-size:13px;line-height:18px;font-weight:600;margin:0 0 8px;padding:0 4px}
 .bt-set-card{border:1px solid var(--bt-line);border-radius:12px;background:var(--bt-card);display:flex;flex-direction:column}
 .bt-set-card>*+*{border-top:.5px solid var(--bt-line)}
@@ -21347,25 +21348,25 @@ function mentionableBots(roster, sessionId) {
   if (room2) return room2.members.map((id) => roster.byId[id]).filter(Boolean);
   return roster.byId[sessionId] ? roster.bots : [];
 }
-function userTextParts(text, bots, referenceLabels = []) {
+function userTextParts(text, bots, referenceLabels = [], { everyone = false } = {}) {
   const parts = [];
   let cursor = 0;
   for (const span of mentionSpans(text, bots, { references: referenceLabels })) {
-    if (!span.bot) continue;
+    if (!span.bot && !everyone) continue;
     if (span.start > cursor) parts.push({ text: text.slice(cursor, span.start) });
-    parts.push({ bot: span.bot, label: text.slice(span.start + 1, span.end) });
+    parts.push(span.bot ? { bot: span.bot, label: text.slice(span.start + 1, span.end) } : { all: true, label: text.slice(span.start, span.end) });
     cursor = span.end;
   }
   if (cursor < text.length) parts.push({ text: text.slice(cursor) });
   return parts;
 }
-function UserText({ text, bots, referenceLabels, skillNames, references, actions }) {
-  return userTextParts(text, bots, referenceLabels).map((part, index) => part.bot ? (0, import_react56.createElement)(
+function UserText({ text, bots, everyone, referenceLabels, skillNames, references, actions }) {
+  return userTextParts(text, bots, referenceLabels, { everyone }).map((part, index) => part.bot ? (0, import_react56.createElement)(
     "button",
     { key: index, type: "button", className: "bt-umention", title: `@${part.bot.name}`, onClick: () => actions.openSession(part.bot.id) },
     (0, import_react56.createElement)(BotMark, { bot: part.bot, size: 16 }),
     part.label
-  ) : (0, import_react56.createElement)(import_react56.Fragment, { key: index }, ui.projectUserText(part.text, referenceLabels, skillNames, "skill", references)));
+  ) : part.all ? (0, import_react56.createElement)("span", { key: index, className: "bt-uall" }, part.label) : (0, import_react56.createElement)(import_react56.Fragment, { key: index }, ui.projectUserText(part.text, referenceLabels, skillNames, "skill", references)));
 }
 function Attachments({ attachments, renderMessageImages }) {
   const compact2 = attachments.length > 1;
@@ -21403,7 +21404,7 @@ function UserMessageCell({ node, sessionId, useRoster, actions, renderMessageIma
   const steering = node.kind === "steering";
   const groupTime = roster.roomsById?.[sessionId] && Number.isFinite(data.time) ? messageClock(data.time) : void 0;
   const { shown, folded, control } = useFold(text, { markdown: false });
-  const body = (0, import_react56.createElement)(UserText, { text: shown, bots: mentionableBots(roster, sessionId), referenceLabels, skillNames: data.skillNames ?? [], references, actions });
+  const body = (0, import_react56.createElement)(UserText, { text: shown, bots: mentionableBots(roster, sessionId), everyone: Boolean(roster.roomsById?.[sessionId]), referenceLabels, skillNames: data.skillNames ?? [], references, actions });
   const row = (0, import_react56.useRef)(null);
   const [toolsOpen, setToolsOpen] = (0, import_react56.useState)(false);
   (0, import_react56.useEffect)(() => {
@@ -21446,7 +21447,8 @@ var USER_MESSAGE_CSS = `
 .bt-umsg{display:flex;flex-direction:row-reverse;align-items:center;justify-content:flex-start;gap:4px}
 .bt-ustack{min-width:0;max-width:calc(var(--bt-msg-w) * 100%);display:flex;flex-direction:column;align-items:flex-end;gap:8px}
 .bt-ubody{max-width:100%;box-sizing:border-box;background:var(--bt-user);color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 10px);white-space:pre-wrap;word-break:break-word;text-wrap:pretty;text-autospace:normal}
-.bt-ubody a{color:inherit}
+.bt-ubody a,.bt-ubody [data-ref-chip]{color:inherit}
+.bt-uall{font-weight:600}
 .bt-umention{display:inline-flex;align-items:center;gap:3px;vertical-align:-3px;max-width:100%;padding:0 1px;border:0;background:none;color:inherit;font:inherit;font-weight:600;line-height:inherit;cursor:pointer;border-radius:6px;white-space:nowrap}
 .bt-umention:hover{text-decoration:underline;text-underline-offset:2px}
 .bt-umention>:first-child{flex:none}
