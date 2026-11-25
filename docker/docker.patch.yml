@@ -10,6 +10,12 @@
         name: Full access
         description: The container is the boundary. Bots can change every file it can see.
     defaultPreset: danger-full-access
+# A browser's answer to a ping waits behind the data still on its way there. On a
+# slow line a chat takes longer than the two seconds the engine allows by
+# default, twice: it hangs up, and the browser starts the same download again.
+- id: typert-gateway
+  config:
+    websocketHeartbeatIntervalMs: 30000
 - id: bot
   config:
     workspace: /workspace

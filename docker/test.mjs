@@ -99,7 +99,8 @@ try {
   containers.add(server)
   docker([
     'run', '--detach', '--rm', '--name', server, '--network', 'none', ...mounts(),
-    '-e', 'PUID=1234', '-e', 'PGID=1235', '-e', 'DSH_TELEMETRY_DISABLED=1', image,
+    '-e', 'PUID=1234', '-e', 'PGID=1235', '-e', 'DSH_TELEMETRY_DISABLED=1',
+    '-e', 'NOVA_LAUNCH_TOKEN_FILE=/data/.launch-token', image,
   ])
   const probe = `
     const response = await fetch('http://127.0.0.1:3080/');
@@ -125,6 +126,26 @@ try {
     test -w /data/profiles/web/package.json
   `])
   console.log('PASS: web startup and private data access under the new identity')
+
+  // The socket never answers a ping, like a browser whose answer waits behind a
+  // long download. The engine's default gives it up within six seconds.
+  const silentBrowser = `
+    import { readFileSync } from 'node:fs'
+    import { connect } from 'node:net'
+    const token = readFileSync('/data/.launch-token', 'utf8').trim()
+    const login = await fetch('http://127.0.0.1:3080/?token=' + token, { redirect: 'manual' })
+    const cookie = login.headers.getSetCookie().map(value => value.split(';')[0]).join('; ')
+    const socket = connect(3080, '127.0.0.1')
+    socket.write(['GET /api/remote.mux HTTP/1.1', 'Host: 127.0.0.1:3080', 'Origin: http://127.0.0.1:3080', 'Cookie: ' + cookie,
+      'Connection: Upgrade', 'Upgrade: websocket', 'Sec-WebSocket-Version: 13', 'Sec-WebSocket-Key: ' + Buffer.alloc(16).toString('base64'), '', ''].join('\\r\\n'))
+    let answer = ''
+    socket.on('data', chunk => { answer += chunk.toString('latin1') })
+    socket.on('error', () => {})
+    socket.on('close', () => { console.error('closed after: ' + answer.slice(0, 40)); process.exit(1) })
+    setTimeout(() => { if (!answer.startsWith('HTTP/1.1 101')) { console.error(answer.slice(0, 80)); process.exit(1) } process.exit(0) }, 12_000)
+  `
+  docker(['exec', server, 'node', '--input-type=module', '-e', silentBrowser])
+  console.log('PASS: a browser that is slow to answer keeps its connection')
 } finally {
   for (const container of containers) {
     docker(['rm', '--force', container], { allowFailure: true })
