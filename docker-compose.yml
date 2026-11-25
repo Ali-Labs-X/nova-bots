@@ -38,6 +38,14 @@ services:
       - ./cache:/home/node/.cache/ms-playwright
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    # 0 is no limit. A browser-heavy team can starve the rest of the machine.
+    cpus: "${NOVA_ENGINE_CPUS:-0}"
+    mem_limit: "${NOVA_ENGINE_MEMORY:-0}"
+    # A log without a bound fills the disk, and one damaged by a power cut cannot
+    # be read past the damage.
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
     restart: unless-stopped
     stop_grace_period: 15s
 
@@ -54,9 +62,12 @@ services:
       - path: .env
         required: false
     volumes:
-      - ./nginx-config/nova-bots.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./portal/nginx/nova-bots.conf:/etc/nginx/conf.d/default.conf:ro
       - ./portal/public:/srv:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
     restart: unless-stopped
     stop_grace_period: 15s

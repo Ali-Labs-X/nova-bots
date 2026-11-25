@@ -60,7 +60,7 @@ engine (no front end, no portal):
 It prints something like:
 
 ```
-Login URL: http://127.0.0.1:13080/?token=0eORYKps6B7o60pz7tIkzMqk-0gU4OIHIuQkbeghj7Q
+Login URL: http://127.0.0.1:13080/?token=<token>
 ```
 
 The interface is **Nova**: a violet-to-cyan aurora theme, the Nova spark
