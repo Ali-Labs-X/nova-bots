@@ -68,10 +68,10 @@
     "@deepseek-ai/dsh-workflow": "0.2.1-rc.4",
     "@deepseek-ai/libreoffice-kit": "0.1.5",
     "deep-view": "0.1.0",
-    "nova-bots": "file:../ds-bot",
     "electron-updater": "6.8.10",
+    "nova-bots": "file:../ds-bot",
     "pnpm": "11.7.0",
-    "ws": "8.18.3",
+    "ws": "8.22.0",
     "yaml": "2.9.1"
   },
   "devDependencies": {
