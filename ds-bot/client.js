@@ -3115,6 +3115,7 @@ body[data-ds-dark-theme] .bt-scrim{background:rgba(0,0,0,.5)}
 .bt-settings-close{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:0;background:var(--bt-hover);color:var(--bt-ink-2);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .bt-settings-close:hover{background:var(--bt-active);color:var(--bt-ink)}
 .bt-settings-form{display:flex;flex-direction:column;gap:16px}
+.bt-set-section>.bt-actions{margin-bottom:8px}
 .bt-set-section h3{font-size:13px;line-height:18px;font-weight:600;margin:0 0 8px;padding:0 4px}
 .bt-set-card{border:1px solid var(--bt-line);border-radius:12px;background:var(--bt-card);display:flex;flex-direction:column}
 .bt-set-card>*+*{border-top:.5px solid var(--bt-line)}
@@ -10870,10 +10871,15 @@ function useEscape(onClose) {
   }, []);
 }
 function usePaneLeft() {
-  const [paneLeft, setPaneLeft] = (0, import_react21.useState)(280);
+  const [paneLeft, setPaneLeft] = (0, import_react21.useState)(FALLBACK_SIDEBAR_WIDTH);
   (0, import_react21.useLayoutEffect)(() => {
-    const column = document.querySelector('[class*="_footArea"]')?.parentElement;
-    if (column) setPaneLeft(Math.round(column.getBoundingClientRect().right));
+    const column = document.querySelector('[class*="_centerCol"]');
+    if (!column) return void 0;
+    const measure = () => setPaneLeft(Math.round(column.getBoundingClientRect().left));
+    measure();
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null;
+    observer?.observe(column);
+    return () => observer?.disconnect();
   }, []);
   return paneLeft;
 }
@@ -11021,7 +11027,7 @@ function PickerDialog({ value, title, info, fallback, actions, onPick, onClose }
   return (0, import_react_dom5.createPortal)((0, import_react22.createElement)(
     "div",
     { className: "bt-fpick-layer" },
-    (0, import_react22.createElement)("div", { className: "bt-fpick-scrim", onMouseDown: onClose }),
+    (0, import_react22.createElement)("div", { className: "bt-scrim", onMouseDown: onClose }),
     (0, import_react22.createElement)(
       "div",
       { className: "bt-fpick", role: "dialog", "aria-modal": true, "aria-label": title },
@@ -11132,7 +11138,6 @@ var PICKER_CSS = `
 .bt-fpick-mount{display:flex}
 .bt-fpick footer select{height:30px;border:1px solid var(--bt-line);border-radius:8px;background:var(--bt-card);color:inherit;font:inherit}
 .bt-fpick-layer{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;z-index:70;display:flex;align-items:center;justify-content:center;font-family:var(--bt-font);font-size:13px;line-height:18px;color:var(--bt-ink)}
-.bt-fpick-scrim{position:absolute;inset:0;background:color-mix(in srgb,var(--bt-ink) 30%,transparent);animation:bt-fade .2s ease-out}
 .bt-fpick{position:relative;display:grid;grid-template:auto 1fr auto/190px 1fr;width:min(760px,calc(100vw - 32px));height:min(560px,calc(100vh - 64px));border:.5px solid var(--bt-line-2);border-radius:18px;background:var(--bt-main);overflow:hidden}
 .bt-fpick button{display:inline-flex;align-items:center;gap:8px;min-width:0;border:0;border-radius:8px;padding:6px 8px;background:none;color:inherit;font:inherit;cursor:pointer}
 .bt-fpick button:hover,.bt-fpick [aria-current]{background:var(--bt-hover)}
@@ -11169,7 +11174,6 @@ var PICKER_CSS = `
 .bt-composer-folder span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bt-composer-folder[data-set] button:first-child{background:color-mix(in srgb,var(--bt-accent) 12%,transparent);color:var(--bt-accent)}
 @media(max-width:600px){.bt-fpick{grid-template:auto auto 1fr auto/1fr}.bt-fpick nav{flex-direction:row;border-right:0;border-bottom:.5px solid var(--bt-line)}.bt-fpick-place{width:auto;flex:none}.bt-fpick footer label,.bt-fpick-here{display:none}.bt-fpick footer{justify-content:flex-end}}
-@media(prefers-reduced-motion:reduce){.bt-fpick-scrim{animation:none}}
 `;
 
 // src/client/composer.js
@@ -11887,7 +11891,8 @@ function ClassicMemoryButton({ wide, useSurface, useRoster, actions }) {
 var BANK_CSS = `
 .bt-bank-layer{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;z-index:62;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:20px;color-scheme:light;color:var(--bt-ink,CanvasText)}
 body[data-ds-dark-theme] .bt-bank-layer{color-scheme:dark}
-.bt-bank-scrim{position:absolute;inset:0;background:color-mix(in srgb,CanvasText 28%,transparent)}
+.bt-bank-scrim{position:absolute;inset:0;background:rgba(0,0,0,.32)}
+body[data-ds-dark-theme] .bt-bank-scrim{background:rgba(0,0,0,.5)}
 .bt-bank{position:relative;display:grid;grid-template:auto 1fr/210px 1fr;width:min(880px,calc(100vw - 32px));height:min(680px,calc(100vh - 64px));border-radius:18px;overflow:hidden;background:var(--bt-main,Canvas);border:1px solid color-mix(in srgb,currentColor 15%,transparent)}
 .bt-bank header{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid color-mix(in srgb,currentColor 10%,transparent)}
 .bt-bank h2{margin:0;font-size:16px;flex:1}
@@ -21343,25 +21348,25 @@ function mentionableBots(roster, sessionId) {
   if (room2) return room2.members.map((id) => roster.byId[id]).filter(Boolean);
   return roster.byId[sessionId] ? roster.bots : [];
 }
-function userTextParts(text, bots, referenceLabels = []) {
+function userTextParts(text, bots, referenceLabels = [], { everyone = false } = {}) {
   const parts = [];
   let cursor = 0;
   for (const span of mentionSpans(text, bots, { references: referenceLabels })) {
-    if (!span.bot) continue;
+    if (!span.bot && !everyone) continue;
     if (span.start > cursor) parts.push({ text: text.slice(cursor, span.start) });
-    parts.push({ bot: span.bot, label: text.slice(span.start + 1, span.end) });
+    parts.push(span.bot ? { bot: span.bot, label: text.slice(span.start + 1, span.end) } : { all: true, label: text.slice(span.start, span.end) });
     cursor = span.end;
   }
   if (cursor < text.length) parts.push({ text: text.slice(cursor) });
   return parts;
 }
-function UserText({ text, bots, referenceLabels, skillNames, references, actions }) {
-  return userTextParts(text, bots, referenceLabels).map((part, index) => part.bot ? (0, import_react56.createElement)(
+function UserText({ text, bots, everyone, referenceLabels, skillNames, references, actions }) {
+  return userTextParts(text, bots, referenceLabels, { everyone }).map((part, index) => part.bot ? (0, import_react56.createElement)(
     "button",
     { key: index, type: "button", className: "bt-umention", title: `@${part.bot.name}`, onClick: () => actions.openSession(part.bot.id) },
     (0, import_react56.createElement)(BotMark, { bot: part.bot, size: 16 }),
     part.label
-  ) : (0, import_react56.createElement)(import_react56.Fragment, { key: index }, ui.projectUserText(part.text, referenceLabels, skillNames, "skill", references)));
+  ) : part.all ? (0, import_react56.createElement)("span", { key: index, className: "bt-uall" }, part.label) : (0, import_react56.createElement)(import_react56.Fragment, { key: index }, ui.projectUserText(part.text, referenceLabels, skillNames, "skill", references)));
 }
 function Attachments({ attachments, renderMessageImages }) {
   const compact2 = attachments.length > 1;
@@ -21399,7 +21404,7 @@ function UserMessageCell({ node, sessionId, useRoster, actions, renderMessageIma
   const steering = node.kind === "steering";
   const groupTime = roster.roomsById?.[sessionId] && Number.isFinite(data.time) ? messageClock(data.time) : void 0;
   const { shown, folded, control } = useFold(text, { markdown: false });
-  const body = (0, import_react56.createElement)(UserText, { text: shown, bots: mentionableBots(roster, sessionId), referenceLabels, skillNames: data.skillNames ?? [], references, actions });
+  const body = (0, import_react56.createElement)(UserText, { text: shown, bots: mentionableBots(roster, sessionId), everyone: Boolean(roster.roomsById?.[sessionId]), referenceLabels, skillNames: data.skillNames ?? [], references, actions });
   const row = (0, import_react56.useRef)(null);
   const [toolsOpen, setToolsOpen] = (0, import_react56.useState)(false);
   (0, import_react56.useEffect)(() => {
@@ -21442,7 +21447,8 @@ var USER_MESSAGE_CSS = `
 .bt-umsg{display:flex;flex-direction:row-reverse;align-items:center;justify-content:flex-start;gap:4px}
 .bt-ustack{min-width:0;max-width:calc(var(--bt-msg-w) * 100%);display:flex;flex-direction:column;align-items:flex-end;gap:8px}
 .bt-ubody{max-width:100%;box-sizing:border-box;background:var(--bt-user);color:var(--bt-user-ink);border-radius:18px;padding:7px 12px;font-size:var(--dsh-content-font-size,14px);line-height:calc(var(--dsh-content-font-size,14px) + 10px);white-space:pre-wrap;word-break:break-word;text-wrap:pretty;text-autospace:normal}
-.bt-ubody a{color:inherit}
+.bt-ubody a,.bt-ubody [data-ref-chip]{color:inherit}
+.bt-uall{font-weight:600}
 .bt-umention{display:inline-flex;align-items:center;gap:3px;vertical-align:-3px;max-width:100%;padding:0 1px;border:0;background:none;color:inherit;font:inherit;font-weight:600;line-height:inherit;cursor:pointer;border-radius:6px;white-space:nowrap}
 .bt-umention:hover{text-decoration:underline;text-underline-offset:2px}
 .bt-umention>:first-child{flex:none}

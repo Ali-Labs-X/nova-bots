@@ -124,7 +124,8 @@ export function ClassicMemoryButton({ wide, useSurface, useRoster, actions }) {
 export const BANK_CSS = `
 .bt-bank-layer{position:fixed;inset:var(--dsh-frame-chrome-top,0px) 0 0;z-index:62;display:flex;align-items:center;justify-content:center;font-size:14px;line-height:20px;color-scheme:light;color:var(--bt-ink,CanvasText)}
 body[data-ds-dark-theme] .bt-bank-layer{color-scheme:dark}
-.bt-bank-scrim{position:absolute;inset:0;background:color-mix(in srgb,CanvasText 28%,transparent)}
+.bt-bank-scrim{position:absolute;inset:0;background:rgba(0,0,0,.32)}
+body[data-ds-dark-theme] .bt-bank-scrim{background:rgba(0,0,0,.5)}
 .bt-bank{position:relative;display:grid;grid-template:auto 1fr/210px 1fr;width:min(880px,calc(100vw - 32px));height:min(680px,calc(100vh - 64px));border-radius:18px;overflow:hidden;background:var(--bt-main,Canvas);border:1px solid color-mix(in srgb,currentColor 15%,transparent)}
 .bt-bank header{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid color-mix(in srgb,currentColor 10%,transparent)}
 .bt-bank h2{margin:0;font-size:16px;flex:1}

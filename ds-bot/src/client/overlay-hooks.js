@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { FALLBACK_SIDEBAR_WIDTH } from './frame-layout.js'
 
 // -------------------------------------------------------------------------
 // Overlays: new chat, bot exchange, details drawer, context menu
@@ -20,12 +21,19 @@ export function useEscape(onClose) {
   }, [])
 }
 
-// New chat and Bot exchanges show in place of the conversation, right of the sidebar.
+// New chat, voice and Bot exchanges show in place of the conversation, so they start
+// where its column does. The shell's own sidebar is collapsed in the Bot view and says
+// nothing about ours.
 export function usePaneLeft() {
-  const [paneLeft, setPaneLeft] = useState(280)
+  const [paneLeft, setPaneLeft] = useState(FALLBACK_SIDEBAR_WIDTH)
   useLayoutEffect(() => {
-    const column = document.querySelector('[class*="_footArea"]')?.parentElement
-    if (column) setPaneLeft(Math.round(column.getBoundingClientRect().right))
+    const column = document.querySelector('[class*="_centerCol"]')
+    if (!column) return undefined
+    const measure = () => setPaneLeft(Math.round(column.getBoundingClientRect().left))
+    measure()
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(measure) : null
+    observer?.observe(column)
+    return () => observer?.disconnect()
   }, [])
   return paneLeft
 }
