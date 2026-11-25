@@ -35,7 +35,7 @@ import { LaunchTokenPool } from './launch-token.mjs'
 import { clearEngineCookies, policyFromEnv, routeFor, signupAllowed } from './gate.mjs'
 import { capacityPage, failedPage, heldPage, provisioningPage } from './pages.mjs'
 import { Tenants, tenancyConfigFromEnv } from './tenants.mjs'
-import { BodyTooLarge, clientIp, rateKey, readBody, requestUrl } from './http.mjs'
+import { BodyTooLarge, clientIp, foreignOrigin, rateKey, readBody, requestUrl } from './http.mjs'
 import { untilDatabase } from './startup.mjs'
 
 const PORT = Number(process.env.NOVA_PORTAL_PORT ?? 13081)
@@ -401,6 +401,7 @@ const server = createServer(async (req, res) => {
     const path = url.pathname
 
     if (path.startsWith('/api/v1/auth/')) {
+      if (req.method !== 'GET' && foreignOrigin(req)) return json(res, 403, { detail: { message: 'Not allowed.' } })
       if (path === '/api/v1/auth/login/local' && req.method === 'POST') return await login(req, res)
       if (path === '/api/v1/auth/me' && req.method === 'GET') return await me(req, res)
       if (path === '/api/v1/auth/logout' && req.method === 'POST') return await logout(req, res)

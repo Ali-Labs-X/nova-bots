@@ -167,10 +167,14 @@ export const requestAuthority = (req) => {
   return origin === dialled ? dialled : host
 }
 
+const acceptsGzip = value => /(^|,)\s*gzip\s*(;\s*q=(0?\.\d*[1-9]|1)[\d.]*\s*)?(,|$)/i.test(String(value ?? ''))
+
 const upstreamHeaders = (req, engineCookie, { upgrade = false, authority } = {}) => {
   const headers = { ...req.headers }
   for (const name of HOP_BY_HOP) if (!upgrade || (name !== 'connection' && name !== 'upgrade')) delete headers[name]
-  delete headers['accept-encoding']
+  // The engine compresses with gzip, and never its live feeds.
+  if (!upgrade && acceptsGzip(headers['accept-encoding'])) headers['accept-encoding'] = 'gzip'
+  else delete headers['accept-encoding']
   // Credentials meant for the portal stay with the portal.
   delete headers.authorization
   delete headers['x-nova-bots-token']
@@ -216,6 +220,23 @@ const requestBody = async req => {
   const chunks = []
   for await (const chunk of req) chunks.push(chunk)
   return { body: Buffer.concat(chunks), replayable: true }
+}
+
+// Every account asks for the same addresses, and each gets its own engine's
+// answer: a cache that kept one by its address would hand one account's code to
+// another. An edge may do so for a script that says nothing about caching, and
+// an engine could ask it to, so the portal has the last word.
+const SHARED_CACHE_HEADERS = ['cdn-cache-control', 'cloudflare-cdn-cache-control', 'surrogate-control', 'x-accel-expires', 'expires']
+// Files named by their content; the engine says nothing about them.
+const ASSET_SECONDS = 14400
+
+const keepPrivate = (headers, path) => {
+  for (const name of SHARED_CACHE_HEADERS) delete headers[name]
+  const said = String(headers['cache-control'] ?? (path.startsWith('/assets/') ? `max-age=${ASSET_SECONDS}` : ''))
+  const kept = said.split(',').map(part => part.trim()).filter(part => part && !/^(public|private|s-maxage\b.*)$/i.test(part))
+  headers['cache-control'] = ['private', ...kept].join(', ')
+  const vary = String(headers.vary ?? '').split(',').map(part => part.trim()).filter(part => part && !/^cookie$/i.test(part))
+  headers.vary = [...vary, 'Cookie'].join(', ')
 }
 
 // The edge closes an answer that stays silent for about two minutes, and the
@@ -283,6 +304,7 @@ export const proxyHttp = async (req, res, target, { retried = false, payload, ke
     const cookies = responseCookies(req, headers['set-cookie'])
     delete headers['set-cookie']
     if (cookies.length) headers['set-cookie'] = cookies
+    keepPrivate(headers, upstream.pathname)
     res.writeHead(upstreamResponse.statusCode ?? 502, headers)
     // `pipe` ends neither side when the other breaks off.
     upstreamResponse.on('error', () => res.destroy())
