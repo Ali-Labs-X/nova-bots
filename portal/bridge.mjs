@@ -62,6 +62,7 @@ export class EngineCookieJar {
     this.maxAgeMs = maxAgeMs
     this.maxEntries = maxEntries
     this.cookies = new Map()
+    this.minting = new Map()
   }
 
   // `mint` hands back a cookie for the engine, trying its own candidates;
@@ -74,10 +75,19 @@ export class EngineCookieJar {
       this.cookies.set(id, cached)
       return cached.value
     }
-    const value = mint ? await mint(url, host) : token ? await this.mint(url, await token(), host) : null
-    this.cookies.delete(id)
-    if (value) this.remember(id, { value, at: now() })
-    return value
+    // A page asks for dozens of files at once: they share one mint. A request
+    // whose cookie was refused does not take one that was under way before.
+    const flight = `${id}\u0000${fresh}`
+    const pending = this.minting.get(flight)
+    if (pending) return pending
+    const work = (async () => {
+      const value = mint ? await mint(url, host) : token ? await this.mint(url, await token(), host) : null
+      this.cookies.delete(id)
+      if (value) this.remember(id, { value, at: now() })
+      return value
+    })().finally(() => this.minting.delete(flight))
+    this.minting.set(flight, work)
+    return work
   }
 
   remember(id, entry) {
@@ -274,7 +284,10 @@ export const proxyHttp = async (req, res, target, { retried = false, payload, ke
     upstreamResponse.pipe(res)
   })
   res.on('close', () => request.destroy())
-  request.on('error', () => unavailable(res, 502, 'The Nova Bots engine is not reachable.'))
+  request.on('error', () => {
+    if (!res.destroyed) target.unreachable?.()
+    unavailable(res, 502, 'The Nova Bots engine is not reachable.')
+  })
   if (replayable) request.end(body ?? undefined)
   else req.pipe(request)
 }
@@ -319,7 +332,10 @@ export const proxyUpgrade = async (req, socket, head, target, { onOpen, onClose,
     }
     socket.destroy()
   })
-  request.on('error', () => socket.destroy())
+  request.on('error', () => {
+    if (!socket.destroyed) target.unreachable?.()
+    socket.destroy()
+  })
   if (head?.length) request.write(head)
   request.end()
 }

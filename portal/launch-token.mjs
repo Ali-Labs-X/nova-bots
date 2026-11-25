@@ -92,6 +92,13 @@ export class LaunchTokenPool {
   // candidate is refused the pool waits and looks again, because the file
   // token is refreshed while the engine starts.
   async mint(engineUrl, host, mint) {
+    // Looking for candidates starts a `docker logs`; the token that worked
+    // last needs none of it.
+    if (this.winner) {
+      const cookie = await mint(engineUrl, this.winner, host)
+      if (cookie) return cookie
+      this.winner = null
+    }
     for (let round = 0; round < this.rounds; round += 1) {
       for (const token of await this.candidates()) {
         const cookie = await mint(engineUrl, token, host)
