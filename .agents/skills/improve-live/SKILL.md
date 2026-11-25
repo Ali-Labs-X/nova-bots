@@ -54,6 +54,13 @@ What a pattern means:
 - A count that only grows is a leak. Compare it with the number of drops.
 - The same large download again and again is someone who gives up before it
   has arrived. Measure who hangs up, on the side that decides.
+- An engine busy while the team is idle: look at the engine process table in
+  the report. Zombies that keep growing mean nothing collects orphans; many
+  reads a second with no disk reads mean something walks `/proc` in a loop.
+- The interface can cost more than the server. Measure an open page that
+  nothing happens on: main-thread time and CPU, with the animations on and off,
+  in Chrome and Firefox. Then check what the cost buys: a screenshot with and
+  without the element, compared pixel by pixel.
 
 For a problem of the interface, or when the logs are quiet, pilot the app:
 `scripts/pilot.sh up` starts a throwaway engine with the mock model. Walk it in a
