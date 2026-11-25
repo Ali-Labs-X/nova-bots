@@ -118,4 +118,9 @@ if [ -n "${NOVA_TRUSTED_HOST:-${DSH_TRUSTED_HOST:-}}" ]; then
 fi
 export HOME=/home/node
 cd /workspace
-exec gosu node "$@"
+# What the Bots' commands leave behind (browsers, dev servers) becomes a child of
+# process 1 and stays a zombie until process 1 collects it, which Node does not do.
+# Every zombie counts against the container's process limit, and the engine reads it
+# again at each look at the process table. tini collects them. It runs as the node
+# user, because root without CAP_KILL could not pass the stop signal on.
+exec gosu node tini -- "$@"

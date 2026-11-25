@@ -245,5 +245,6 @@ After building the image, run `node docker/test.mjs nova-bots:local` from the
 repository root. The test uses isolated, network-disabled containers and
 temporary Docker volumes, with no host directory mounts or model calls. It
 checks entrypoint permissions, first start, UID/GID changes, restored files,
-workspace ownership and web startup. All test containers and volumes are
-removed when it finishes.
+workspace ownership, web startup, that left-behind processes are collected, and
+that the engine stops and starts again cleanly. All test containers and volumes
+are removed when it finishes.
