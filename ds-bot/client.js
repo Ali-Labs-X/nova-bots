@@ -10870,10 +10870,15 @@ function useEscape(onClose) {
   }, []);
 }
 function usePaneLeft() {
-  const [paneLeft, setPaneLeft] = (0, import_react21.useState)(280);
+  const [paneLeft, setPaneLeft] = (0, import_react21.useState)(FALLBACK_SIDEBAR_WIDTH);
   (0, import_react21.useLayoutEffect)(() => {
-    const column = document.querySelector('[class*="_footArea"]')?.parentElement;
-    if (column) setPaneLeft(Math.round(column.getBoundingClientRect().right));
+    const column = document.querySelector('[class*="_centerCol"]');
+    if (!column) return void 0;
+    const measure = () => setPaneLeft(Math.round(column.getBoundingClientRect().left));
+    measure();
+    const observer = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null;
+    observer?.observe(column);
+    return () => observer?.disconnect();
   }, []);
   return paneLeft;
 }
