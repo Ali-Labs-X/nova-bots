@@ -93,3 +93,23 @@ test('a pool that never gets a token answers with nothing', async () => {
   const mint = async () => null
   assert.equal(await pool.mint('http://127.0.0.1:13083', 'h', mint), null)
 })
+
+test('a token that works is used without reading the file or the log again', async () => {
+  let reads = 0
+  const pool = poolOf({ read: async () => { reads += 1; return 'filetoken0123456789' }, log: async () => { reads += 1; return LOG } })
+  const mint = async (url, token) => (token === 'midtoken0123456789' ? 'dsh-auth-h=ok' : null)
+  await pool.mint('http://127.0.0.1:13083', 'h', mint)
+  const first = reads
+  for (let i = 0; i < 5; i += 1) assert.equal(await pool.mint('http://127.0.0.1:13083', 'h', mint), 'dsh-auth-h=ok')
+  assert.equal(reads, first)
+})
+
+test('a token that stops working is replaced by one that does', async () => {
+  const pool = poolOf({ read: async () => 'filetoken0123456789' })
+  let good = 'midtoken0123456789'
+  const mint = async (url, token) => (token === good ? 'dsh-auth-h=ok' : null)
+  await pool.mint('http://127.0.0.1:13083', 'h', mint)
+  good = 'newtoken0123456789'
+  assert.equal(await pool.mint('http://127.0.0.1:13083', 'h', mint), 'dsh-auth-h=ok')
+  assert.equal(pool.winner, 'newtoken0123456789')
+})

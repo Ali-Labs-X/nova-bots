@@ -34,3 +34,22 @@ test('a failed mint leaves no entry behind', async () => {
   await jar.get({ key: 'A', url: 'http://engine', host: 'h', mint: async () => null })
   assert.equal(jar.cookies.size, 0)
 })
+
+test('many requests that find no cookie share one mint', async () => {
+  const jar = new EngineCookieJar()
+  let mints = 0
+  const mint = async () => { mints += 1; await new Promise(resolve => setTimeout(resolve, 20)); return 'dsh-auth-h=v' }
+  const get = fresh => jar.get({ key: 'A', url: 'http://engine', host: 'h', mint, fresh })
+  assert.deepEqual([...new Set(await Promise.all(Array.from({ length: 50 }, () => get(false))))], ['dsh-auth-h=v'])
+  assert.equal(mints, 1)
+  await Promise.all(Array.from({ length: 50 }, () => get(true)))
+  assert.equal(mints, 2, 'a refused cookie is minted again, once')
+})
+
+test('a request after a failed mint tries again', async () => {
+  const jar = new EngineCookieJar()
+  const answers = [null, 'dsh-auth-h=v']
+  const get = () => jar.get({ key: 'A', url: 'http://engine', host: 'h', mint: async () => answers.shift() })
+  assert.equal(await get(), null)
+  assert.equal(await get(), 'dsh-auth-h=v')
+})

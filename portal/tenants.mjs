@@ -367,6 +367,10 @@ export class TenantStore {
 
 // ---- the provisioner ---------------------------------------------------------
 
+// How long a tenant seen running counts as running. Asking docker starts a
+// process, which costs far more than the request it is for.
+const SEEN_RUNNING_MS = 5000
+
 export class CapacityError extends Error {
   constructor(message = 'All workspaces are busy right now.') {
     super(message)
@@ -388,6 +392,7 @@ export class Tenants {
     this.box = secretBox(config.secretKey)
     this.inflight = new Map()
     this.tokens = new Map()
+    this.seen = new Map()
     this.activity = new Map()
     this.sockets = new Map()
     this.failures = new Map()
@@ -511,9 +516,11 @@ export class Tenants {
     if (tenant.kind === 'legacy') return Promise.resolve(tenant)
     const pending = this.inflight.get(tenant.id)
     if (pending) return pending
+    if (this.seenRunning(tenant)) return Promise.resolve(tenant)
     const work = (async () => {
       let state = await this.docker.inspect(tenant.container)
       if (state.running) {
+        this.seen.set(tenant.id, Date.now())
         if (tenant.state !== 'running') tenant = await this.store.update(tenant.id, { state: 'running' })
         return tenant
       }
@@ -522,6 +529,7 @@ export class Tenants {
       this.forget(tenant.id)
       await this.docker.run(['start', tenant.container])
       await this.waitReady(tenant)
+      this.seen.set(tenant.id, Date.now())
       this.activity.set(tenant.id, Date.now())
       const updated = await this.store.update(tenant.id, { state: 'running', started_at: new Date(), last_active_at: new Date(), last_error: null })
       await this.audit({ action: 'tenant-start', actor: 'system', target: tenant.id, detail: { container: tenant.container } })
@@ -532,6 +540,10 @@ export class Tenants {
     }).finally(() => this.inflight.delete(tenant.id))
     this.inflight.set(tenant.id, work)
     return work
+  }
+
+  seenRunning(tenant) {
+    return tenant.state === 'running' && Date.now() - (this.seen.get(tenant.id) ?? 0) < SEEN_RUNNING_MS
   }
 
   async waitReady(tenant) {
@@ -569,6 +581,7 @@ export class Tenants {
   }
 
   forget(id) {
+    this.seen.delete(id)
     this.tokens.delete(id)
     this.jar.invalidate(id)
   }
@@ -594,6 +607,7 @@ export class Tenants {
         mint: tenant.kind === 'legacy' && this.legacyMint ? engineUrl => this.legacyMint(engineUrl, host) : undefined,
       }),
       invalidate: () => this.forget(tenant.id),
+      unreachable: () => this.seen.delete(tenant.id),
     }
   }
 
@@ -605,6 +619,7 @@ export class Tenants {
     if (!tenant) tenant = await this.ensureRow(user)
     if (tenant.kind === 'legacy') return { ready: true, tenant }
     if (!this.inflight.has(tenant.id)) {
+      if (this.seenRunning(tenant)) return { ready: true, tenant }
       const state = await this.docker.inspect(tenant.container)
       if (state.running && this.tokens.has(tenant.id)) return { ready: true, tenant }
       if (state.running) {
@@ -648,6 +663,7 @@ export class Tenants {
   async stop(tenant, { reason = 'admin', actor = 'system' } = {}) {
     if (!tenant) return null
     if (tenant.kind === 'legacy') throw new Error('the shared engine is not managed by the provisioner')
+    this.seen.delete(tenant.id)
     this.closeSockets(tenant.id)
     const state = await this.docker.inspect(tenant.container)
     if (state.running) await this.docker.run(['stop', '--time', '15', tenant.container], { timeout: 60000 })

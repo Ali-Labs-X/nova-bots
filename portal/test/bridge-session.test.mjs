@@ -119,6 +119,12 @@ test('/app answers with a redirect to /app/', async () => {
   assert.equal(res.body, '')
 })
 
+test('/app keeps its query', async () => {
+  const seen = {}
+  redirectToApp({ url: '/app?a=1&b=2' }, { writeHead: (status, headers) => Object.assign(seen, headers), end() {} })
+  assert.equal(seen.location, '/app/?a=1&b=2')
+})
+
 test('/app/ is bridged as it is', async () => {
   const res = await get('/app/')
   assert.equal(res.status, 200)

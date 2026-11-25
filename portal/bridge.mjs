@@ -16,7 +16,7 @@
 //     from the engine's answer, and any engine cookie the browser still holds
 //     from before is deleted.
 
-import { request as httpRequest } from 'node:http'
+import { request as httpRequest, STATUS_CODES } from 'node:http'
 import { requestUrl } from './http.mjs'
 import {
   clearEngineCookies,
@@ -62,6 +62,7 @@ export class EngineCookieJar {
     this.maxAgeMs = maxAgeMs
     this.maxEntries = maxEntries
     this.cookies = new Map()
+    this.minting = new Map()
   }
 
   // `mint` hands back a cookie for the engine, trying its own candidates;
@@ -74,10 +75,19 @@ export class EngineCookieJar {
       this.cookies.set(id, cached)
       return cached.value
     }
-    const value = mint ? await mint(url, host) : token ? await this.mint(url, await token(), host) : null
-    this.cookies.delete(id)
-    if (value) this.remember(id, { value, at: now() })
-    return value
+    // A page asks for dozens of files at once: they share one mint. A request
+    // whose cookie was refused does not take one that was under way before.
+    const flight = `${id}\u0000${fresh}`
+    const pending = this.minting.get(flight)
+    if (pending) return pending
+    const work = (async () => {
+      const value = mint ? await mint(url, host) : token ? await this.mint(url, await token(), host) : null
+      this.cookies.delete(id)
+      if (value) this.remember(id, { value, at: now() })
+      return value
+    })().finally(() => this.minting.delete(flight))
+    this.minting.set(flight, work)
+    return work
   }
 
   remember(id, entry) {
@@ -189,7 +199,7 @@ const unavailable = (res, status, message, extra = {}) => {
 // blank. /app answers with a redirect to /app/ instead.
 export const redirectToApp = (req, res) => {
   const url = requestUrl(req.url)
-  const location = url.search ? `/app/?${url.search}` : '/app/'
+  const location = `/app/${url.search}`
   res.writeHead(302, { location, 'cache-control': 'no-store' })
   res.end()
 }
@@ -230,16 +240,24 @@ const keepFeedOpen = (upstreamResponse, res, keepAliveMs) => {
   res.on('close', stop)
 }
 
+// A service worker would answer for every page of this origin from then on,
+// the sign-in page among them. The app has none, and an engine's page is not
+// to be trusted with one.
+const asksForServiceWorker = req => req.headers['service-worker'] === 'script'
+
 // HTTP. A 401 from the engine means the minted cookie is no longer accepted
 // (an engine whose cookie key changed): the request is sent again with a
 // fresh cookie when it can be replayed; one that cannot be replayed is
 // answered with the status the client can act on.
-export const proxyHttp = async (req, res, target, { retried = false, payload, keepAliveMs = KEEP_ALIVE_MS } = {}) => {
+export const proxyHttp = async (req, res, target, { retried = false, payload, keepAliveMs = KEEP_ALIVE_MS, onFeed } = {}) => {
+  if (asksForServiceWorker(req)) return unavailable(res, 403, 'Not allowed.')
   const host = requestAuthority(req)
   const engineCookie = await target.cookie(host, { fresh: retried })
   if (!engineCookie) return unavailable(res, 503, 'The Nova Bots workspace is not reachable yet. Try again in a moment.', { 'retry-after': '2' })
   const upstream = new URL(enginePath(req.url), target.url)
   const { body, replayable } = payload ?? await requestBody(req)
+  // Gone while this was prepared: its `close` has come and gone, too.
+  if (res.destroyed) return
   const request = httpRequest({
     hostname: upstream.hostname,
     port: upstream.port || 80,
@@ -251,7 +269,7 @@ export const proxyHttp = async (req, res, target, { retried = false, payload, ke
       upstreamResponse.resume()
       target.invalidate?.()
       if (!retried && replayable) {
-        return proxyHttp(req, res, target, { retried: true, payload: { body, replayable }, keepAliveMs })
+        return proxyHttp(req, res, target, { retried: true, payload: { body, replayable }, keepAliveMs, onFeed })
           .catch(() => unavailable(res, 502, 'The Nova Bots engine is not reachable.'))
       }
       return unavailable(res, 401, 'The Nova Bots workspace refused the session. Reload the page and sign in again.')
@@ -269,21 +287,40 @@ export const proxyHttp = async (req, res, target, { retried = false, payload, ke
     // `pipe` ends neither side when the other breaks off.
     upstreamResponse.on('error', () => res.destroy())
     upstreamResponse.on('close', () => { if (!upstreamResponse.complete) res.destroy() })
-    const feed = String(headers['content-type'] ?? '').startsWith('text/event-stream')
-    if (feed && !headers['content-encoding'] && req.method === 'GET') keepFeedOpen(upstreamResponse, res, keepAliveMs)
+    const feed = req.method === 'GET' && String(headers['content-type'] ?? '').startsWith('text/event-stream')
+    if (feed) onFeed?.(res)
+    if (feed && !headers['content-encoding']) keepFeedOpen(upstreamResponse, res, keepAliveMs)
     upstreamResponse.pipe(res)
   })
   res.on('close', () => request.destroy())
-  request.on('error', () => unavailable(res, 502, 'The Nova Bots engine is not reachable.'))
+  request.on('error', () => {
+    if (!res.destroyed) target.unreachable?.()
+    unavailable(res, 502, 'The Nova Bots engine is not reachable.')
+  })
   if (replayable) request.end(body ?? undefined)
   else req.pipe(request)
 }
 
+// A refusal the proxies in front can pass on; a bare hang-up reads as an
+// outage of this server to them.
+export const refuseUpgrade = (socket, status) => {
+  if (socket.destroyed || socket.writableEnded) return
+  socket.end(`HTTP/1.1 ${status} ${STATUS_CODES[status]}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`)
+}
+
+// The browser has gone; its `end` may have come before anyone listened.
+const left = socket => socket.destroyed || socket.readableEnded
+
+// How long an engine may take to answer, and how long one side may outlive
+// the other: a live connection is never meant to be half open.
+const UPGRADE_LIMITS = { handshakeMs: 30000, halfOpenMs: 5000 }
+
 // WebSocket and other upgrades (the live feed). Same cookie rules as HTTP.
-export const proxyUpgrade = async (req, socket, head, target, { onOpen, onClose, retried = false } = {}) => {
+export const proxyUpgrade = async (req, socket, head, target, { onOpen, onClose, retried = false, limits = UPGRADE_LIMITS } = {}) => {
   const host = requestAuthority(req)
   const engineCookie = await target.cookie(host, { fresh: retried })
-  if (!engineCookie) return socket.destroy()
+  if (!engineCookie) return refuseUpgrade(socket, 503)
+  if (left(socket)) return socket.destroy()
   const upstream = new URL(enginePath(req.url), target.url)
   const request = httpRequest({
     hostname: upstream.hostname,
@@ -292,7 +329,22 @@ export const proxyUpgrade = async (req, socket, head, target, { onOpen, onClose,
     method: req.method,
     headers: upstreamHeaders(req, engineCookie, { upgrade: true, authority: host }),
   })
+  const tooLate = setTimeout(() => {
+    refuseUpgrade(socket, 504)
+    request.destroy()
+  }, limits.handshakeMs)
+  request.once('close', () => clearTimeout(tooLate))
+  const abandon = () => request.destroy()
+  socket.once('close', abandon)
+  socket.once('end', abandon)
   request.on('upgrade', (upstreamResponse, upstreamSocket, upstreamHead) => {
+    clearTimeout(tooLate)
+    socket.removeListener('close', abandon)
+    socket.removeListener('end', abandon)
+    if (left(socket)) {
+      socket.destroy()
+      return upstreamSocket.destroy()
+    }
     const lines = []
     for (const [key, value] of Object.entries(upstreamResponse.headers)) {
       const name = key.toLowerCase()
@@ -307,6 +359,9 @@ export const proxyUpgrade = async (req, socket, head, target, { onOpen, onClose,
     socket.on('error', () => upstreamSocket.destroy())
     socket.on('close', () => upstreamSocket.destroy())
     upstreamSocket.on('close', () => socket.end())
+    const closeSoon = () => setTimeout(() => { socket.destroy(); upstreamSocket.destroy() }, limits.halfOpenMs).unref()
+    socket.once('end', closeSoon)
+    upstreamSocket.once('end', closeSoon)
     upstreamSocket.pipe(socket).pipe(upstreamSocket)
     onOpen?.(socket)
     socket.once('close', () => onClose?.(socket))
@@ -315,11 +370,18 @@ export const proxyUpgrade = async (req, socket, head, target, { onOpen, onClose,
     upstreamResponse.resume()
     if (upstreamResponse.statusCode === 401 && !retried) {
       target.invalidate?.()
-      return proxyUpgrade(req, socket, head, target, { onOpen, onClose, retried: true }).catch(() => socket.destroy())
+      socket.removeListener('close', abandon)
+      socket.removeListener('end', abandon)
+      return proxyUpgrade(req, socket, head, target, { onOpen, onClose, retried: true, limits }).catch(() => socket.destroy())
     }
-    socket.destroy()
+    const status = upstreamResponse.statusCode
+    refuseUpgrade(socket, status >= 400 && status < 600 ? status : 502)
   })
-  request.on('error', () => socket.destroy())
+  request.on('error', () => {
+    if (socket.destroyed) return
+    target.unreachable?.()
+    refuseUpgrade(socket, 502)
+  })
   if (head?.length) request.write(head)
   request.end()
 }

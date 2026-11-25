@@ -11,6 +11,7 @@
 
 import { createHash, timingSafeEqual } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
+import { readBody } from './http.mjs'
 
 const ADMIN_TOKEN = process.env.NOVA_ADMIN_TOKEN ?? ''
 const ENGINE = process.env.NOVA_ENGINE_URL ?? 'http://127.0.0.1:13083'
@@ -206,14 +207,10 @@ const revokeSessions = async (res, auth, id, ip, ctx) => {
   json(res, 200, { ok: true })
 }
 
-const readBody = async (req) => {
-  const chunks = []
-  for await (const chunk of req) chunks.push(chunk)
-  return Buffer.concat(chunks).toString('utf8')
-}
+const readText = async req => (await readBody(req)).toString('utf8')
 
 const setPlan = async (res, auth, id, req, ip) => {
-  const body = await readBody(req)
+  const body = await readText(req)
   const form = new URLSearchParams(body)
   const plan = (form.get('plan') ?? '').trim() || ( (() => { try { return JSON.parse(body).plan } catch { return '' } })() )
   const user = await auth.setPlan(id, plan)
@@ -223,7 +220,7 @@ const setPlan = async (res, auth, id, req, ip) => {
 }
 
 const grantBonus = async (res, auth, id, req, ip) => {
-  const body = await readBody(req)
+  const body = await readText(req)
   let daily = 0, days = 7
   try {
     const parsed = JSON.parse(body)
@@ -253,23 +250,14 @@ const auditLog = async (res, auth) => {
 
 // ---- the tenants ---------------------------------------------------------
 
-const readJson = (req) => new Promise((resolve) => {
-  const chunks = []
-  let size = 0
-  req.on('data', chunk => {
-    size += chunk.length
-    if (size > 64 * 1024) req.destroy()
-    else chunks.push(chunk)
-  })
-  req.on('end', () => {
-    try {
-      resolve(chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : {})
-    } catch {
-      resolve(null)
-    }
-  })
-  req.on('error', () => resolve(null))
-})
+const readJson = async (req) => {
+  const text = await readText(req)
+  try {
+    return text ? JSON.parse(text) : {}
+  } catch {
+    return null
+  }
+}
 
 const needTenancy = (res, ctx) => {
   if (ctx.tenants) return false

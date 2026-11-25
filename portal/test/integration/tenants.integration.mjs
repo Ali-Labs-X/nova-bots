@@ -305,7 +305,12 @@ test('idle stop, then lazy restart keeps the tenant data', { timeout: 400000 }, 
     await sleep(3000)
   }
   assert.equal(state.State.Running, false, 'the idle tenant was stopped by the reaper')
-  const row = await tenantOf(A.email)
+  // Docker reports the stop a moment before the portal has written it down.
+  let row = await tenantOf(A.email)
+  for (let i = 0; i < 20 && row.state !== 'stopped'; i += 1) {
+    await sleep(250)
+    row = await tenantOf(A.email)
+  }
   evidence(`A idle-stopped by the reaper: container running=${state.State.Running}, tenant state ${row.state}`)
   assert.equal(row.state, 'stopped')
   const woke = await openWorkspace(S.a.cookie)

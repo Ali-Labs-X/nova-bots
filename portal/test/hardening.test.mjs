@@ -9,7 +9,7 @@ import { createServer as createHttp, request } from 'node:http'
 import { connect, createServer as createTcp } from 'node:net'
 import { fileURLToPath } from 'node:url'
 import { enginePath, proxyHttp } from '../bridge.mjs'
-import { BodyTooLarge, clientIp, readBody } from '../http.mjs'
+import { BodyTooLarge, clientIp, dockerBridges, rateKey, readBody, trustedProxies } from '../http.mjs'
 
 const listen = server => new Promise(resolve => server.listen(0, '127.0.0.1', () => resolve(server.address().port)))
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -98,6 +98,22 @@ test('no request stops the portal, and a failure shows no detail', async (t) => 
   assert.match(await raw(port, 'GET /health HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n'), /200 OK/)
 })
 
+test('a live connection without a session is answered, not dropped', async (t) => {
+  const { port } = await startPortal(t)
+  assert.match(await raw(port, 'GET /app/api/remote.mux HTTP/1.1\r\nHost: x\r\nConnection: Upgrade\r\nUpgrade: websocket\r\n\r\n'), /^HTTP\/1\.1 401 /)
+})
+
+test('no page served by an engine can install a service worker over the sign-in page', async (t) => {
+  let reached = false
+  const engine = createHttp((_req, res) => { reached = true; res.end('self') })
+  const target = { url: `http://127.0.0.1:${await listen(engine)}`, cookie: async () => 'dsh-auth-h=x' }
+  const portal = createHttp((req, res) => proxyHttp(req, res, target))
+  const port = await listen(portal)
+  t.after(() => { for (const server of [portal, engine]) { server.closeAllConnections(); server.close() } })
+  assert.match(await raw(port, 'GET /sw.js HTTP/1.1\r\nHost: x\r\nService-Worker: script\r\nConnection: close\r\n\r\n'), /^HTTP\/1\.1 403 /)
+  assert.equal(reached, false)
+})
+
 test('a path never chooses the engine host', async (t) => {
   for (const path of ['/app//evil.test/x', '//evil.test/x', '/app///evil.test/x', '/app/\\evil.test/x']) {
     assert.equal(new URL(enginePath(path), 'http://engine.local').hostname, 'engine.local', path)
@@ -116,13 +132,45 @@ test('a path never chooses the engine host', async (t) => {
   assert.deepEqual(seen, [])
 })
 
+const ROUTES = [
+  'Iface\tDestination\tGateway\tFlags\tRefCnt\tUse\tMetric\tMask\tMTU\tWindow\tIRTT',
+  'wlan0\t00000000\t0100A8C0\t0003\t0\t0\t600\t00000000\t0\t0\t0',
+  'docker0\t000011AC\t00000000\t0001\t0\t0\t0\t0000FFFF\t0\t0\t0',
+  'br-c0b87a979441\t00C8A8C0\t00000000\t0001\t0\t0\t0\t00FFFFFF\t0\t0\t0',
+  'nb-tenants\t000015AC\t00000000\t0001\t0\t0\t0\t0000FFFF\t0\t0\t0',
+].join('\n')
+
+const from = (trusted, remoteAddress, forwarded) => clientIp({ socket: { remoteAddress }, headers: forwarded ? { 'x-forwarded-for': forwarded } : {} }, trusted)
+
 test('the address comes from the proxies we run, not from what the visitor sent', () => {
-  const from = (remoteAddress, forwarded) => clientIp({ socket: { remoteAddress }, headers: forwarded ? { 'x-forwarded-for': forwarded } : {} })
-  assert.equal(from('172.18.0.3', '9.9.9.9, 203.0.113.7, 172.18.0.1'), '203.0.113.7')
-  assert.equal(from('::ffff:172.18.0.3', '203.0.113.7, 127.0.0.1'), '203.0.113.7')
-  assert.equal(from('192.168.1.20', '9.9.9.9'), '192.168.1.20')
-  assert.equal(from('127.0.0.1', 'nonsense'), '127.0.0.1')
-  assert.equal(from('127.0.0.1'), '127.0.0.1')
+  const trusted = trustedProxies({ bridges: [], extra: '' })
+  assert.equal(from(trusted, '172.18.0.3', '9.9.9.9, 203.0.113.7, 172.18.0.1'), '203.0.113.7')
+  assert.equal(from(trusted, '::ffff:172.18.0.3', '203.0.113.7, 127.0.0.1'), '203.0.113.7')
+  assert.equal(from(trusted, '192.168.1.20', '9.9.9.9'), '192.168.1.20')
+  assert.equal(from(trusted, '127.0.0.1', 'nonsense'), '127.0.0.1')
+  assert.equal(from(trusted, '127.0.0.1'), '127.0.0.1')
+})
+
+test("Docker's own bridges are the proxies, wherever Docker put them; a tenant is not one", () => {
+  const bridges = dockerBridges(ROUTES)
+  assert.deepEqual(bridges, ['172.17.0.0/16', '192.168.200.0/24'])
+  const trusted = trustedProxies({ bridges, extra: '' })
+  assert.equal(from(trusted, '192.168.200.3', '9.9.9.9, 203.0.113.7, 192.168.200.1'), '203.0.113.7')
+  assert.equal(from(trusted, '172.21.0.5', '9.9.9.9'), '172.21.0.5')
+})
+
+test('an operator can name more proxies', () => {
+  const trusted = trustedProxies({ bridges: [], extra: ' 10.1.2.0/24, fd00::/8 , nonsense' })
+  assert.equal(from(trusted, '10.1.2.3', '203.0.113.7'), '203.0.113.7')
+  assert.equal(from(trusted, 'fd00::1', '203.0.113.7'), '203.0.113.7')
+})
+
+test('one IPv6 network is one visitor', () => {
+  assert.equal(rateKey('203.0.113.7'), '203.0.113.7')
+  assert.equal(rateKey('2001:db8:1:2:aaaa::1'), rateKey('2001:db8:1:2::ffff'))
+  assert.notEqual(rateKey('2001:db8:1:2::1'), rateKey('2001:db8:1:3::1'))
+  assert.equal(rateKey('2001:db8::1'), '2001:db8:0:0::/64')
+  assert.equal(rateKey('unknown'), 'unknown')
 })
 
 test('a body over the limit is refused', async (t) => {

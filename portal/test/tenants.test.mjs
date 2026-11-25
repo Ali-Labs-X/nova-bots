@@ -84,6 +84,7 @@ test('assigned provider keys are sealed with AES-GCM and need the key to open', 
 const fakeProvisioner = ({ maxRunning = 2, idleMinutes = 30 } = {}) => {
   const rows = new Map()
   const containers = new Map()
+  const inspected = []
   const t = new Tenants({
     pool: {},
     config: { ...config, maxRunning, idleMinutes },
@@ -91,7 +92,7 @@ const fakeProvisioner = ({ maxRunning = 2, idleMinutes = 30 } = {}) => {
     audit: async () => {},
     log: { error() {} },
     docker: {
-      inspect: async name => ({ exists: containers.has(name), running: containers.get(name) === 'running' }),
+      inspect: async name => { inspected.push(name); return { exists: containers.has(name), running: containers.get(name) === 'running' } },
       run: async args => {
         if (args[0] === 'start') containers.set(args[1], 'running')
         if (args[0] === 'stop') containers.set(args.at(-1), 'stopped')
@@ -112,7 +113,7 @@ const fakeProvisioner = ({ maxRunning = 2, idleMinutes = 30 } = {}) => {
     if (state === 'running') containers.set(row.container, 'running')
     return row
   }
-  return { t, rows, containers, add }
+  return { t, rows, containers, add, inspected }
 }
 
 test('lazy start: a missing container is created and started, concurrent requests share one start', async () => {
@@ -121,6 +122,29 @@ test('lazy start: a missing container is created and started, concurrent request
   const [one, two] = await Promise.all([t.ensureRunning(row), t.ensureRunning(row)])
   assert.equal(one.state, 'running')
   assert.equal(two.state, 'running')
+  assert.equal(containers.get('c-a'), 'running')
+})
+
+test('requests to a running tenant do not ask docker each time', async () => {
+  const { t, add, inspected } = fakeProvisioner()
+  const row = add('a', 'running')
+  for (let i = 0; i < 50; i += 1) await t.ensureRunning(row)
+  assert.equal(inspected.length, 1)
+})
+
+test('a tenant that cannot be reached, or was stopped, is looked at again', async () => {
+  const { t, add, rows, containers, inspected } = fakeProvisioner()
+  add('a', 'running')
+  t.store.byUser = async () => rows.get('a')
+  const target = await t.targetFor({ id: 'u' })
+  containers.set('c-a', 'stopped')
+  target.unreachable()
+  await t.targetFor({ id: 'u' })
+  assert.equal(containers.get('c-a'), 'running', 'started again')
+  const looked = inspected.length
+  await t.stop(rows.get('a'))
+  await t.targetFor({ id: 'u' })
+  assert.ok(inspected.length > looked)
   assert.equal(containers.get('c-a'), 'running')
 })
 
