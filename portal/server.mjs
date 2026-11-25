@@ -35,6 +35,7 @@ import { LaunchTokenPool } from './launch-token.mjs'
 import { clearEngineCookies, policyFromEnv, routeFor, signupAllowed } from './gate.mjs'
 import { capacityPage, failedPage, heldPage, provisioningPage } from './pages.mjs'
 import { Tenants, tenancyConfigFromEnv } from './tenants.mjs'
+import { untilDatabase } from './startup.mjs'
 
 const PORT = Number(process.env.NOVA_PORTAL_PORT ?? 13081)
 const HOST = process.env.NOVA_PORTAL_HOST ?? '127.0.0.1'
@@ -435,7 +436,7 @@ const server = createServer(async (req, res) => {
 
 server.on('upgrade', upgrade)
 
-await auth.migrate()
+await untilDatabase(() => auth.migrate())
 if (tenants) {
   await tenants.migrate()
   // Every existing account gets its own tenant row (created lazily on first

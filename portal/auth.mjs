@@ -49,6 +49,9 @@ export class Auth {
       throw new Error('NOVA_JWT_SECRET must be set (at least 16 characters, 32+ recommended)')
     }
     this.pool = new Pool({ connectionString: databaseUrl, max: 4 })
+    // Without a listener, a database restart that drops an idle connection
+    // stops the whole portal; the pool opens a new one by itself.
+    this.pool.on('error', error => console.error(`portal: database connection lost: ${error.message}`))
     this.jwtSecret = jwtSecret
     this.tokenExpiryDays = tokenExpiryDays
     this.rateLimitMax = rateLimitMax
