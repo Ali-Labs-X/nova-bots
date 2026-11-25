@@ -30,12 +30,12 @@ import { createServer } from 'node:http'
 import { Auth } from './auth.mjs'
 import { handleAdmin } from './admin.mjs'
 import { createHostFolders, mountdClient } from './host-folders.mjs'
-import { EngineCookieJar, mintEngineCookie, proxyHttp, proxyUpgrade, redirectToApp } from './bridge.mjs'
+import { EngineCookieJar, mintEngineCookie, proxyHttp, proxyUpgrade, redirectToApp, refuseUpgrade } from './bridge.mjs'
 import { LaunchTokenPool } from './launch-token.mjs'
 import { clearEngineCookies, policyFromEnv, routeFor, signupAllowed } from './gate.mjs'
 import { capacityPage, failedPage, heldPage, provisioningPage } from './pages.mjs'
 import { Tenants, tenancyConfigFromEnv } from './tenants.mjs'
-import { BodyTooLarge, clientIp, readBody, requestUrl } from './http.mjs'
+import { BodyTooLarge, clientIp, rateKey, readBody, requestUrl } from './http.mjs'
 import { untilDatabase } from './startup.mjs'
 
 const PORT = Number(process.env.NOVA_PORTAL_PORT ?? 13081)
@@ -83,7 +83,7 @@ const login = async (req, res) => {
   if (!email || !password) return json(res, 400, { detail: { code: 'invalid_credentials', message: 'Enter your email and password.' } })
 
   const ip = clientIp(req)
-  const limit = auth.rateLimit(`signin:${ip}`)
+  const limit = auth.rateLimit(`signin:${rateKey(ip)}`)
   if (!limit.allowed) {
     await auth.audit({ action: 'sign-in-failed', actor: email, ok: false, ip, detail: { reason: 'rate-limited' } })
     return json(res, 429, { detail: { code: 'too_many_attempts', message: `Too many attempts. Try again in ${limit.retryAfter} seconds.` } })
@@ -99,7 +99,7 @@ const login = async (req, res) => {
     return json(res, 403, { detail: { code: 'not_authenticated', message: 'Account is forbidden. Contact support.' } })
   }
 
-  auth.clearRateLimit(`signin:${ip}`)
+  auth.clearRateLimit(`signin:${rateKey(ip)}`)
   await auth.touchSignIn(result.id)
   await auth.audit({
     action: 'sign-in',
@@ -175,7 +175,7 @@ const register = async (req, res) => {
 
   // Signing up is open, but not unlimited: five accounts per address per hour.
   const ip = clientIp(req)
-  const limit = auth.rateLimit(`signup:${ip}`, 5, 3600000)
+  const limit = auth.rateLimit(`signup:${rateKey(ip)}`, 5, 3600000)
   if (!limit.allowed) {
     return json(res, 429, { detail: { message: `Too many accounts from this address. Try again in ${limit.retryAfter} seconds.` } })
   }
@@ -328,10 +328,9 @@ const tenantUnavailable = (req, res, error) => {
 
 const bridge = async (req, res) => {
   const { user, route } = await sessionFor(req)
-  if (user && req.headers.accept?.includes('text/event-stream')) trackSocket(user.id, res)
   if (route === 'no-session') return toLogin(req, res)
   if (route === 'not-entitled') return holdOut(req, res)
-  if (route === 'shared') return await proxyHttp(req, res, sharedTarget)
+  if (route === 'shared') return await proxyHttp(req, res, sharedTarget, { onFeed: feed => trackSocket(user.id, feed) })
 
   // own-tenant: the account's own engine and nothing else. A page load while
   // the engine is created or woken shows a page that refreshes; API calls wait.
@@ -346,7 +345,13 @@ const bridge = async (req, res) => {
       }
     }
     const target = await tenants.targetFor(user)
-    return await proxyHttp(req, res, target)
+    return await proxyHttp(req, res, target, {
+      onFeed: feed => {
+        trackSocket(user.id, feed)
+        tenants.socketOpened(target.tenantId, feed)
+        feed.once('close', () => tenants.socketClosed(target.tenantId, feed))
+      },
+    })
   } catch (error) {
     console.error(`portal: workspace for an account is unavailable: ${error.message}`)
     return tenantUnavailable(req, res, error)
@@ -362,7 +367,7 @@ const upgrade = async (req, socket, head) => {
     if (route === 'shared') {
       return await proxyUpgrade(req, socket, head, sharedTarget, { onOpen: s => trackSocket(user.id, s) })
     }
-    if (route !== 'own-tenant') return socket.destroy()
+    if (route !== 'own-tenant') return refuseUpgrade(socket, route === 'no-session' ? 401 : 403)
     const target = await tenants.targetFor(user)
     await proxyUpgrade(req, socket, head, target, {
       onOpen: s => {
@@ -371,8 +376,9 @@ const upgrade = async (req, socket, head) => {
       },
       onClose: s => tenants.socketClosed(target.tenantId, s),
     })
-  } catch {
-    socket.destroy()
+  } catch (error) {
+    console.error(`portal: a live connection failed: ${error?.message ?? error}`)
+    refuseUpgrade(socket, 503)
   }
 }
 
@@ -429,6 +435,9 @@ const server = createServer(async (req, res) => {
 })
 
 server.on('upgrade', upgrade)
+
+// One request's forgotten error must not end everyone else's.
+process.on('unhandledRejection', error => console.error(`portal: an error nobody waited for: ${error?.stack ?? error}`))
 
 await untilDatabase(() => auth.migrate())
 if (tenants) {

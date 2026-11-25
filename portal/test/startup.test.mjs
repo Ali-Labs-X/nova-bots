@@ -7,10 +7,10 @@ const failure = code => Object.assign(new Error(code), { code })
 const quiet = { sleep: async () => {}, log: () => {} }
 
 test('a database that is still starting is waited for', async () => {
-  const answers = [failure('ECONNREFUSED'), failure('ECONNRESET'), failure('57P03')]
+  const answers = [failure('ECONNREFUSED'), failure('ECONNRESET'), failure('57P03'), failure('57P01'), new Error('Connection terminated unexpectedly')]
   let calls = 0
   const value = await untilDatabase(async () => { calls += 1; const error = answers.shift(); if (error) throw error; return 'ready' }, quiet)
-  assert.deepEqual([value, calls], ['ready', 4])
+  assert.deepEqual([value, calls], ['ready', 6])
 })
 
 test('an error that waiting cannot fix stops the start at once', async () => {
