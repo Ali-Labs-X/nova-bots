@@ -44,7 +44,7 @@ window.__ModuleLoader__.load({
 					WebkitBackgroundClip: "text",
 					backgroundClip: "text",
 					color: "transparent",
-					animation: "nova-ui-shimmer 8s linear infinite",
+					animation: "nova-ui-shimmer 8s linear 2",
 					filter: "drop-shadow(0 0 10px rgba(139,124,255,.35))",
 				},
 			}, "Nova Bots");

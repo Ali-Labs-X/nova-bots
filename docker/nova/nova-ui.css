@@ -9,8 +9,9 @@ html body {
   text-rendering: optimizeLegibility;
 }
 
-/* The star field sits behind the app, never over it. Two slow layers keep it
- * alive without pulling attention away from the conversation. */
+/* The star field sits behind the app, never over it. Its two layers stand still:
+ * the panes cover them once the app is up, and a moving field had the browser
+ * repaint the whole window every frame (docs/design/ui-standard.md 9.5). */
 html body .nova-stars {
   position: fixed;
   inset: 0;
@@ -26,7 +27,6 @@ html body .nova-stars {
     radial-gradient(1.6px 1.6px at 342px 302px, rgba(139, 124, 255, .7), transparent 60%),
     radial-gradient(1px 1px at 168px 338px, rgba(255, 255, 255, .5), transparent 60%);
   background-size: 380px 380px;
-  animation: nova-ui-twinkle 12s ease-in-out infinite alternate, nova-ui-drift 180s linear infinite;
 }
 
 html body .nova-stars::after {
@@ -41,12 +41,12 @@ html body .nova-stars::after {
     radial-gradient(1.8px 1.8px at 540px 420px, rgba(167, 139, 250, .7), transparent 60%),
     radial-gradient(1px 1px at 340px 520px, rgba(255, 255, 255, .45), transparent 60%);
   background-size: 620px 620px;
-  animation: nova-ui-drift-reverse 240s linear infinite;
 }
 
 html body #root { position: relative; z-index: 1; }
 
-/* One aurora hairline across the very top of the window. */
+/* One aurora hairline across the very top of the window. It sweeps twice when the
+ * page opens and then rests, so an idle page draws no frames. */
 html body::before {
   content: "";
   position: fixed;
@@ -57,12 +57,7 @@ html body::before {
   background: linear-gradient(90deg, transparent 0%, rgba(167, 139, 250, .7) 28%, rgba(94, 231, 247, .6) 62%, transparent 100%);
   background-size: 220% 100%;
   opacity: .85;
-  animation: nova-ui-shimmer 9s ease-in-out infinite alternate;
-}
-
-@keyframes nova-ui-shimmer {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 100% 50%; }
+  animation: nova-ui-shimmer 9s ease-in-out 2 alternate;
 }
 
 /* A quiet boot wordmark while the app mounts. */
@@ -150,26 +145,12 @@ html body a:hover {
   from { background-position: 0% 50%; }
   to { background-position: 200% 50%; }
 }
-@keyframes nova-ui-twinkle {
-  from { opacity: .34; }
-  to { opacity: .68; }
-}
-@keyframes nova-ui-drift {
-  from { background-position: 0 0; }
-  to { background-position: -380px 260px; }
-}
-@keyframes nova-ui-drift-reverse {
-  from { background-position: 0 0; }
-  to { background-position: 620px -420px; }
-}
 @keyframes nova-ui-pulse {
   0%, 100% { opacity: .55; }
   50% { opacity: .9; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html body .nova-stars,
-  html body .nova-stars::after,
   html body::before,
   #root:empty::before,
   html body button[class*="primary" i] {

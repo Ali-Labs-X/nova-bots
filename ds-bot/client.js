@@ -1881,7 +1881,9 @@ html body:not([data-ds-dark-theme]){
     var(--bt-main);
   background-attachment:fixed;
 }
-/* The star field sits behind the app, never over it. */
+/* The star field sits behind the app, never over it. It stands still: the panes cover
+   it once the app is up, and a moving field had the browser repaint the whole window
+   every frame (docs/design/ui-standard.md 9.5). */
 html body .nova-stars{
   position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.55;
   background-image:
@@ -1893,7 +1895,6 @@ html body .nova-stars{
     radial-gradient(1.6px 1.6px at 342px 302px,rgba(139,124,255,.7),transparent 60%),
     radial-gradient(1px 1px at 168px 338px,rgba(255,255,255,.5),transparent 60%);
   background-size:380px 380px;
-  animation:nova-twinkle 12s ease-in-out infinite alternate,nova-drift 180s linear infinite;
 }
 html body .nova-stars::after{
   content:"";position:absolute;inset:0;opacity:.5;
@@ -1904,27 +1905,28 @@ html body .nova-stars::after{
     radial-gradient(1.8px 1.8px at 540px 420px,rgba(167,139,250,.7),transparent 60%),
     radial-gradient(1px 1px at 340px 520px,rgba(255,255,255,.45),transparent 60%);
   background-size:620px 620px;
-  animation:nova-drift-reverse 240s linear infinite;
 }
 html body #root{position:relative;z-index:1}
-/* Glass side rail and settings surface. */
+/* Side rail and settings surface. Only the aurora's soft gradient lies behind the rail,
+   which a blur does not change, so it has none: a blurred panel is drawn again for
+   every frame of anything that moves on the page. */
 html body [class*="_sidebarCol"]{
   background:linear-gradient(180deg,color-mix(in srgb,var(--bt-sidebar) 92%,transparent),color-mix(in srgb,var(--bt-sidebar) 80%,transparent))!important;
-  backdrop-filter:blur(22px) saturate(1.15);
   border-right:1px solid var(--bt-line);
 }
 html body .bt-settings{
   background:linear-gradient(180deg,color-mix(in srgb,var(--bt-card) 96%,transparent),color-mix(in srgb,var(--bt-main) 92%,transparent))!important;
   box-shadow:0 40px 120px -30px rgba(0,0,0,.7),0 0 0 1px rgba(139,124,255,.12),0 0 90px -30px rgba(109,94,252,.45),inset 0 1px 0 rgba(255,255,255,.05)!important;
 }
-/* The wordmark is the brand: an aurora that keeps moving, quietly. */
+/* The wordmark is the brand: an aurora that moves through it twice when the page
+   opens, then rests, so an open page does not draw a frame while nothing happens. */
 .bt-brand{font-weight:650!important;letter-spacing:-.02em!important}
 .bt-brand svg,.bt-brand img{filter:drop-shadow(0 0 10px rgba(139,124,255,.5))}
 .bt-brand-name{
   background:linear-gradient(100deg,#f4f1ff 0%,#c4b5fd 20%,#8b7cff 42%,#5ee7f7 66%,#f4f1ff 100%);
   background-size:220% auto;
   -webkit-background-clip:text;background-clip:text;color:transparent;
-  animation:nova-shimmer 8s linear infinite;
+  animation:nova-shimmer 8s linear 2;
 }
 html body:not([data-ds-dark-theme]) .bt-brand-name{
   background:linear-gradient(100deg,#2b2350 0%,#5b46d6 50%,#0e8ea8 100%);
@@ -1973,12 +1975,10 @@ html body [aria-current="page"],html body [data-active="true"]{
 /* Selection and scrollbar, quietly in the same family. */
 html body ::selection{background:color-mix(in srgb,var(--bt-accent) 34%,transparent)}
 html body *{scrollbar-color:color-mix(in srgb,var(--bt-ink) 22%,transparent) transparent}
-@keyframes nova-shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
-@keyframes nova-twinkle{0%{opacity:.34}100%{opacity:.68}}
-@keyframes nova-drift{0%{background-position:0 0}100%{background-position:-380px 260px}}
-@keyframes nova-drift-reverse{0%{background-position:0 0}100%{background-position:620px -420px}}
+/* One period of the 220% wide gradient: the rest after the last pass looks like its start. */
+@keyframes nova-shimmer{0%{background-position:0% 50%}100%{background-position:183.333% 50%}}
 @media (prefers-reduced-motion:reduce){
-  html body .nova-stars,html body .nova-stars::after,.bt-brand-name,html body button[class*="_primary"]::after{animation:none!important}
+  .bt-brand-name,html body button[class*="_primary"]::after{animation:none!important}
 }
 `;
 var THEMES = {
